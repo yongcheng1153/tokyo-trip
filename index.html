@@ -49,11 +49,162 @@
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .drag-handle { flex-shrink: 0; padding: 12px 8px; margin: -8px -4px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
   .place-row { position: relative; }
+  #expHost { position: fixed; inset: 0; z-index: 90; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, visibility 0s linear 0.18s; }
+  #expHost.open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 0.18s ease; }
 </style>
 </head>
 <body>
 
 <div id="app"></div>
+<div id="expHost"></div>
+
+<template id="expTemplate">
+<style>
+
+  :host { color-scheme: light; --bg:#FBF1E4; --card:#FFFFFF; --text:#4A3626; --muted:#9C8770; --accent:#B9713F; --dark:#8B5E34; --line:#EADFCB; --soft:#FBEADA; --danger:#B84343; --ok:#4E8B5E; }
+  * { box-sizing: border-box; }
+  .root { position: absolute; inset: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif; -webkit-text-size-adjust: 100%; }
+  #app { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; font-size: 16px; color: var(--text); background: #FFFFFF; }
+  a { color: var(--accent); text-decoration: none; }
+  .top { background: linear-gradient(135deg, #E8B98C 0%, #D9986A 100%); padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px; flex: none; }
+  .top .back { border: none; font-family: inherit; cursor: pointer; display: inline-block; font-size: 12px; color: #6B4425; background: rgba(255,255,255,0.8); border-radius: 999px; padding: 4px 10px; margin-bottom: 8px; }
+  .top .toprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .top h1 { margin: 0 0 2px; font-size: 22px; color: #5A3A1E; }
+  .top .mode { font-size: 11px; font-weight: 700; color: #6B4425; background: rgba(255,255,255,0.8); border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
+  .top p { margin: 0; font-size: 12px; color: #6B4425; }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 12px 12px 210px; }
+  .banner { max-width: 520px; margin: 10px auto 0; padding: 0 12px; }
+  .banner .mig { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .banner > div + div { margin-top: 8px; }
+  .banner > div { background: #FDF0E4; border: 1.5px solid #F0C9A0; border-radius: 12px; padding: 10px 12px; font-size: 12px; color: #A65C1E; line-height: 1.6; }
+  .card { background: var(--card); border-radius: 16px; padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(139,94,52,0.10); }
+  .card h3 { margin: 0 0 8px; font-size: 15px; color: #5A3A1E; }
+  .muted { color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .big { font-size: 26px; font-weight: 700; color: var(--dark); }
+  .empty { text-align: center; color: #B49A7F; font-size: 13px; padding: 26px 10px; }
+  .dayhead { font-size: 12px; font-weight: 700; color: var(--accent); margin: 14px 4px 6px; }
+  .exp { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; background: var(--card); border: none; border-radius: 14px; padding: 11px 13px; margin-bottom: 7px; box-shadow: 0 3px 10px rgba(139,94,52,0.08); color: var(--text); }
+  .exp .l { min-width: 0; }
+  .exp .t { font-size: 14px; font-weight: 700; }
+  .exp .m { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .exp .r { text-align: right; flex-shrink: 0; }
+  .exp .a { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: var(--soft); color: var(--accent); margin-left: 4px; }
+  .tag.gray { background: #EEE7DC; color: #8A7B68; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > input { flex: 1; min-width: 0; }
+  input[type=text], input[type=number], input[type=date], select { width: 100%; height: 42px; border: 1.5px solid var(--line); border-radius: 10px; padding: 0 11px; }
+  .btn { height: 42px; padding: 0 16px; border: none; border-radius: 10px; background: var(--dark); color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .btn.ghost { background: #fff; color: var(--dark); border: 1.5px solid var(--line); }
+  .btn.danger { background: #fff; color: var(--danger); border: 1.5px solid #E8C3C3; }
+  .btn.small { height: 32px; padding: 0 12px; font-size: 12px; }
+  .mrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  .mrow:last-child { border-bottom: none; }
+  table.bal { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.bal th { text-align: right; font-size: 11px; color: var(--muted); font-weight: 600; padding: 4px 0; }
+  table.bal th:first-child, table.bal td:first-child { text-align: left; }
+  table.bal td { text-align: right; padding: 8px 0; border-top: 1px solid var(--line); }
+  .pos { color: var(--ok); font-weight: 700; } .neg { color: var(--danger); font-weight: 700; }
+  .xfer { display: flex; justify-content: space-between; align-items: center; background: var(--soft); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+  .bar { height: 8px; background: #EEE7DC; border-radius: 999px; overflow: hidden; margin: 8px 0 4px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .bar.ok > i { background: var(--ok); }
+  .chip { border: 1.5px solid var(--line); background: #fff; color: var(--dark); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 600; margin: 0 6px 6px 0; }
+  .chip.on { background: var(--dark); color: #fff; border-color: var(--dark); }
+  .chip.sm { padding: 5px 12px; font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist { margin-top: 8px; }
+  .hist .lab { font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+  .seg { display: flex; gap: 8px; }
+  .seg button { flex: 1; height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--dark); font-weight: 700; font-size: 14px; }
+  .seg button.on { background: var(--dark); color: #fff; border-color: var(--dark); }
+  ol.steps, ul.notes { margin: 6px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.8; }
+  .tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .tabs button { flex: 1; height: 54px; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; }
+  .tabs button.on { color: var(--dark); box-shadow: inset 0 3px 0 var(--accent); }
+  .fab { position: absolute; right: 14px; bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 48px; padding: 0 20px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(139,94,52,0.35); }
+  .sheet { position: absolute; inset: 0; z-index: 100; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .sheet-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; border-bottom: 1px solid var(--line); }
+  .sheet-top b { font-size: 16px; color: #5A3A1E; }
+  .sheet-body { max-width: 520px; margin: 0 auto; padding: 12px 12px 80px; }
+  .sheet-body label.f { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin: 12px 0 5px; }
+  .sheet-body .hint { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 6px; }
+  .sheet-body .box { background: #fff; border-radius: 14px; padding: 12px; margin-top: 12px; }
+  .err { color: var(--danger); font-size: 13px; font-weight: 600; margin-top: 12px; min-height: 18px; }
+  .dlg-mask { position: absolute; inset: 0; z-index: 200; background: rgba(74,54,38,0.45); }
+  .dlg { position: absolute; left: 50%; top: 8vh; transform: translateX(-50%); width: 88%; max-width: 360px; max-height: 84vh; overflow-y: auto; background: #fff; border-radius: 16px; padding: 16px; z-index: 201; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  .dlg textarea { width: 100%; border: 1.5px solid var(--line); border-radius: 10px; padding: 9px 11px; font-family: inherit; font-size: 16px; color: var(--text); background: #fff; resize: none; }
+  .dlg .hint { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 6px; }
+  .dlg .derr { color: var(--danger); font-size: 13px; font-weight: 600; margin-top: 8px; min-height: 18px; }
+  .dlg p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
+  .dlg .row { margin-top: 4px; }
+  .toast { position: absolute; left: 50%; bottom: calc(130px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 300; background: rgba(74,54,38,0.92); color: #fff; font-size: 13px; padding: 9px 14px; border-radius: 999px; max-width: 90%; text-align: center; }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.5; margin-top: 10px; }
+  .check input { width: 20px; height: 20px; margin: 2px 0 0; flex-shrink: 0; accent-color: #C97B4A; }
+  .howto-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .howto-head h3 { margin: 0; }
+  .dhandle { position: absolute; left: 0; top: 46%; z-index: 62; width: 24px; height: 56px; border: none; border-radius: 0 12px 12px 0; background: var(--dark); color: #fff; font-size: 16px; line-height: 1; box-shadow: 2px 2px 8px rgba(0,0,0,0.18); }
+  .edgestrip { position: absolute; left: 0; top: 0; bottom: calc(54px + env(safe-area-inset-bottom, 0px)); width: 18px; z-index: 59; }
+  .dmask { position: absolute; inset: 0; z-index: 90; background: rgba(74,54,38,0.45); display: none; }
+  .dmask.open { display: block; }
+  .drawer { position: absolute; top: 0; left: 0; bottom: 0; width: 86%; max-width: 380px; z-index: 91; background: #fff; transform: translateX(-102%); visibility: hidden; transition: transform 0.25s ease, visibility 0s linear 0.25s; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 40px; box-shadow: 6px 0 24px rgba(0,0,0,0.18); }
+  .drawer.open { transform: translateX(0); visibility: visible; transition: transform 0.25s ease; }
+  .dhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .dhead b { font-size: 16px; color: #5A3A1E; }
+  .dclose { width: 30px; height: 30px; border-radius: 50%; border: none; background: var(--soft); color: var(--dark); font-size: 15px; font-weight: 700; }
+  .dsec { background: var(--bg); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+  .dsec h4 { margin: 0 0 8px; font-size: 14px; color: #5A3A1E; }
+  table.gloss { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.gloss td { padding: 6px 4px; border-top: 1px solid var(--line); vertical-align: top; line-height: 1.5; }
+  table.gloss tr:first-child td { border-top: none; }
+  table.gloss td.jp { font-weight: 700; color: var(--dark); width: 38%; padding-right: 8px; }
+  table.gloss .nw { white-space: nowrap; }
+  .fab2 { position: absolute; right: 14px; bottom: calc(66px + 48px + 10px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
+  .acc-head { display: flex; align-items: center; gap: 8px; }
+  .acc-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; text-align: left; background: none; border: none; padding: 11px 2px; color: var(--text); font-family: inherit; }
+  .acc-toggle .chev { display: inline-block; width: 16px; color: var(--accent); font-size: 14px; transition: transform 0.2s ease; flex-shrink: 0; }
+  .acc:not(.open) .acc-toggle .chev { transform: rotate(-90deg); }
+  .acc-text { display: flex; flex-direction: column; min-width: 0; }
+  .acc-title { font-size: 15px; font-weight: 700; color: #5A3A1E; }
+  .acc-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .acc-body { overflow: hidden; transition: max-height 0.25s ease; }
+  .card.acc { padding: 2px 14px 14px; }
+  .card.acc:not(.open) { padding-bottom: 2px; }
+  .dayacc { background: var(--card); border-radius: 16px; padding: 2px 12px 10px; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(139,94,52,0.10); }
+  .dayacc:not(.open) { padding-bottom: 2px; }
+  .dayacc .exp { background: var(--bg); box-shadow: none; margin-bottom: 6px; }
+  .dayacc .acc-head .btn.small { min-width: 34px; padding: 0 10px; }
+  .sheet-body .hint.tight { margin-top: 5px; }
+  .dlg label.dl { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin: 6px 0 5px; }
+  .dlg .stack { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+</style>
+<div class="root">
+  <div id="app">
+    <header class="top">
+      <button class="back" id="expBack" type="button">← 行程懶人包</button>
+      <div class="toprow"><h1>旅行記帳</h1><span class="mode" id="modeTag">連線中…</span></div>
+      <p>誰付了多少、誰欠誰，一起算清楚</p>
+    </header>
+    <div class="scroll" id="scroll">
+      <div id="banner" class="banner"></div>
+      <main class="wrap" id="view"></main>
+    </div>
+  </div>
+  <button id="fabDay" class="fab2">＋ 新的一天</button>
+  <button id="fab" class="fab">＋ 記一筆</button>
+  <nav id="tabs" class="tabs"></nav>
+  <div id="sheetLayer"></div>
+  <div id="dialogLayer"></div>
+  <button id="drawerHandle" class="dhandle" aria-label="打開對照表與退稅小抄">›</button>
+  <div id="edgeStrip" class="edgestrip"></div>
+  <div id="drawerMask" class="dmask"></div>
+  <aside id="drawer" class="drawer" aria-hidden="true"></aside>
+  <div id="toastLayer"></div>
+</div>
+</template>
+
 
 <script>
 (function () {
@@ -170,6 +321,7 @@
         { time: '12:00', name: '午餐', desc: '柴又或返回池袋簡餐' },
         { time: '13:00', name: '返回池袋取行李', desc: '確認隨身物品與退稅單據' },
         { time: '14:30', name: '搭NEX前往機場', desc: '約80-90分鐘' },
+        { time: '16:00', name: '抵達成田機場：先退稅，再託運', desc: '先到「免稅手續機台」掃護照（出境大廳、託運行李之前），辦完再報到託運、逛免稅店' },
         { time: '19:55', name: '班機起飛', desc: '預留約3.5小時緩衝，從容不趕' }
       ],
       weatherNote: '若大雨強風導致京成線誤點，柴又範圍不大，可縮短停留時間至1小時應變，不影響返程。',
@@ -233,6 +385,7 @@
     bus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/><path d="M3 12 L21 12"/></svg>',
     pin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 5 14 5 9 A7 7 0 0 1 19 9 C19 14 12 21 12 21 Z"/><circle cx="12" cy="9" r="2.4"/></svg>',
     pinSmall: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8770" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 5 14 5 9 A7 7 0 0 1 19 9 C19 14 12 21 12 21 Z"/><circle cx="12" cy="9" r="2"/></svg>',
+    wallet: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 L4 6.5 C4 5.7 4.7 5 5.5 5 L17 5 C18.1 5 19 5.9 19 7 L19 8"/><rect x="3" y="8" width="18" height="12" rx="2.5"/><circle cx="16.5" cy="14" r="1.2" fill="#B9713F"/></svg>',
     check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12 L11 15 L16 9"/></svg>',
     x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
     xSmall: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B45151" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
@@ -290,6 +443,7 @@
           '<button class="btn-icon" data-open-modal="transport">' + ICO.bus + '</button>' +
           '<button class="btn-icon" data-open-modal="map">' + ICO.pin + '</button>' +
           '<button class="btn-icon" data-open-modal="checklist" style="position:relative;">' + ICO.check + badgeHtml + '</button>' +
+          '<button class="btn-icon" data-open-expenses aria-label="旅行記帳" title="旅行記帳">' + ICO.wallet + '</button>' +
         '</div>' +
 
         '<div class="wrap">' +
@@ -513,6 +667,9 @@
       el.addEventListener('click', function () { state.activeDayId = el.getAttribute('data-day'); state.quickModal = null; render(); });
     });
 
+    Array.prototype.forEach.call(app.querySelectorAll('[data-open-expenses]'), function (el) {
+      el.addEventListener('click', function () { if (window.ExpenseHost) window.ExpenseHost.open(); });
+    });
     Array.prototype.forEach.call(app.querySelectorAll('[data-open-modal]'), function (el) {
       el.addEventListener('click', function () { state.quickModal = el.getAttribute('data-open-modal'); render(); });
     });
@@ -946,6 +1103,7 @@
     try {
       firebase.initializeApp(FIREBASE_CONFIG);
     } catch (e) { state.dbChecked = true; noteDbError('Firebase 初始化失敗', e); return; }
+    try { var pr = firebase.firestore().enablePersistence({ synchronizeTabs: true }); if (pr && pr.catch) pr.catch(function () { /* offline cache is optional */ }); } catch (e) { /* ignore */ }
     firebase.auth().signInAnonymously().then(function () {
       db = firebase.firestore();
       state.dbChecked = true;
@@ -994,6 +1152,1118 @@
 
   render();
   initDb();
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  var root = null;                                   // the shadow root the expense app lives in
+  function $(id) { return root.getElementById(id); }
+
+  var TAX_THRESHOLD = 5000;   // yen, tax-excluded, per store per day (Japan Tourism Agency, refund method from 2026-11-01)
+  var CATEGORIES = [
+    { label: '餐飲', goods: false }, { label: '交通', goods: false }, { label: '住宿', goods: false },
+    { label: '門票體驗', goods: false }, { label: '購物', goods: true }, { label: '藥妝', goods: true },
+    { label: '伴手禮', goods: true }, { label: '其他', goods: true }
+  ];
+
+  // ------------------------------------------------------------------ helpers
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function fmtInt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function fmtYen(n) { return '¥' + fmtInt(n); }
+  function fmtTwd(n) { return 'NT$' + fmtInt(n); }
+  function fmtDate(iso) {
+    var p = String(iso || '').split('-'); if (p.length !== 3) return iso || '';
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return p[1] + '/' + p[2] + '（' + '日一二三四五六'.charAt(d.getDay()) + '）';
+  }
+  function ymd(d) {
+    var m = String(d.getMonth() + 1), day = String(d.getDate());
+    return d.getFullYear() + '-' + (m.length < 2 ? '0' + m : m) + '-' + (day.length < 2 ? '0' + day : day);
+  }
+  function todayStr() { return ymd(new Date()); }
+  function addDays(iso, n) { var p = iso.split('-'); return ymd(new Date(+p[0], +p[1] - 1, +p[2] + n)); }
+  function isDateStr(x) { return typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x); }
+  function isGoods(cat) { for (var i = 0; i < CATEGORIES.length; i++) { if (CATEGORIES[i].label === cat) return CATEGORIES[i].goods; } return false; }
+  function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+
+  // ------------------------------------------------------------------ calculations (pure)
+  function minorOf(amount, cur) { return cur === 'JPY' ? Math.round(amount) : Math.round(amount * 100); }
+  function splitMinor(total, ids) {
+    var out = {}, n = ids.length; if (!n) return out;
+    var base = Math.floor(total / n), rem = total - base * n;
+    ids.forEach(function (id, i) { out[id] = base + (i < rem ? 1 : 0); });
+    return out;
+  }
+  function expenseTwd(e) { return e.currency === 'JPY' ? e.amount * e.rate : e.amount; }
+  function shareTwd(e, minor) { return e.currency === 'JPY' ? minor * e.rate : minor / 100; }
+
+  function computeBalances(expenses, members) {
+    var bal = {};
+    members.forEach(function (m) { bal[m.id] = { paid: 0, owed: 0 }; });
+    expenses.forEach(function (e) {
+      var parts = (e.participantIds || []).filter(function (id) { return bal[id]; });
+      var shares = splitMinor(minorOf(e.amount, e.currency), parts);
+      if (bal[e.payerId]) bal[e.payerId].paid += expenseTwd(e);
+      parts.forEach(function (id) { bal[id].owed += shareTwd(e, shares[id]); });
+    });
+    Object.keys(bal).forEach(function (id) { bal[id].net = bal[id].paid - bal[id].owed; });
+    return bal;
+  }
+  function settlements(bal) {
+    var cred = [], debt = [];
+    Object.keys(bal).forEach(function (id) {
+      var n = bal[id].net;
+      if (n > 0.5) cred.push({ id: id, amt: n }); else if (n < -0.5) debt.push({ id: id, amt: -n });
+    });
+    cred.sort(function (a, b) { return b.amt - a.amt; });
+    debt.sort(function (a, b) { return b.amt - a.amt; });
+    var out = [], i = 0, j = 0;
+    while (i < debt.length && j < cred.length) {
+      var x = Math.min(debt[i].amt, cred[j].amt);
+      out.push({ from: debt[i].id, to: cred[j].id, amount: Math.round(x) });
+      debt[i].amt -= x; cred[j].amt -= x;
+      if (debt[i].amt < 0.5) i++;
+      if (cred[j].amt < 0.5) j++;
+    }
+    return out.filter(function (t) { return t.amount > 0; });
+  }
+
+  function taxInfo(e) {
+    if (!e.taxFree || e.currency !== 'JPY') return null;
+    var pre = Math.round(e.amount / (1 + (Number(e.taxRate) || 10) / 100));
+    return { pretax: pre, tax: e.amount - pre };
+  }
+  function taxGroups(expenses) {
+    var map = {}, list = [];
+    expenses.forEach(function (e) {
+      var t = taxInfo(e); if (!t) return;
+      var store = String(e.store || '').trim() || '（未填店名）';
+      var key = e.date + '|' + store.toLowerCase();
+      if (!map[key]) { map[key] = { key: key, date: e.date, store: store, pretax: 0, entries: [], refundYen: 0, refundTwd: 0, eligible: false }; list.push(map[key]); }
+      map[key].pretax += t.pretax; map[key].entries.push(e);
+    });
+    list.forEach(function (g) {
+      g.eligible = g.pretax >= TAX_THRESHOLD;
+      g.entries.forEach(function (e) {
+        if (g.eligible && !e.consumed) { var t = taxInfo(e); g.refundYen += t.tax; g.refundTwd += t.tax * e.rate; }
+      });
+    });
+    list.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : (a.store < b.store ? -1 : 1); });
+    return list;
+  }
+  window.ExpenseCalc = { splitMinor: splitMinor, computeBalances: computeBalances, settlements: settlements, taxGroups: taxGroups, taxInfo: taxInfo, minorOf: minorOf };
+
+  // ------------------------------------------------------------------ state
+  var state = { tab: 'list', members: [], expenses: [], days: [], rate: null, storageMessage: '', loading: true, sync: 'loading', localInfo: null };
+  var renderPending = false;
+  var formState = null, formId = null;
+
+  function memberName(id) { for (var i = 0; i < state.members.length; i++) { if (state.members[i].id === id) return state.members[i].name; } return '（已刪除）'; }
+  function sortedExpenses() {
+    return state.expenses.slice().sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    });
+  }
+
+  // ------------------------------------------------------------------ small UI helpers
+  function toast(msg) {
+    var el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+    $('toastLayer').appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2600);
+  }
+  function openDialog(html, onBind) {
+    var layer = $('dialogLayer');
+    var wrap = document.createElement('div');
+    wrap.innerHTML = '<div class="dlg-mask" data-dlg-close="1"></div><div class="dlg">' + html + '</div>';
+    layer.appendChild(wrap);
+    function close() { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }
+    wrap.addEventListener('click', function (e) { if (e.target.getAttribute && e.target.getAttribute('data-dlg-close')) close(); });
+    onBind(wrap, close);
+  }
+  function confirmBox(msg, okLabel, onOk) {
+    openDialog('<p>' + esc(msg) + '</p><div class="row"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1;background:#C0524B" data-ok>' + esc(okLabel) + '</button></div>', function (w, close) {
+      w.querySelector('[data-no]').addEventListener('click', close);
+      w.querySelector('[data-ok]').addEventListener('click', function () { close(); onOk(); });
+    });
+  }
+  function askText(title, initial, onOk) {
+    openDialog('<p>' + esc(title) + '</p><input type="text" id="askInput" value="' + esc(initial) + '"><div class="row" style="margin-top:12px"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1" data-ok>確定</button></div>', function (w, close) {
+      var inp = w.querySelector('#askInput');
+      w.querySelector('[data-no]').addEventListener('click', close);
+      function ok() { var v = inp.value.trim(); if (!v) return; close(); onOk(v); }
+      w.querySelector('[data-ok]').addEventListener('click', ok);
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') ok(); });
+      setTimeout(function () { inp.focus(); inp.select(); }, 30);
+    });
+  }
+  // ------------------------------------------------------------------ data: Firebase Firestore (shared by everyone who has the link)
+  // Everything the screens read or write goes through Store. Collections: members, expenses, days (doc id = date), settings/main.
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBe9oXSs3tGdB0QYSthaVDG2U8Nu74B3DI",
+    authDomain: "travel-japan-7f1e8.firebaseapp.com",
+    projectId: "travel-japan-7f1e8",
+    storageBucket: "travel-japan-7f1e8.firebasestorage.app",
+    messagingSenderId: "746468043166",
+    appId: "1:746468043166:web:6c8fa9db052ffa0ece8e8f"
+  };
+  var LOCAL_KEY = 'tripExpenses.v1';          // where the earlier this-phone-only version kept its data
+
+  function cloneJson(x) { return JSON.parse(JSON.stringify(x)); }
+  function newId(prefix) { return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function str(x) { return typeof x === 'string' && x.length > 0; }
+  function num(x) { return typeof x === 'number' && isFinite(x); }
+  function byDate(a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }
+
+  function cleanMember(m, i) {
+    if (!m || !str(m.id) || !str(m.name)) return null;
+    return { id: m.id, name: m.name, order: num(m.order) ? m.order : i + 1 };
+  }
+  function cleanExpense(e) {
+    if (!e || !str(e.id) || !isDateStr(e.date)) return null;
+    if (!num(e.amount) || !(e.amount > 0) || (e.currency !== 'JPY' && e.currency !== 'TWD')) return null;
+    var rate = e.currency === 'TWD' ? 1 : e.rate;
+    if (!num(rate) || !(rate > 0) || !str(e.payerId) || !Array.isArray(e.participantIds)) return null;
+    var parts = e.participantIds.filter(str);
+    if (!parts.length) return null;
+    var cat = str(e.category) ? e.category : '其他';
+    var taxFree = e.currency === 'JPY' && e.taxFree === true;
+    return { id: e.id, date: e.date, title: str(e.title) ? e.title : cat, category: cat, currency: e.currency, amount: e.amount, rate: rate,
+      payerId: e.payerId, participantIds: parts, taxFree: taxFree, store: taxFree && typeof e.store === 'string' ? e.store : '',
+      taxRate: Number(e.taxRate) === 8 ? 8 : 10, consumed: taxFree && e.consumed === true, createdAt: num(e.createdAt) ? e.createdAt : 0 };
+  }
+  // Returns { data, skipped } or null when the shape is wrong. Used for backups and for the old this-phone data.
+  function normalize(p) {
+    if (!p || typeof p !== 'object' || !Array.isArray(p.members) || !Array.isArray(p.expenses)) return null;
+    var members = [], expenses = [], skipped = 0;
+    p.members.forEach(function (m, i) { var c = cleanMember(m, i); if (c) members.push(c); else skipped++; });
+    p.expenses.forEach(function (e) { var c = cleanExpense(e); if (c) expenses.push(c); else skipped++; });
+    var settings = {};
+    if (p.settings && num(p.settings.rate) && p.settings.rate > 0) settings.rate = p.settings.rate;
+    // Days are the major items. Older data has none, so every date used by an expense becomes a day.
+    var seen = {}, days = [];
+    (Array.isArray(p.days) ? p.days : []).forEach(function (d) {
+      var date = typeof d === 'string' ? d : (d && d.date);
+      if (isDateStr(date) && !seen[date]) { seen[date] = 1; days.push({ date: date }); } else if (!isDateStr(date)) skipped++;
+    });
+    expenses.forEach(function (e) { if (!seen[e.date]) { seen[e.date] = 1; days.push({ date: e.date }); } });
+    days.sort(byDate);
+    return { data: { members: members, expenses: expenses, days: days, settings: settings }, skipped: skipped };
+  }
+  function parseImport(text) {
+    var parsed;
+    try { parsed = JSON.parse(String(text || '').trim()); } catch (e) { return { ok: false, error: '這不是有效的備份內容（格式不對，可能沒有完整複製）。' }; }
+    var norm = normalize(parsed);
+    if (!norm) return { ok: false, error: '備份內容裡找不到旅伴和帳目資料。' };
+    return { ok: true, norm: norm };
+  }
+  function explainDbError(err) {
+    var code = (err && (err.code || err.message)) ? String(err.code || err.message) : '未知錯誤';
+    var hint = '';
+    if (/operation-not-allowed|admin-restricted/.test(code)) hint = '請到Firebase主控台啟用匿名登入';
+    else if (/permission-denied|insufficient/i.test(code)) hint = '請確認Firestore規則允許已登入者讀寫';
+    else if (/not-connected|sdk-not-loaded/.test(code)) hint = '尚未連上資料庫，請檢查網路後重新整理';
+    else if (/network|unavailable|offline/i.test(code)) hint = '請檢查網路連線';
+    else if (/failed-precondition|not-found/.test(code)) hint = '請確認已在Firebase建立Firestore資料庫';
+    return hint ? hint + '（' + code + '）' : code;
+  }
+
+  var Store = (function () {
+    var fs = null, started = false, attached = false, ready = false, readyTimer = null;
+    var data = { members: [], expenses: [], days: [], settings: {} };
+    var dayDocs = [], daysLoaded = false;  // dates that already have their own document
+    var first = {}, meta = {}, askedDays = {};
+    var h = { onMembers: noop, onExpenses: noop, onDays: noop, onSettings: noop, onStatus: noop, onReady: noop };
+    function noop() {}
+
+    function fail(what, err) { console.error(what, err); h.onStatus({ message: what + '：' + explainDbError(err) }); }
+    function guard(p, what) { if (p && p.catch) p.catch(function (err) { fail(what, err); }); return p; }
+    function ref(path) {
+      if (fs) return fs.doc(path);
+      var no = function () { return Promise.reject({ code: 'not-connected' }); };
+      return { set: no, update: no, delete: no };
+    }
+    function newBatch() {
+      if (fs) return fs.batch();
+      return { set: noop, update: noop, delete: noop, commit: function () { return Promise.reject({ code: 'not-connected' }); } };
+    }
+    // ops: ['set'|'delete', path, value?, merge?] ... applied in order, 400 per batch
+    function runOps(ops, what) {
+      var chain = Promise.resolve(true);
+      for (var k = 0; k < ops.length; k += 400) {
+        (function (chunk) {
+          chain = chain.then(function () {
+            var b = newBatch();
+            chunk.forEach(function (op) {
+              if (op[0] === 'delete') b.delete(ref(op[1]));
+              else if (op[3]) b.set(ref(op[1]), op[2], { merge: true });
+              else b.set(ref(op[1]), op[2]);
+            });
+            return b.commit();
+          });
+        })(ops.slice(k, k + 400));
+      }
+      return chain.then(function () { return true; }, function (err) { fail(what, err); return false; });
+    }
+
+    function computeDays() {
+      var seen = {}, out = [];
+      dayDocs.forEach(function (d) { if (!seen[d]) { seen[d] = 1; out.push({ date: d }); } });
+      data.expenses.forEach(function (e) { if (!seen[e.date]) { seen[e.date] = 1; out.push({ date: e.date }); } });
+      out.sort(byDate); data.days = out;
+    }
+    // a date used by an expense but without its own document (older data, imports): give it one.
+    // Checked a moment after the data settles, because after a batch (e.g. changing a day's date) the day list and
+    // the expense list update one after the other, and in between they briefly disagree.
+    var ensureTimer = null;
+    function scheduleEnsure() { clearTimeout(ensureTimer); ensureTimer = setTimeout(ensureDayDocs, 500); }
+    function ensureDayDocs() {
+      if (!daysLoaded) return;             // wait until the list of day documents is known, or every day looks missing at start-up
+      data.expenses.forEach(function (e) {
+        if (dayDocs.indexOf(e.date) === -1 && !askedDays[e.date]) { askedDays[e.date] = 1; guard(ref('days/' + e.date).set({ date: e.date }), '建立日期失敗'); }
+      });
+    }
+    function syncState() {
+      var pending = false, cached = false;
+      Object.keys(meta).forEach(function (k) { if (meta[k].pending) pending = true; if (meta[k].cached) cached = true; });
+      var heardFromFirebase = Object.keys(meta).length > 0;      // no snapshot at all = never connected, so never "synced"
+      h.onStatus({ sync: !ready ? 'loading' : !heardFromFirebase ? 'offline' : pending ? 'pending' : cached ? 'offline' : 'synced' });
+    }
+    function becomeReady() { if (ready) return; ready = true; clearTimeout(readyTimer); h.onReady(); syncState(); }
+    function gotFirst(name) { first[name] = true; if (first.members && first.expenses && first.days && first.settings) becomeReady(); }
+    function docsOf(snap) { return snap.docs.map(function (d) { var x = d.data() || {}; x.id = d.id; return x; }); }
+    function listen(name, onData) {
+      fs.collection(name).onSnapshot({ includeMetadataChanges: true }, function (snap) {
+        meta[name] = { pending: !!(snap.metadata && snap.metadata.hasPendingWrites), cached: !!(snap.metadata && snap.metadata.fromCache) };
+        var changed = !first[name] || !snap.docChanges || snap.docChanges().length > 0;
+        if (changed) onData(snap);
+        gotFirst(name); syncState();
+      }, function (err) { fail('讀取失敗', err); gotFirst(name); });
+    }
+    function attach() {
+      listen('members', function (snap) {
+        data.members = docsOf(snap).map(cleanMember).filter(Boolean).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+        h.onMembers(cloneJson(data.members));
+      });
+      listen('expenses', function (snap) {
+        data.expenses = docsOf(snap).map(cleanExpense).filter(Boolean);
+        computeDays(); scheduleEnsure();
+        h.onExpenses(cloneJson(data.expenses)); h.onDays(cloneJson(data.days));
+      });
+      listen('days', function (snap) {
+        dayDocs = docsOf(snap).map(function (d) { return isDateStr(d.date) ? d.date : (isDateStr(d.id) ? d.id : null); }).filter(Boolean);
+        daysLoaded = true;
+        computeDays(); scheduleEnsure(); h.onDays(cloneJson(data.days));
+      });
+      fs.doc('settings/main').onSnapshot({ includeMetadataChanges: true }, function (snap) {
+        meta.settings = { pending: !!(snap.metadata && snap.metadata.hasPendingWrites), cached: !!(snap.metadata && snap.metadata.fromCache) };
+        var d = snap.exists ? snap.data() : null;
+        data.settings = d && num(d.rate) && d.rate > 0 ? { rate: d.rate } : {};
+        h.onSettings(cloneJson(data.settings)); gotFirst('settings'); syncState();
+      }, function (err) { fail('讀取失敗', err); gotFirst('settings'); });
+    }
+
+    // ---- data from the earlier this-phone-only version, if this phone still has some
+    function readLocal() {
+      var raw = null;
+      try { raw = window.localStorage.getItem(LOCAL_KEY); } catch (e) { return null; }
+      if (!raw) return null;
+      try {
+        var norm = normalize(JSON.parse(raw));
+        if (!norm || !(norm.data.members.length || norm.data.expenses.length || norm.data.days.length)) return null;
+        return { raw: raw, data: norm.data };
+      } catch (e) { return null; }
+    }
+
+    return {
+      kind: 'firebase',
+      start: function (handlers) {
+        Object.keys(handlers).forEach(function (k) { h[k] = handlers[k]; });
+        if (started) return; started = true;
+        readyTimer = setTimeout(function () {
+          if (ready) return;
+          h.onStatus({ message: '還沒連上資料庫，先顯示這支手機暫存的內容（可能不是最新）。' });
+          becomeReady();
+        }, 8000);
+        if (!window.firebase) { fail('Firebase SDK 載入失敗', { code: 'sdk-not-loaded' }); becomeReady(); return; }
+        try { if (!(firebase.apps && firebase.apps.length)) firebase.initializeApp(FIREBASE_CONFIG); } catch (e) { fail('Firebase 初始化失敗', e); becomeReady(); return; }
+        var auth = firebase.auth(); fs = firebase.firestore();
+        auth.onAuthStateChanged(function (user) { if (user && !attached) { attached = true; attach(); } });
+        // the page signs in on its own; only step in if that has not happened after a while
+        setTimeout(function () {
+          if (!attached && !auth.currentUser) auth.signInAnonymously().catch(function (err) { fail('登入失敗', err); becomeReady(); });
+        }, window.__expAuthFallbackMs || 2500);
+      },
+      addMember: function (name) {
+        var order = data.members.reduce(function (m, x) { return Math.max(m, x.order || 0); }, 0) + 1;
+        var id = newId('m_'); guard(ref('members/' + id).set({ name: name, order: order }), '新增旅伴失敗'); return id;
+      },
+      updateMember: function (id, patch) { guard(ref('members/' + id).update(patch), '改名失敗'); },
+      deleteMember: function (id) { guard(ref('members/' + id).delete(), '刪除旅伴失敗'); },
+      addExpense: function (obj) { var id = newId('e_'), e = cloneJson(obj); delete e.id; guard(ref('expenses/' + id).set(e), '儲存帳目失敗'); return id; },
+      setExpense: function (id, obj) { var e = cloneJson(obj); delete e.id; guard(ref('expenses/' + id).set(e), '儲存帳目失敗'); },
+      deleteExpense: function (id) { guard(ref('expenses/' + id).delete(), '刪除帳目失敗'); },
+      addDay: function (date) {
+        if (!isDateStr(date)) return { ok: false, error: '請選一個日期' };
+        if (data.days.some(function (d) { return d.date === date; })) return { ok: false, error: '這一天已經有了' };
+        guard(ref('days/' + date).set({ date: date }), '新增日期失敗'); return { ok: true };
+      },
+      // Changing a day's date moves all of its expenses with it (one atomic batch)
+      moveDay: function (oldDate, newDate) {
+        if (!isDateStr(newDate)) return { ok: false, error: '請選一個日期' };
+        if (oldDate === newDate) return { ok: true };
+        if (data.days.some(function (d) { return d.date === newDate; })) return { ok: false, error: '這一天已經有了' };
+        var b = newBatch();
+        b.set(ref('days/' + newDate), { date: newDate });
+        b.delete(ref('days/' + oldDate));
+        data.expenses.forEach(function (e) { if (e.date === oldDate) b.update(ref('expenses/' + e.id), { date: newDate }); });
+        guard(b.commit(), '改日期失敗'); return { ok: true };
+      },
+      deleteDay: function (date) {
+        if (data.expenses.some(function (e) { return e.date === date; })) return { ok: false, error: '這天還有帳目' };
+        guard(ref('days/' + date).delete(), '刪除日期失敗'); return { ok: true };
+      },
+      saveSettings: function (patch) { guard(ref('settings/main').set(patch, { merge: true }), '儲存設定失敗'); },
+      clearAll: function () {
+        var ops = [];
+        data.members.forEach(function (m) { ops.push(['delete', 'members/' + m.id]); });
+        data.expenses.forEach(function (e) { ops.push(['delete', 'expenses/' + e.id]); });
+        dayDocs.forEach(function (d) { ops.push(['delete', 'days/' + d]); });
+        ops.push(['delete', 'settings/main']);
+        return runOps(ops, '清除失敗');
+      },
+      exportJson: function () {
+        return JSON.stringify({ app: 'trip-expenses', v: 1, exportedAt: new Date().toISOString(), members: data.members, days: data.days, expenses: data.expenses, settings: data.settings }, null, 1);
+      },
+      // Checks a backup without changing anything. Returns { ok, error } or { ok, members, expenses, days, skipped }
+      previewImport: function (text) {
+        var r = parseImport(text);
+        return r.ok ? { ok: true, members: r.norm.data.members.length, expenses: r.norm.data.expenses.length, days: r.norm.data.days.length, skipped: r.norm.skipped } : r;
+      },
+      // Replaces everything in Firebase with the backup (ids are kept). Returns the same shape as previewImport
+      importJson: function (text) {
+        var r = parseImport(text);
+        if (!r.ok) return r;
+        var d = r.norm.data, keep = {}, ops = [], sets = [];
+        d.members.forEach(function (m) { keep['members/' + m.id] = 1; sets.push(['set', 'members/' + m.id, { name: m.name, order: m.order }]); });
+        d.days.forEach(function (x) { keep['days/' + x.date] = 1; sets.push(['set', 'days/' + x.date, { date: x.date }]); });
+        d.expenses.forEach(function (e) { var v = cloneJson(e); delete v.id; keep['expenses/' + e.id] = 1; sets.push(['set', 'expenses/' + e.id, v]); });
+        data.members.forEach(function (m) { if (!keep['members/' + m.id]) ops.push(['delete', 'members/' + m.id]); });
+        data.expenses.forEach(function (e) { if (!keep['expenses/' + e.id]) ops.push(['delete', 'expenses/' + e.id]); });
+        dayDocs.forEach(function (x) { if (!keep['days/' + x]) ops.push(['delete', 'days/' + x]); });
+        if (d.settings.rate) sets.push(['set', 'settings/main', { rate: d.settings.rate }]); else ops.push(['delete', 'settings/main']);
+        runOps(ops.concat(sets), '匯入失敗');
+        return { ok: true, members: d.members.length, expenses: d.expenses.length, days: d.days.length, skipped: r.norm.skipped };
+      },
+      // ---- moving the earlier this-phone-only data up to Firebase (adds to what is there, never deletes)
+      localInfo: function () {
+        var b = readLocal();
+        return b ? { members: b.data.members.length, expenses: b.data.expenses.length, days: b.data.days.length } : null;
+      },
+      migrateLocal: function () {
+        var b = readLocal();
+        if (!b) return Promise.resolve(null);
+        var byName = {}, idMap = {}, ops = [];
+        data.members.forEach(function (m) { byName[m.name] = m.id; });
+        var order = data.members.reduce(function (m, x) { return Math.max(m, x.order || 0); }, 0);
+        b.data.members.forEach(function (m) {
+          if (byName[m.name]) { idMap[m.id] = byName[m.name]; return; }        // same name already in Firebase: reuse it
+          idMap[m.id] = m.id; byName[m.name] = m.id; order += 1;
+          ops.push(['set', 'members/' + m.id, { name: m.name, order: order }]);
+        });
+        b.data.days.forEach(function (x) { ops.push(['set', 'days/' + x.date, { date: x.date }]); });
+        b.data.expenses.forEach(function (e) {
+          var v = cloneJson(e); delete v.id;
+          v.payerId = idMap[e.payerId] || e.payerId;
+          v.participantIds = e.participantIds.map(function (p) { return idMap[p] || p; });
+          ops.push(['set', 'expenses/' + e.id, v]);
+        });
+        if (b.data.settings.rate && !data.settings.rate) ops.push(['set', 'settings/main', { rate: b.data.settings.rate }, true]);
+        var counts = { members: b.data.members.length, expenses: b.data.expenses.length, days: b.data.days.length };
+        return runOps(ops, '上傳失敗').then(function (ok) {
+          if (!ok) return null;
+          try { window.localStorage.setItem(LOCAL_KEY + '.migrated', b.raw); window.localStorage.removeItem(LOCAL_KEY); } catch (e) { /* ignore */ }
+          return counts;
+        });
+      }
+    };
+  })();
+
+  // ------------------------------------------------------------------ views
+  function membersCard() {
+    var rows = state.members.map(function (m) {
+      return '<div class="mrow"><span>' + esc(m.name) + '</span><span class="row"><button class="btn ghost small" data-rename="' + m.id + '">改名</button><button class="btn danger small" data-del-member="' + m.id + '">刪除</button></span></div>';
+    }).join('');
+    return '<div class="card"><h3>旅伴</h3>' +
+      (rows || '<div class="muted">還沒有旅伴，先在下面新增每一位一起旅行的人。</div>') +
+      '<div class="row" style="margin-top:10px"><input type="text" id="newMember" placeholder="姓名或稱呼（例如：爸爸）" maxlength="12"><button class="btn" data-add-member>新增</button></div></div>';
+  }
+  function viewOnboarding() {
+    return '<div class="card"><h3>先新增旅伴</h3><div class="muted">輸入每位一起旅行的人。之後每一筆帳都可以選「誰付的」和「誰要分攤」，系統會自動算出誰欠誰。</div></div>' + membersCard();
+  }
+  function expRow(e) {
+    var n = (e.participantIds || []).length;
+    var who = n === state.members.length ? '全員分攤' : n + ' 人分攤';
+    var tags = (e.taxFree ? '<span class="tag">免稅</span>' : '') + (e.taxFree && e.consumed ? '<span class="tag gray">已用掉</span>' : '');
+    var main = e.currency === 'JPY' ? fmtYen(e.amount) : fmtTwd(e.amount);
+    var sub = e.currency === 'JPY' ? '<div class="m">≈ ' + fmtTwd(expenseTwd(e)) + '</div>' : '';
+    return '<button class="exp" data-edit="' + e.id + '"><div class="l"><div class="t">' + esc(e.title) + tags + '</div>' +
+      '<div class="m">' + esc(e.category) + ' · ' + esc(memberName(e.payerId)) + ' 付 · ' + who + '</div></div>' +
+      '<div class="r"><div class="a">' + main + '</div>' + sub + '</div></button>';
+  }
+  // ---- accordion (how-to card and each day) ----
+  function accClosedSet() { try { var a = JSON.parse(lsGet('expenses.accClosed') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function isAccClosed(id) { return accClosedSet().indexOf(id) > -1; }
+  function setAccClosed(id, closed) {
+    var set = accClosedSet().filter(function (x) { return x !== id; });
+    if (closed) set.push(id);
+    lsSet('expenses.accClosed', JSON.stringify(set));
+  }
+  function accHtml(id, headInner, actions, body, cls) {
+    var closed = isAccClosed(id);
+    return '<div class="acc' + (closed ? '' : ' open') + (cls ? ' ' + cls : '') + '" data-acc="' + esc(id) + '">' +
+      '<div class="acc-head"><button class="acc-toggle" data-acc-toggle aria-expanded="' + (closed ? 'false' : 'true') + '"><span class="chev">▾</span>' + headInner + '</button>' + (actions || '') + '</div>' +
+      '<div class="acc-body" style="max-height:' + (closed ? '0' : 'none') + '"><div class="acc-inner">' + body + '</div></div></div>';
+  }
+  function toggleAcc(card) {
+    if (!card) return;
+    var id = card.getAttribute('data-acc'), body = card.querySelector('.acc-body'), btn = card.querySelector('[data-acc-toggle]');
+    var open = !card.classList.contains('open');
+    card.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    setAccClosed(id, !open);
+    if (open) { body.style.maxHeight = body.scrollHeight + 'px'; setTimeout(function () { if (card.classList.contains('open')) body.style.maxHeight = 'none'; }, 280); }
+    else { body.style.maxHeight = body.scrollHeight + 'px'; void body.offsetHeight; body.style.maxHeight = '0px'; }
+  }
+
+  function howtoCard() {
+    return accHtml('howto', '<span class="acc-text"><span class="acc-title">怎麼用</span></span>', '',
+      '<ol class="steps">' +
+        '<li>先到「設定」新增旅伴，並填好預設匯率（1 日圓 = 幾台幣）。資料會同步，家人打開同一個網址就看到同一份</li>' +
+        '<li>按右下角「<b>＋ 新的一天</b>」新增旅行的日期，一天一天加。每一天是一個大項目，可以收合</li>' +
+        '<li>在某一天右邊按「＋」，或按右下角「＋ 記一筆」：填金額，選<b>誰付的</b>、<b>誰要分攤</b>。日期直接從已新增的天數裡選</li>' +
+        '<li>「結算」會算出每個人該收或該付多少，並列出怎麼轉帳最省事</li>' +
+        '<li>在免稅店買的東西，記帳時勾「在免稅店購買」並填店名。「退稅」分頁會幫你看有沒有達到 ¥5,000</li>' +
+        '<li>看不懂收據，或離境要辦退稅？點畫面<b>左側的小把手</b>，打開「對照表與退稅小抄」</li></ol>', 'card');
+  }
+  function dayCard(date, list) {
+    var total = list.reduce(function (sum, e) { return sum + expenseTwd(e); }, 0);
+    var head = '<span class="acc-text"><span class="acc-title">' + esc(fmtDate(date)) + '</span><span class="acc-sub">' + list.length + ' 筆 · ' + fmtTwd(total) + '</span></span>';
+    var actions = '<button class="btn small" data-day-add="' + date + '" aria-label="在這天記一筆">＋</button><button class="btn ghost small" data-day-menu="' + date + '" aria-label="這天的選項">⋯</button>';
+    var body = list.length ? list.map(expRow).join('') : '<div class="empty" style="padding:10px 0 14px">這天還沒有帳目，按上面的「＋」記一筆</div>';
+    return accHtml('day:' + date, head, actions, body, 'dayacc');
+  }
+  function viewList() {
+    if (!state.members.length) return howtoCard() + viewOnboarding();
+    var exps = sortedExpenses();
+    var total = exps.reduce(function (sum, e) { return sum + expenseTwd(e); }, 0);
+    var html = howtoCard() + '<div class="card"><div class="muted">目前總花費（換算台幣）</div><div class="big">' + fmtTwd(total) + '</div><div class="muted">共 ' + state.days.length + ' 天、' + exps.length + ' 筆</div></div>';
+    if (!state.days.length) return html + '<div class="empty">還沒有任何一天。先按右下角「＋ 新的一天」，再開始記帳</div>';
+    var byDate = {};
+    exps.forEach(function (e) { (byDate[e.date] = byDate[e.date] || []).push(e); });
+    state.days.slice().reverse().forEach(function (d) { html += dayCard(d, byDate[d] || []); });
+    return html;
+  }
+  function viewSettle() {
+    if (!state.members.length) return viewOnboarding();
+    var bal = computeBalances(state.expenses, state.members);
+    var rows = state.members.map(function (m) {
+      var b = bal[m.id]; var net = Math.round(b.net);
+      var cls = net > 0 ? 'pos' : net < 0 ? 'neg' : '';
+      var txt = net > 0 ? '應收 ' + fmtTwd(net) : net < 0 ? '應付 ' + fmtTwd(-net) : '打平';
+      return '<tr><td>' + esc(m.name) + '</td><td>' + fmtTwd(b.paid) + '</td><td>' + fmtTwd(b.owed) + '</td><td class="' + cls + '">' + txt + '</td></tr>';
+    }).join('');
+    var xf = settlements(bal);
+    var xfHtml = xf.length
+      ? xf.map(function (t) { return '<div class="xfer"><span><b>' + esc(memberName(t.from)) + '</b> 付給 <b>' + esc(memberName(t.to)) + '</b></span><b>' + fmtTwd(t.amount) + '</b></div>'; }).join('')
+      : '<div class="empty" style="padding:14px 0 4px">目前不需要互相轉帳</div>';
+    return '<div class="card"><h3>每個人的收支（台幣）</h3><table class="bal"><tr><th>旅伴</th><th>已付</th><th>應分攤</th><th>結果</th></tr>' + rows + '</table></div>' +
+      '<div class="card"><h3>怎麼轉帳最省事</h3>' + xfHtml +
+      '<div class="muted" style="margin-top:10px">每筆帳都用記帳當下鎖定的匯率換成台幣。轉帳金額四捨五入到整數，可能有 NT$1～2 的誤差。</div></div>';
+  }
+  function viewTax() {
+    var groups = taxGroups(state.expenses);
+    var yen = 0, twd = 0;
+    groups.forEach(function (g) { yen += g.refundYen; twd += g.refundTwd; });
+    var html = '<div class="card"><div class="muted">預估可退稅金</div><div class="big">' + fmtYen(yen) + '</div><div class="muted">約 ' + fmtTwd(twd) + '。已排除未達門檻、已用掉的；未扣店家可能收的手續費。</div></div>';
+    if (!groups.length) {
+      html += '<div class="empty">還沒有免稅購物的帳目。記帳時勾選「在免稅店購買」，就會出現在這裡。</div>';
+    }
+    groups.forEach(function (g) {
+      var pct = Math.min(100, Math.round(g.pretax / TAX_THRESHOLD * 100));
+      var status = g.eligible ? '<span class="pos">已達門檻</span>' : '<span class="neg">還差 ' + fmtYen(TAX_THRESHOLD - g.pretax) + '（未稅）</span>';
+      var items = g.entries.map(function (e) {
+        var t = taxInfo(e);
+        return '<div class="mrow"><span>' + esc(e.title) + (e.consumed ? '<span class="tag gray">已用掉，不退</span>' : '') + '<div class="muted">含稅 ' + fmtYen(e.amount) + '，稅 ' + fmtYen(t.tax) + '（' + (Number(e.taxRate) || 10) + '%）</div></span><button class="btn ghost small" data-edit="' + e.id + '">編輯</button></div>';
+      }).join('');
+      html += '<div class="card"><h3>' + esc(g.store) + ' · ' + esc(fmtDate(g.date)) + '</h3><div class="muted">未稅合計 ' + fmtYen(g.pretax) + ' / ' + fmtYen(TAX_THRESHOLD) + '　' + status + '</div><div class="bar' + (g.eligible ? ' ok' : '') + '"><i style="width:' + pct + '%"></i></div>' + items +
+        (g.eligible ? '<div class="muted" style="margin-top:6px">這家店預估可退 ' + fmtYen(g.refundYen) + '</div>' : '') + '</div>';
+    });
+    html += '<div class="card"><h3>看不懂收據，或要辦離境退稅？</h3><div class="muted">收據對照表、離境當天檢查清單、記帳時的重點，都收在左側的抽屜裡。</div><div style="margin-top:10px"><button class="btn small" data-open-drawer>打開對照表與退稅小抄</button></div></div>';
+    return html;
+  }
+  function viewSettings() {
+    var meOpts = '<option value="">（不指定）</option>' + state.members.map(function (m) {
+      return '<option value="' + m.id + '"' + (lsGet('expenses.me') === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>';
+    }).join('');
+    return membersCard() +
+      '<div class="card"><h3>我是誰</h3><div class="muted">這支手機記帳時，「誰付的」會預設成這個人（只存在這支手機）。</div><div style="margin-top:8px"><select id="meSelect">' + meOpts + '</select></div></div>' +
+      '<div class="card"><h3>資料儲存（Firebase 同步）</h3><div class="muted">資料存在你的Firebase，拿到這個網址的家人打開都會看到同一份，不用註冊或登入。斷線時會先存在手機，連上網路後自動補上傳。匯出備份可以另外留一份在自己手上。</div>' +
+      '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small" data-export>匯出備份</button><button class="btn ghost small" data-import>匯入備份</button><button class="btn danger small" data-clear>清除全部資料</button></div>' +
+      (state.localInfo ? '<div class="muted" style="margin-top:12px">這支手機還有以前只存在手機的資料（' + state.localInfo.members + ' 位旅伴、' + state.localInfo.expenses + ' 筆帳目）。</div><div style="margin-top:8px"><button class="btn small" data-mig-upload>上傳到Firebase</button></div>' : '') + '</div>' +
+      '<div class="card"><h3>預設匯率</h3><div class="muted">1 日圓 = ? 台幣。記日圓帳目時會自動帶入。每一筆記下後匯率就鎖定，之後再改預設匯率，不會影響已經記的帳。</div>' +
+      '<div class="row" style="margin-top:8px"><input type="number" id="rateInput" step="0.0001" min="0" inputmode="decimal" placeholder="例如 0.2" value="' + (state.rate || '') + '"></div></div>';
+  }
+
+  // ------------------------------------------------------------------ render
+  function viewHasFocusedInput() {
+    var a = root.activeElement;
+    return !!(a && (a.tagName === 'INPUT' || a.tagName === 'SELECT') && $('view').contains(a));
+  }
+  function renderBanner() {
+    var el = $('banner'), html = '';
+    if (state.storageMessage) html += '<div>' + esc(state.storageMessage) + '</div>';
+    var li = state.localInfo;
+    if (li && !state.loading && lsGet('expenses.migrateSkip') !== '1') {
+      html += '<div>這支手機還有以前「只存在手機」的記帳資料（' + li.members + ' 位旅伴、' + li.expenses + ' 筆帳目）。要上傳到Firebase，讓家人也看得到嗎？' +
+        '<div class="mig"><button class="btn small" data-mig-upload>上傳到Firebase</button><button class="btn ghost small" data-mig-skip>先不要</button></div></div>';
+    }
+    el.innerHTML = html;
+  }
+  function renderModeTag() {
+    var el = $('modeTag'); if (!el) return;
+    var T = { loading: '連線中…', synced: '已同步', pending: '同步中…', offline: '離線（暫存）' };
+    el.textContent = T[state.sync] || T.loading;
+  }
+  function uploadLocalData(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '上傳中…'; }
+    Store.migrateLocal().then(function (counts) {
+      state.localInfo = Store.localInfo(); renderBanner(); renderView(true);
+      if (counts) toast('已上傳 ' + counts.members + ' 位旅伴、' + counts.expenses + ' 筆帳目到Firebase');
+      else if (btn) { btn.disabled = false; btn.textContent = '上傳到Firebase'; }
+    });
+  }
+  function renderTabs() {
+    var T = [['list', '明細'], ['settle', '結算'], ['tax', '退稅'], ['settings', '設定']];
+    $('tabs').innerHTML = T.map(function (t) {
+      return '<button data-tab="' + t[0] + '" class="' + (state.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
+    }).join('');
+  }
+  function renderView(force) {
+    if (!force && viewHasFocusedInput()) { renderPending = true; return; }
+    renderPending = false;
+    var html = state.loading ? '<div class="card"><div class="muted">正在讀取資料…</div></div>'
+      : state.tab === 'settle' ? viewSettle() : state.tab === 'tax' ? viewTax() : state.tab === 'settings' ? viewSettings() : viewList();
+    $('view').innerHTML = html;
+  }
+  function renderAll() { renderBanner(); renderModeTag(); renderTabs(); renderView(); }
+
+  // ------------------------------------------------------------------ data actions
+  function addMember(name) {
+    name = String(name || '').trim(); if (!name) return false;
+    if (state.members.some(function (m) { return m.name === name; })) { toast('已經有「' + name + '」了'); return false; }
+    Store.addMember(name); return true;
+  }
+  function memberInUse(id) {
+    return state.expenses.some(function (e) { return e.payerId === id || (e.participantIds || []).indexOf(id) > -1; });
+  }
+  function deleteMember(id) {
+    if (memberInUse(id)) { toast('已有帳目用到「' + memberName(id) + '」，無法刪除（可以改名）'); return; }
+    confirmBox('確定要刪除旅伴「' + memberName(id) + '」嗎？', '刪除', function () { Store.deleteMember(id); });
+  }
+  function renameMember(id) {
+    askText('旅伴名稱', memberName(id), function (v) { Store.updateMember(id, { name: v }); });
+  }
+  function saveRate(v) {
+    var r = parseFloat(v);
+    if (!(r > 0)) return;
+    Store.saveSettings({ rate: r });
+  }
+
+  function copyText(text, ta) {
+    function legacy() { try { ta.focus(); ta.select(); ta.setSelectionRange(0, text.length); return !!document.execCommand('copy'); } catch (e) { return false; } }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return legacy(); });
+    }
+    return Promise.resolve(legacy());
+  }
+  function canDownload() { return !!(window.Blob && window.URL && window.URL.createObjectURL); }
+  function downloadText(name, text) {
+    var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+    var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+  function openExport() {
+    var json = Store.exportJson();
+    openDialog('<p><b>匯出備份</b></p><textarea id="bkText" readonly rows="7">' + esc(json) + '</textarea>' +
+      '<div class="hint">複製後貼到備忘錄，或傳給自己保存。之後可以用「匯入備份」還原。</div>' +
+      '<div class="row" style="margin-top:12px"><button class="btn ghost" style="flex:1" data-close>關閉</button><button class="btn" style="flex:1" data-copy>複製</button></div>' +
+      (canDownload() ? '<button class="btn ghost" style="width:100%;margin-top:8px" data-download>下載成檔案</button>' : ''),
+      function (w, close) {
+        var ta = w.querySelector('#bkText');
+        w.querySelector('[data-close]').addEventListener('click', close);
+        w.querySelector('[data-copy]').addEventListener('click', function () {
+          copyText(json, ta).then(function (ok) { toast(ok ? '已複製' : '請長按文字框，自己選取並複製'); });
+        });
+        var dl = w.querySelector('[data-download]');
+        if (dl) dl.addEventListener('click', function () {
+          var d = new Date(); var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+          downloadText('trip-expenses-' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json', json);
+        });
+      });
+  }
+  function openImport() {
+    openDialog('<p><b>匯入備份</b></p><textarea id="impText" rows="7" placeholder="把備份內容貼在這裡"></textarea>' +
+      '<div class="hint">匯入會<b>取代</b>目前這支手機上的所有資料。</div><div class="derr" id="impErr"></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-close>取消</button><button class="btn" style="flex:1" data-go>匯入</button></div>',
+      function (w, close) {
+        w.querySelector('[data-close]').addEventListener('click', close);
+        w.querySelector('[data-go]').addEventListener('click', function () {
+          var text = w.querySelector('#impText').value;
+          var err = w.querySelector('#impErr');
+          if (!text.trim()) { err.textContent = '請先貼上備份內容'; return; }
+          var pre = Store.previewImport(text);
+          if (!pre.ok) { err.textContent = pre.error; return; }
+          err.textContent = '';
+          function doImport() {
+            var res = Store.importJson(text);
+            if (!res.ok) { err.textContent = res.error; return; }
+            close();
+            toast('已匯入 ' + res.members + ' 位旅伴、' + res.expenses + ' 筆帳目' + (res.skipped ? '（略過 ' + res.skipped + ' 筆格式不正確的）' : ''));
+          }
+          if (state.members.length || state.expenses.length) {
+            confirmBox('Firebase 上目前的 ' + state.members.length + ' 位旅伴、' + state.expenses.length + ' 筆帳目會被取代，而且所有人的手機都會一起變成備份的內容（備份裡有 ' + pre.members + ' 位旅伴、' + pre.expenses + ' 筆帳目）。確定嗎？', '匯入', doImport);
+          } else { doImport(); }
+        });
+      });
+  }
+  function clearAllData() {
+    confirmBox('這會刪除 Firebase 上所有的旅伴、日期和帳目，所有人的手機都會一起清空，無法復原。確定要清除嗎？（建議先匯出備份）', '全部清除', function () { Store.clearAll().then(function (ok) { if (ok) toast('已清除'); }); });
+  }
+
+  // ------------------------------------------------------------------ days (the major items)
+  function dayCount(date) { return state.expenses.filter(function (e) { return e.date === date; }).length; }
+  function nextDayDefault() { return state.days.length ? addDays(state.days[state.days.length - 1], 1) : todayStr(); }
+  function openNewDay() {
+    openDialog('<p><b>新的一天</b></p><label class="dl" for="dayDate">日期</label><input type="date" id="dayDate" value="' + esc(nextDayDefault()) + '">' +
+      '<div class="hint">按「新增」後，這一天就會出現在明細裡，記帳時直接從這些天選。</div><div class="derr" id="dayErr"></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1" data-ok>新增</button></div>',
+      function (w, close) {
+        w.querySelector('[data-no]').addEventListener('click', close);
+        w.querySelector('[data-ok]').addEventListener('click', function () {
+          var v = w.querySelector('#dayDate').value, err = w.querySelector('#dayErr');
+          var r = Store.addDay(v);
+          if (!r.ok) { err.textContent = r.error; return; }
+          setAccClosed('day:' + v, false); close(); toast('已新增 ' + fmtDate(v));
+        });
+      });
+  }
+  function openChangeDay(date) {
+    var n = dayCount(date);
+    openDialog('<p><b>改日期</b></p><label class="dl" for="dayDate2">' + esc(fmtDate(date)) + ' 改成</label><input type="date" id="dayDate2" value="' + esc(date) + '">' +
+      (n ? '<div class="hint">這天的 ' + n + ' 筆帳目會一起改成新日期。</div>' : '') + '<div class="derr" id="dayErr2"></div>' +
+      '<div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1" data-ok>確定</button></div>',
+      function (w, close) {
+        w.querySelector('[data-no]').addEventListener('click', close);
+        w.querySelector('[data-ok]').addEventListener('click', function () {
+          var v = w.querySelector('#dayDate2').value, err = w.querySelector('#dayErr2');
+          var r = Store.moveDay(date, v);
+          if (!r.ok) { err.textContent = r.error; return; }
+          if (isAccClosed('day:' + date)) { setAccClosed('day:' + date, false); setAccClosed('day:' + v, true); }
+          close();
+        });
+      });
+  }
+  function deleteDayFlow(date) {
+    var n = dayCount(date);
+    if (n) { toast(fmtDate(date) + ' 還有 ' + n + ' 筆帳目，請先刪除，或編輯帳目改到別天'); return; }
+    confirmBox('確定要刪除 ' + fmtDate(date) + ' 嗎？', '刪除', function () { Store.deleteDay(date); });
+  }
+  function openDayMenu(date) {
+    openDialog('<p><b>' + esc(fmtDate(date)) + '</b>　' + dayCount(date) + ' 筆帳目</p><div class="stack"><button class="btn ghost" data-change>改日期</button><button class="btn danger" data-del>刪除這天</button><button class="btn ghost" data-no>取消</button></div>',
+      function (w, close) {
+        w.querySelector('[data-no]').addEventListener('click', close);
+        w.querySelector('[data-change]').addEventListener('click', function () { close(); openChangeDay(date); });
+        w.querySelector('[data-del]').addEventListener('click', function () { close(); deleteDayFlow(date); });
+      });
+  }
+
+  // ------------------------------------------------------------------ expense form
+  function defaultDay(preset) {
+    if (preset && state.days.indexOf(preset) > -1) return preset;
+    var t = todayStr();
+    return state.days.indexOf(t) > -1 ? t : state.days[state.days.length - 1];
+  }
+  function newFormState(presetDate) {
+    var me = lsGet('expenses.me');
+    var payer = state.members.some(function (m) { return m.id === me; }) ? me : state.members[0].id;
+    return { date: defaultDay(presetDate), title: '', category: '餐飲', currency: 'JPY', amount: '', rate: state.rate ? String(state.rate) : '',
+      payerId: payer, participantIds: state.members.map(function (m) { return m.id; }), taxFree: false, store: '', taxRate: 10, consumed: false };
+  }
+  function formFromExpense(e) {
+    return { date: e.date, title: e.title, category: e.category, currency: e.currency, amount: String(e.amount),
+      rate: e.currency === 'JPY' ? String(e.rate) : (state.rate ? String(state.rate) : ''),
+      payerId: e.payerId, participantIds: (e.participantIds || []).slice(), taxFree: !!e.taxFree, store: e.store || '',
+      taxRate: Number(e.taxRate) || 10, consumed: !!e.consumed };
+  }
+  function formHtml(f, isEdit) {
+    var chips = state.members.map(function (m) {
+      return '<button type="button" class="chip' + (f.participantIds.indexOf(m.id) > -1 ? ' on' : '') + '" data-part="' + m.id + '">' + esc(m.name) + '</button>';
+    }).join('');
+    var payer = state.members.map(function (m) { return '<option value="' + m.id + '"' + (m.id === f.payerId ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
+    var dayOpts = state.days.slice().reverse().map(function (d) { return '<option value="' + d + '"' + (d === f.date ? ' selected' : '') + '>' + esc(fmtDate(d)) + '</option>'; }).join('');
+    if (f.date && state.days.indexOf(f.date) === -1) dayOpts = '<option value="' + esc(f.date) + '" selected>' + esc(fmtDate(f.date)) + '</option>' + dayOpts;
+    var cats = CATEGORIES.map(function (c) { return '<option' + (c.label === f.category ? ' selected' : '') + '>' + c.label + '</option>'; }).join('');
+    return '<div class="sheet"><div class="sheet-top"><button class="btn ghost small" data-f="cancel">取消</button><b>' + (isEdit ? '編輯帳目' : '記一筆') + '</b><button class="btn small" data-f="save">儲存</button></div><div class="sheet-body">' +
+      '<label class="f" for="f_date">日期（從已新增的天數選）</label><select id="f_date">' + dayOpts + '</select><div class="hint tight">沒有想要的日期？先取消，按右下角「＋ 新的一天」新增。</div>' +
+      '<label class="f" for="f_title">品項</label><input type="text" id="f_title" placeholder="例如：拉麵、Suica儲值" value="' + esc(f.title) + '">' +
+      '<label class="f" for="f_category">分類</label><select id="f_category">' + cats + '</select>' +
+      '<label class="f">幣別</label><div class="seg"><button type="button" data-cur="JPY" class="' + (f.currency === 'JPY' ? 'on' : '') + '">日圓 ¥</button><button type="button" data-cur="TWD" class="' + (f.currency === 'TWD' ? 'on' : '') + '">台幣 NT$</button></div>' +
+      '<label class="f" for="f_amount">金額（含稅、實際付的）</label><input type="number" id="f_amount" inputmode="decimal" min="0" step="any" placeholder="0" value="' + esc(f.amount) + '">' +
+      '<div id="f_rateWrap"><label class="f" for="f_rate">匯率：1 日圓 = ? 台幣</label><input type="number" id="f_rate" inputmode="decimal" min="0" step="any" placeholder="例如 0.2" value="' + esc(f.rate) + '"><div class="hint" id="f_twdPreview"></div></div>' +
+      '<label class="f" for="f_payer">誰付的</label><select id="f_payer">' + payer + '</select>' +
+      '<label class="f">誰要分攤（平均分）</label><div>' + chips + '<button type="button" class="chip" data-allparts="1">全選</button></div><div class="hint" id="f_shares"></div>' +
+      '<div id="f_taxWrap" class="box"><label class="check" style="margin-top:0"><input type="checkbox" id="f_taxfree"' + (f.taxFree ? ' checked' : '') + '><span>在免稅店購買，打算辦退稅</span></label>' +
+      '<div id="f_taxFields"><label class="f" for="f_store">店名（同一家店請寫一樣）</label><input type="text" id="f_store" placeholder="例如：Bic Camera 池袋" value="' + esc(f.store) + '"><div class="hist" id="f_storeHist"></div>' +
+      '<label class="f">稅率</label><div class="seg"><button type="button" data-taxrate="10" class="' + (f.taxRate === 10 ? 'on' : '') + '">10%（一般商品）</button><button type="button" data-taxrate="8" class="' + (f.taxRate === 8 ? 'on' : '') + '">8%（食品飲料）</button></div>' +
+      '<label class="check"><input type="checkbox" id="f_consumed"' + (f.consumed ? ' checked' : '') + '><span>已經吃掉或用掉（不能退稅）</span></label><div class="hint" id="f_taxPreview"></div></div></div>' +
+      '<div class="err" id="fError"></div>' +
+      (isEdit ? '<button class="btn danger" style="width:100%;margin-top:14px" data-f="delete">刪除這筆帳目</button>' : '') +
+      '</div></div>';
+  }
+  function applyFormVisibility() {
+    var f = formState;
+    var jpy = f.currency === 'JPY';
+    var canTax = jpy && isGoods(f.category);
+    var q = function (id) { return $(id); };
+    q('f_rateWrap').style.display = jpy ? '' : 'none';
+    q('f_taxWrap').style.display = canTax ? '' : 'none';
+    q('f_taxFields').style.display = (canTax && f.taxFree) ? '' : 'none';
+    Array.prototype.forEach.call(root.querySelectorAll('[data-cur]'), function (b) { b.className = b.getAttribute('data-cur') === f.currency ? 'on' : ''; });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-taxrate]'), function (b) { b.className = Number(b.getAttribute('data-taxrate')) === f.taxRate ? 'on' : ''; });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-part]'), function (b) { b.className = 'chip' + (f.participantIds.indexOf(b.getAttribute('data-part')) > -1 ? ' on' : ''); });
+    updateFormPreview();
+  }
+  // Store names typed before (newest first, one per store), so a later purchase can just tap one.
+  // Same spelling = same store, which is what makes the 5,000-yen threshold add up.
+  function storeHistory() {
+    var seen = {}, out = [];
+    state.expenses.slice().sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    }).forEach(function (e) {
+      var n = String(e.store || '').trim(), k = n.toLowerCase();
+      if (n && !seen[k]) { seen[k] = 1; out.push(n); }
+    });
+    return out;
+  }
+  function renderStoreHistory() {
+    var el = $('f_storeHist');
+    if (!el || !formState) return;
+    var typed = String(formState.store || '').trim().toLowerCase();
+    var list = storeHistory().filter(function (n) { return !typed || n.toLowerCase().indexOf(typed) > -1; }).slice(0, 10);
+    el.innerHTML = list.length
+      ? '<div class="lab">以前填過的店名，點一下就填入</div>' + list.map(function (n) {
+          return '<button type="button" class="chip sm' + (n.toLowerCase() === typed ? ' on' : '') + '" data-store="' + esc(n) + '">' + esc(n) + '</button>';
+        }).join('')
+      : '';
+  }
+  function updateFormPreview() {
+    var f = formState, q = function (id) { return $(id); };
+    var amt = parseFloat(f.amount), rate = parseFloat(f.rate);
+    var jpy = f.currency === 'JPY';
+    q('f_twdPreview').textContent = (jpy && amt > 0 && rate > 0) ? '≈ ' + fmtTwd(amt * rate) : '';
+    var shareEl = q('f_shares');
+    if (amt > 0 && f.participantIds.length) {
+      var ordered = state.members.filter(function (m) { return f.participantIds.indexOf(m.id) > -1; });
+      var sh = splitMinor(minorOf(amt, f.currency), ordered.map(function (m) { return m.id; }));
+      shareEl.textContent = ordered.map(function (m) { return m.name + ' ' + (jpy ? fmtYen(sh[m.id]) : fmtTwd(sh[m.id] / 100)); }).join('　');
+    } else { shareEl.textContent = ''; }
+    var tp = q('f_taxPreview');
+    if (jpy && f.taxFree && amt > 0) {
+      var t = taxInfo({ taxFree: true, currency: 'JPY', amount: Math.round(amt), taxRate: f.taxRate });
+      tp.textContent = '未稅 ' + fmtYen(t.pretax) + '，稅金 ' + fmtYen(t.tax) + '（同店同日未稅滿 ' + fmtYen(TAX_THRESHOLD) + ' 才能退）';
+    } else { tp.textContent = ''; }
+    renderStoreHistory();
+  }
+  function openForm(exp, presetDate) {
+    if (state.loading) { toast('資料還在讀取中，請稍候'); return; }
+    if (!state.members.length) { state.tab = 'settings'; renderAll(); toast('請先新增旅伴'); return; }
+    if (!state.days.length) { toast('先新增一天，才能記帳'); openNewDay(); return; }
+    formState = exp ? formFromExpense(exp) : newFormState(presetDate);
+    formId = exp ? exp.id : null;
+    var layer = $('sheetLayer');
+    layer.innerHTML = formHtml(formState, !!exp);
+    applyFormVisibility();
+    var sheet = layer.querySelector('.sheet');
+    sheet.addEventListener('input', function (e) {
+      var id = e.target.id, f = formState;
+      if (id === 'f_amount') f.amount = e.target.value;
+      else if (id === 'f_rate') f.rate = e.target.value;
+      else if (id === 'f_title') f.title = e.target.value;
+      else if (id === 'f_store') f.store = e.target.value;
+      else if (id === 'f_date') f.date = e.target.value;
+      else return;
+      updateFormPreview();
+    });
+    sheet.addEventListener('change', function (e) {
+      var id = e.target.id, f = formState;
+      if (id === 'f_category') f.category = e.target.value;
+      else if (id === 'f_payer') f.payerId = e.target.value;
+      else if (id === 'f_taxfree') f.taxFree = e.target.checked;
+      else if (id === 'f_consumed') f.consumed = e.target.checked;
+      else if (id === 'f_date') f.date = e.target.value;
+      else return;
+      applyFormVisibility();
+    });
+    sheet.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('button') : null; if (!t) return;
+      var f = formState;
+      if (t.hasAttribute('data-cur')) { f.currency = t.getAttribute('data-cur'); applyFormVisibility(); }
+      else if (t.hasAttribute('data-store')) {
+        f.store = t.getAttribute('data-store');
+        var si = $('f_store'); si.value = f.store; si.blur();
+        updateFormPreview();
+      }
+      else if (t.hasAttribute('data-taxrate')) { f.taxRate = Number(t.getAttribute('data-taxrate')); applyFormVisibility(); }
+      else if (t.hasAttribute('data-part')) {
+        var id = t.getAttribute('data-part'), i = f.participantIds.indexOf(id);
+        if (i > -1) f.participantIds.splice(i, 1); else f.participantIds.push(id);
+        applyFormVisibility();
+      }
+      else if (t.hasAttribute('data-allparts')) { f.participantIds = state.members.map(function (m) { return m.id; }); applyFormVisibility(); }
+      else if (t.getAttribute('data-f') === 'cancel') closeForm();
+      else if (t.getAttribute('data-f') === 'save') saveForm();
+      else if (t.getAttribute('data-f') === 'delete') {
+        confirmBox('確定要刪除這筆帳目嗎？', '刪除', function () {
+          Store.deleteExpense(formId);
+          closeForm();
+        });
+      }
+    });
+    if (!exp) setTimeout(function () { var a = $('f_amount'); if (a) a.focus(); }, 60);
+  }
+  function closeForm() {
+    $('sheetLayer').innerHTML = '';
+    formState = null; formId = null;
+    syncBodyScroll();
+    if (renderPending) renderView();
+  }
+  function setFormError(msg) { var el = $('fError'); if (el) el.textContent = msg || ''; }
+  function saveForm() {
+    var f = formState; if (!f) return;
+    var amount = parseFloat(f.amount), rate = parseFloat(f.rate);
+    if (!(amount > 0)) { setFormError('請輸入金額'); return; }
+    if (!f.date) { setFormError('請選日期'); return; }
+    var jpy = f.currency === 'JPY';
+    if (jpy) { amount = Math.round(amount); if (!(rate > 0)) { setFormError('請輸入匯率（1 日圓 = ? 台幣）'); return; } }
+    else { amount = Math.round(amount * 100) / 100; rate = 1; }
+    if (!f.payerId) { setFormError('請選擇誰付的'); return; }
+    if (!f.participantIds.length) { setFormError('請至少選一位分攤的人'); return; }
+    var canTax = jpy && isGoods(f.category);
+    var taxFree = canTax && f.taxFree;
+    if (taxFree && !String(f.store).trim()) { setFormError('請填店名，同一家店同一天才會合併計算門檻'); return; }
+    var ordered = state.members.filter(function (m) { return f.participantIds.indexOf(m.id) > -1; }).map(function (m) { return m.id; });
+    var existing = null;
+    if (formId) state.expenses.forEach(function (e) { if (e.id === formId) existing = e; });
+    var data = {
+      date: f.date, title: String(f.title).trim() || f.category, category: f.category, currency: f.currency,
+      amount: amount, rate: rate, payerId: f.payerId, participantIds: ordered,
+      taxFree: !!taxFree, store: taxFree ? String(f.store).trim() : '', taxRate: Number(f.taxRate) || 10, consumed: !!(taxFree && f.consumed),
+      createdAt: existing && existing.createdAt ? existing.createdAt : Date.now()
+    };
+    setAccClosed('day:' + data.date, false);
+    if (formId) Store.setExpense(formId, data); else Store.addExpense(data);
+    if (jpy && state.rate !== rate) Store.saveSettings({ rate: rate });
+    closeForm();
+  }
+
+  // ------------------------------------------------------------------ side drawer (glossary + refund cheat sheet)
+  var GLOSSARY = [
+    ['合計／お会計', '總計。記帳要填的是含稅的這個數字'],
+    ['小計', '小計，不一定是最後要付的金額'],
+    ['税込／税抜', '含稅／未稅'],
+    ['内消費税（等）', '內含的消費稅金額'],
+    ['8%対象／10%対象', '適用 8%／10% 稅率的金額'],
+    ['軽減税率、※', '適用 8% 的減稅稅率商品，常用 ※ 標記'],
+    ['免税', '免稅'],
+    ['お預り／お釣り', '你給的錢／找零'],
+    ['現金／クレジット', '現金／信用卡']
+  ];
+  function drawerHtml() {
+    var rows = GLOSSARY.map(function (g) {
+      var term = g[0].split('／').map(function (part) { return '<span class="nw">' + esc(part) + '</span>'; }).join('／<wbr>');
+      return '<tr><td class="jp">' + term + '</td><td>' + esc(g[1]) + '</td></tr>';
+    }).join('');
+    return '<div class="dhead"><b>對照表與退稅小抄</b><button class="dclose" id="drawerClose" aria-label="關閉">✕</button></div>' +
+      '<div class="dsec"><h4>收據對照表</h4><table class="gloss">' + rows + '</table>' +
+      '<div class="muted" style="margin-top:8px">看不懂時，可以用 iPhone 的「翻譯」App 相機。出發前先下載日文語言包，就能離線使用。金額和稅率請自己再看一眼。</div></div>' +
+      '<div class="dsec"><h4>離境當天檢查清單</h4><div class="muted">日本觀光廳規定（2026年11月起適用）</div><ol class="steps">' +
+      '<li>到機場後，先找<b>免稅手續機台</b>（出境大廳，在託運行李<b>之前</b>）</li>' +
+      '<li>免稅商品和收據都帶在身邊，不要先託運</li>' +
+      '<li>掃護照：綠燈＝完成；紅燈＝把商品帶到海關查驗區</li>' +
+      '<li>成田也可用 Visit Japan Web，在專用Wi‑Fi區網路辦理（到安檢前）</li>' +
+      '<li>已經吃掉或用掉的商品，不要在機台辦理，改向海關櫃台說明</li>' +
+      '<li>辦完退稅，再託運行李、報到登機</li></ol></div>' +
+      '<div class="dsec"><h4>記帳時的重點</h4><ul class="notes">' +
+      '<li>同一家店、同一天，<b>未稅</b>合計滿 ¥5,000 才能退</li>' +
+      '<li>整張收據一起算：少一件或吃掉一件，整張都不能退。要吃掉／用掉的和要帶回台灣的，請分開結帳、分開記帳</li>' +
+      '<li>只有「商品」能退，餐飲、住宿、交通、門票不行</li>' +
+      '<li>店名請每次寫一樣，才會合併計算</li>' +
+      '<li>退款方式和手續費依店家而定，結帳時記得問</li></ul></div>';
+  }
+  var drawerOpen = false;
+  function syncBodyScroll() { /* the page behind is locked by the host while this screen is open */ }
+  function openDrawer() {
+    var d = $('drawer');
+    drawerOpen = true; d.scrollTop = 0;
+    d.className = 'drawer open'; d.setAttribute('aria-hidden', 'false');
+    $('drawerMask').className = 'dmask open';
+    syncBodyScroll();
+  }
+  function closeDrawer() {
+    var d = $('drawer');
+    drawerOpen = false;
+    d.className = 'drawer'; d.setAttribute('aria-hidden', 'true');
+    $('drawerMask').className = 'dmask';
+    syncBodyScroll();
+  }
+  function bindDrawer() {
+    $('drawer').innerHTML = drawerHtml();
+    $('drawerHandle').addEventListener('click', openDrawer);
+    $('drawerMask').addEventListener('click', closeDrawer);
+    $('drawerClose').addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && drawerOpen) closeDrawer(); });
+    // swipe: right from the left edge opens, left inside the drawer closes (mostly-horizontal drags only)
+    function swipe(el, onSwipe) {
+      var sx = null, sy = null;
+      el.addEventListener('touchstart', function (e) { var t = e.touches && e.touches[0]; if (t) { sx = t.clientX; sy = t.clientY; } }, { passive: true });
+      el.addEventListener('touchend', function (e) {
+        var t = e.changedTouches && e.changedTouches[0];
+        if (sx !== null && t) { var dx = t.clientX - sx, dy = t.clientY - sy; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) onSwipe(dx); }
+        sx = null; sy = null;
+      }, { passive: true });
+    }
+    swipe($('edgeStrip'), function (dx) { if (dx > 0) openDrawer(); });
+    swipe($('drawer'), function (dx) { if (dx < 0) closeDrawer(); });
+  }
+
+  // ------------------------------------------------------------------ events
+  function bindStatic() {
+    $('fab').addEventListener('click', function () { openForm(null); });
+    $('fabDay').addEventListener('click', openNewDay);
+    $('banner').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
+      if (b.hasAttribute('data-mig-upload')) uploadLocalData(b);
+      else if (b.hasAttribute('data-mig-skip')) { lsSet('expenses.migrateSkip', '1'); renderBanner(); }
+    });
+    $('tabs').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-tab]') : null; if (!b) return;
+      state.tab = b.getAttribute('data-tab'); renderTabs(); renderView(true); $('scroll').scrollTop = 0;
+    });
+    var view = $('view');
+    view.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('button') : null; if (!t) return;
+      if (t.hasAttribute('data-acc-toggle')) toggleAcc(t.closest('.acc'));
+      else if (t.hasAttribute('data-day-add')) openForm(null, t.getAttribute('data-day-add'));
+      else if (t.hasAttribute('data-day-menu')) openDayMenu(t.getAttribute('data-day-menu'));
+      else if (t.hasAttribute('data-edit')) {
+        var id = t.getAttribute('data-edit'), found = null;
+        state.expenses.forEach(function (x) { if (x.id === id) found = x; });
+        if (found) openForm(found);
+      }
+      else if (t.hasAttribute('data-add-member')) {
+        var inp = $('newMember');
+        var v = inp ? inp.value : '';
+        if (addMember(v) && inp) inp.value = '';
+        renderView(true);
+        var again = $('newMember'); if (again && !v.trim()) again.focus();
+      }
+      else if (t.hasAttribute('data-open-drawer')) openDrawer();
+      else if (t.hasAttribute('data-mig-upload')) uploadLocalData(t);
+      else if (t.hasAttribute('data-export')) openExport();
+      else if (t.hasAttribute('data-import')) openImport();
+      else if (t.hasAttribute('data-clear')) clearAllData();
+      else if (t.hasAttribute('data-del-member')) deleteMember(t.getAttribute('data-del-member'));
+      else if (t.hasAttribute('data-rename')) renameMember(t.getAttribute('data-rename'));
+    });
+    view.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.id === 'newMember') {
+        var v = e.target.value;
+        if (addMember(v)) e.target.value = '';
+        renderView(true);
+        var again = $('newMember'); if (again) again.focus();
+      }
+    });
+    view.addEventListener('change', function (e) {
+      if (e.target.id === 'rateInput') saveRate(e.target.value);
+      if (e.target.id === 'meSelect') lsSet('expenses.me', e.target.value);
+    });
+    view.addEventListener('focusout', function () {
+      setTimeout(function () { if (renderPending && !viewHasFocusedInput()) renderView(); }, 250);
+    });
+  }
+
+  // ------------------------------------------------------------------ boot (called once, with the shadow root)
+  function mount(shadowRoot) {
+    root = shadowRoot;
+    if (lsGet('expenses.howto') === 'closed') { setAccClosed('howto', true); try { window.localStorage.removeItem('expenses.howto'); } catch (e) { /* ignore */ } }   // older versions
+    bindStatic();
+    bindDrawer();
+    Store.start({
+      onMembers: function (list) { state.members = list.sort(function (a, b) { return (a.order || 0) - (b.order || 0); }); renderAll(); },
+      onExpenses: function (list) { state.expenses = list; renderView(); },
+      onDays: function (list) { state.days = list.map(function (d) { return d.date; }).sort(); renderView(); },
+      onSettings: function (st) { state.rate = st && st.rate > 0 ? Number(st.rate) : null; renderView(); },
+      onStatus: function (st) {
+        if (st.message !== undefined) state.storageMessage = st.message;
+        if (st.sync) { state.sync = st.sync; if (st.sync === 'synced') state.storageMessage = ''; }
+        renderBanner(); renderModeTag();
+      },
+      onReady: function () { state.loading = false; state.localInfo = Store.localInfo(); renderAll(); }
+    });
+    renderAll();
+  }
+  window.ExpenseApp = { mount: mount };
+})();
+</script>
+<script>
+(function () {
+  "use strict";
+  // Hosts the expense screen inside this page: an isolated container (shadow DOM) so its styles and ids can never
+  // clash with the guide, started at page load so the data is already here when the wallet icon is tapped.
+  var host = document.getElementById('expHost');
+  var isOpen = false, pushed = false, mounted = false;
+  function mountOnce() {
+    if (mounted) return; mounted = true;
+    try {
+      var shadow = host.attachShadow({ mode: 'open' });
+      shadow.appendChild(document.getElementById('expTemplate').content.cloneNode(true));
+      window.ExpenseApp.mount(shadow);
+      shadow.getElementById('expBack').addEventListener('click', close);
+    } catch (e) { console.error('expense screen failed to start', e); }
+  }
+  function hide() {
+    if (!isOpen) return;
+    isOpen = false; host.classList.remove('open'); document.body.style.overflow = '';
+  }
+  function open() {
+    if (isOpen) return;
+    isOpen = true; host.classList.add('open'); document.body.style.overflow = 'hidden';
+    try { history.pushState({ exp: 1 }, ''); pushed = true; } catch (e) { pushed = false; }   // so the phone's back gesture closes it
+  }
+  function close() {
+    if (pushed) {
+      pushed = false;
+      try { history.back(); setTimeout(hide, 350); return; } catch (e) { /* fall through */ }
+    }
+    hide();
+  }
+  window.addEventListener('popstate', function () { pushed = false; hide(); });
+  window.ExpenseHost = { open: open, close: close, isOpen: function () { return isOpen; } };
+  mountOnce();
 })();
 </script>
 </body>
