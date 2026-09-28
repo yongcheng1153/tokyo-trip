@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>東京親子7日遊懶人包</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.1/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.1/firebase-firestore-compat.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #FBF1E4; --card: #FFFFFF; --text: #4A3626; --muted: #9C8770;
+    --tan: #B9713F; --tan-deep: #8B5E34; --line: #EADFCB;
+    --accent: #E8A085; --amber: #A65C1E; --amberbg: #FDF0E4; --amberline: #F0C9A0;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    color: var(--text); overflow-x: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  a { color: var(--tan); text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+  input[type="checkbox"] { width: 18px; height: 18px; accent-color: #C97B4A; cursor: pointer; flex-shrink: 0; }
+  input[type="text"] { font-family: inherit; background: #FFFFFF; color: #4A3626; -webkit-text-fill-color: #4A3626; }
+  .fredoka { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 14px 12px 40px; }
+  .card { background: var(--card); border-radius: 16px; padding: 14px; margin-bottom: 10px; box-shadow: 0 4px 14px rgba(139,94,52,0.1); }
+  .card h3 { margin: 0; font-size: 14px; color: #5A3A1E; }
+  .card-head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
+  .btn-icon { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: none; box-shadow: 0 3px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; }
+  .pill { border-radius: 999px; padding: 7px 12px; font-size: 11.5px; font-weight: 700; border: none; white-space: nowrap; }
+  .tag { background: #FBEADA; color: var(--tan); font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
+  .modal-mask { position: fixed; inset: 0; background: rgba(74,54,38,0.45); z-index: 60; }
+  .modal-box { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 86%; max-width: 380px; max-height: 78vh; overflow-y: auto; background: #fff; border-radius: 18px; z-index: 61; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  .modal-box-top { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); width: 86%; max-width: 300px; height: auto; background: #fff; border-radius: 14px; z-index: 71; padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .close-x { background: #FBF1E4; border: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .drawer { position: fixed; top: 0; left: 0; height: 100vh; width: 50%; min-width: 220px; max-width: 300px; background: #fff; z-index: 51; transition: transform 0.25s ease; overflow-y: auto; box-shadow: 6px 0 24px rgba(0,0,0,0.18); padding: 16px 10px 30px; transform: translateX(-100%); }
+  .drawer.open { transform: translateX(0); }
+  .edge-strip { position: fixed; left: 0; top: 0; width: 24px; height: 100vh; z-index: 44; background: transparent; }
+  .handle { position: fixed; left: 0; top: 50%; transform: translateY(-50%); background: var(--tan-deep); color: #fff; border: none; padding: 14px 7px; border-radius: 0 14px 14px 0; box-shadow: 3px 3px 10px rgba(0,0,0,0.15); z-index: 45; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .toolbar { position: fixed; top: 14px; right: 12px; z-index: 46; display: flex; flex-direction: column; gap: 8px; }
+  .place-row, .booking-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #FBF1E4; border-radius: 11px; padding: 10px; }
+  .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+  .drag-handle { flex-shrink: 0; padding: 4px; touch-action: none; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // Static content (itinerary, weather, transport, booking, accommodation)
+  // ---------------------------------------------------------------------
+  var DAYS = [
+    {
+      id: 'd1', label: '12/4 抵達日', title: 'Day 1．抵達日．池袋周邊',
+      items: [
+        { time: '10:40', name: '成田機場抵達', desc: '入境領行李，購買Suica／Pasmo交通卡' },
+        { time: '12:00', name: '搭NEX前往池袋', desc: '約80-90分鐘直達，不用轉車' },
+        { time: '14:00', name: '飯店Check-in', desc: '放行李、稍作休息' },
+        { time: '15:30', name: '池袋Sunshine City', desc: '展望台／水族館自由選擇，停留約2小時' },
+        { time: '18:00', name: '池袋晚餐', desc: '西口拉麵一番街，輕鬆收尾第一天' }
+      ],
+      weatherNote: '抵達當天行程輕鬆，Sunshine City是室內展望台／水族館，就算下雨也不受影響。',
+      othersArranged: false,
+      transport: [
+        { title: '機場 → 飯店（成田特快 N\'EX）', subtitle: '成田機場直達池袋，全車指定席，免轉乘',
+          rows: [{ route: '成田機場 → 池袋', time: '約80-90分', price: '約¥3,070' }],
+          tips: ['入境審查時間不可控，尖峰常需40-60分鐘：行程本就排得輕鬆，delay也不影響後續',
+                 '若飛機延誤超過2小時：直接跳過當天其他景點，check-in後在池袋周邊用餐即可',
+                 'N\'EX全車指定席，建議事先於官網或えきねっと預訂座位，避免現場候補'] }
+      ]
+    },
+    {
+      id: 'd2', label: '12/5 淺草・上野', title: 'Day 2．淺草．上野',
+      items: [
+        { time: '09:15', name: '淺草寺・雷門・仲見世通', desc: '參拜與老街逛街，停留約90分鐘' },
+        { time: '11:00', name: '淺草文化觀光中心展望台', desc: '免費眺望晴空塔，約20分鐘' },
+        { time: '11:30', name: '淺草午餐', desc: '今半壽喜燒或天婦羅' },
+        { time: '13:30', name: '上野恩賜公園・國立博物館', desc: '公園散步＋博物館（選配），停留約2小時' },
+        { time: '16:00', name: '阿美橫丁逛街', desc: '平價伴手禮、零食採買' }
+      ],
+      weatherNote: '淺草、上野皆為石板老街，偶有濕滑，這天走路量大，建議穿好走防滑鞋。',
+      othersArranged: false,
+      transport: [
+        { title: '市區移動：Suica／Pasmo ＋ JR山手線／地鐵', subtitle: 'JR山手線＋東京Metro銀座線，逐次刷卡最划算',
+          rows: [{ route: 'JR山手線（池袋→上野）', time: '約15-17分', price: '約¥200' },
+                 { route: '東京Metro銀座線（上野→淺草）', time: '約5分', price: '約¥180' }],
+          tips: ['地鐵日券不含JR山手線，這天混用JR＋銀座線，逐次刷Suica／Pasmo比買日券划算',
+                 '淺草寺本堂若因法會暫停參拜：仲見世通不受影響，可先繞去平行的傳法院通老街',
+                 '國立博物館臨時休館：步行10分鐘內的西洋美術館可替代'] }
+      ]
+    },
+    {
+      id: 'd3', label: '12/6 川越＋夜景巴士', title: 'Day 3．川越小江戶古鎮＋夜間東京巡遊',
+      items: [
+        { time: '09:00', name: '池袋出發→川越', desc: '東武東上線「川越特急」，最快26分鐘' },
+        { time: '09:45', name: '一番街藏造老街', desc: '時の鐘、傳統老街悠閒散步' },
+        { time: '12:00', name: '午餐：鰻魚飯', desc: '川越在地名物' },
+        { time: '15:30', name: '返回池袋，轉往東京車站', desc: '丸之內線約17分鐘' },
+        { time: '18:00', name: 'Sky Bus東京夜景コース', desc: '50分鐘繞行，近距離仰望點燈東京鐵塔' }
+      ],
+      weatherNote: '夜間搭乘露天雙層巴士，體感常在5度以下，務必帶圍巾、毛帽保暖。',
+      othersArranged: false,
+      transport: [
+        { title: '川越在地接駁：小江戶巡迴バス', subtitle: '一番街範圍內用走的即可，延伸到喜多院方向再搭巴士',
+          rows: [{ route: '單程一次（イーグルバス）', time: '車程依站數', price: '¥220' },
+                 { route: '1日フリー乗車券（不限次數）', time: '全天皆可用', price: '¥600' }],
+          tips: ['一番街部分老舖並非每天營業，出發前建議上「小江戶川越觀光協會」官網確認當週公休狀況',
+                 '若某店家公休：一番街同類型店家眾多，直接找隔壁店替代即可'] },
+        { title: 'Sky Bus東京｜夜景コース', subtitle: '丸之內三菱大樓前發車，固定路線繞行不下車',
+          rows: [{ route: '丸之內 → 銀座 → 台場方向繞行', time: '約50分鐘', price: '¥2,600／人' }],
+          tips: ['平日發車約18:30、假日18:00，建議出發前先於官網確認當日發車時間',
+                 '遇大雨強風：官方會改用有屋頂車輛運行，通常不會直接停駛',
+                 '真的停駛時：改走日比谷公園方向步行看丸之內／銀座聖誕燈飾（免費）'] }
+      ]
+    },
+    {
+      id: 'd4', label: '12/7 富士山', title: 'Day 4．富士山一日遊',
+      items: [{ time: '全日', name: '富士山一日遊', desc: '由其他夥伴安排行程' }],
+      weatherNote: '12月是東京晴天日數多、能見度較好的月份，清晨視野通常最清楚，下午容易起雲。',
+      othersArranged: true,
+      othersNote: '這天交通由其他夥伴安排，這裡先提醒：建議12/6晚上不要玩太晚，提早休息儲備體力。',
+      transport: []
+    },
+    {
+      id: 'd5', label: '12/8 江之島・鐮倉', title: 'Day 5．江之島．鐮倉',
+      items: [{ time: '全日', name: '江之島・鐮倉一日遊', desc: '由其他夥伴安排行程' }],
+      weatherNote: '沿海地區風較大，體感比市區更冷，建議多帶一件防風外套。',
+      othersArranged: true,
+      othersNote: '這天交通由其他夥伴安排，這裡先提醒：沿海風大，注意保暖與防風。',
+      transport: []
+    },
+    {
+      id: 'd6', label: '12/9 澀谷天空＋新宿', title: 'Day 6．原宿．澀谷（天空展望台）．新宿',
+      items: [
+        { time: '09:30', name: '明治神宮', desc: '平日人潮少，森林參道散步' },
+        { time: '13:30', name: '表參道散步', desc: '精品旗艦店建築巡禮' },
+        { time: '15:00', name: 'SHIBUYA SKY展望台', desc: '230米高空景觀，記得先線上預約時段票' },
+        { time: '18:00', name: '新宿夜遊', desc: '思い出橫丁、都廳免費展望台看夜景' },
+        { time: '21:00', name: '返回池袋飯店', desc: '山手線約10分鐘' }
+      ],
+      weatherNote: 'SHIBUYA SKY若遇強風大雨，屋頂「SKY STAGE」可能關閉且入場後不退款，出發前務必查當日風速預報。',
+      othersArranged: false,
+      transport: [
+        { title: '市區移動：Suica／Pasmo ＋ JR山手線', subtitle: '原宿到澀谷全程可步行經表參道，最省交通費的一天',
+          rows: [{ route: 'JR山手線（池袋→原宿）', time: '約25分', price: '約¥210' },
+                 { route: 'JR山手線（澀谷→新宿→池袋）', time: '約25分', price: '約¥340' }],
+          tips: ['地鐵日券這天完全用不上，全程JR，逐次刷Suica／Pasmo最划算',
+                 '若SHIBUYA SKY整個關閉：改用當晚原本就排的東京都廳免費展望台（室內、免費）補位看夜景',
+                 '表參道正值聖誕燈飾旺季，建議17:00前走完，避開下班人潮＋燈飾人潮疊加'] }
+      ]
+    },
+    {
+      id: 'd7', label: '12/10 柴又＋返程', title: 'Day 7．柴又老街．返程日（19:55班機）',
+      items: [
+        { time: '09:00', name: '飯店退房', desc: '行李改寄放池袋站置物櫃或ecbo cloak合作店家' },
+        { time: '09:30', name: '柴又帝釋天・參道老街', desc: '帝釋天、參道、山本亭庭園，停留約2小時' },
+        { time: '12:00', name: '午餐', desc: '柴又或返回池袋簡餐' },
+        { time: '13:00', name: '返回池袋取行李', desc: '確認隨身物品與退稅單據' },
+        { time: '14:30', name: '搭NEX前往機場', desc: '約80-90分鐘' },
+        { time: '19:55', name: '班機起飛', desc: '預留約3.5小時緩衝，從容不趕' }
+      ],
+      weatherNote: '若大雨強風導致京成線誤點，柴又範圍不大，可縮短停留時間至1小時應變，不影響返程。',
+      othersArranged: false,
+      transport: [
+        { title: '柴又交通：JR＋京成金町線', subtitle: '池袋往返柴又，2次轉乘',
+          rows: [{ route: '池袋 ⇄ 柴又', time: '單程約50-60分', price: '約¥480-590' }],
+          tips: ['最晚13:30前還沒回到池袋，就直接放棄取行李原訂順序，改計程車或宅配送行李到機場'] },
+        { title: '機場 → 成田特快 N\'EX', subtitle: '池袋直達成田機場，全車指定席',
+          rows: [{ route: '池袋 → 成田機場', time: '約80-90分', price: '約¥3,070' }],
+          tips: ['19:55的班機，14:30從池袋出發、16:00抵達機場，預留約3.5小時緩衝，時間相當充裕'] }
+      ]
+    }
+  ];
+
+  var BOOKING_LINKS = [
+    { label: '成田特快 N\'EX', desc: '機場往返車票線上預訂', url: 'https://www.jreast.co.jp/multi/nex/' },
+    { label: 'Tokyo Subway Ticket', desc: '東京Metro／都營地下鐵票券資訊', url: 'https://www.tokyometro.jp/tcn/ticket/travel/index.html' },
+    { label: 'SHIBUYA SKY', desc: '展望台官方時段票預約', url: 'https://www.shibuya-scramble-square.com/sky/' },
+    { label: 'Sky Bus東京', desc: '夜景コース官方預約', url: 'https://www.skybus.jp/' },
+    { label: '住宿｜Airbnb房源', desc: 'SCD155 池袋商圈大別墅', url: 'https://th.airbnb.com/rooms/36005812' }
+  ];
+  var HOTEL_MAP_URL = 'https://maps.app.goo.gl/WwfyYf9xHSBx8cQ38?g_st=il';
+  var JMA_URL = 'https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=130000';
+
+  function dayById(id) { for (var i = 0; i < DAYS.length; i++) { if (DAYS[i].id === id) return DAYS[i]; } return DAYS[0]; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  // ---------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------
+  var state = {
+    activeDayId: 'd1',
+    drawerOpen: false,
+    quickModal: null,          // 'weather' | 'transport' | 'map' | 'checklist' | null
+    dbReady: false,
+    dbChecked: false,
+    dbError: '',
+    places: [],                // from db: {id, dayId, name, url, note, order}
+    checklist: [],             // from db: {id, dayId, label, checked, order}
+    addPlaceOpen: false,
+    newPlace: { name: '', url: '', note: '' },
+    addPlaceError: '',
+    confirmDeletePlaceId: null,
+    editingChecklistId: null,
+    editingChecklistText: '',
+    dragPlaceId: null
+  };
+
+  var db = null;
+  var unsubPlaces = null;
+  var unsubChecklist = null;
+
+  // ---------------------------------------------------------------------
+  // Icons (small inline SVGs, original simple shapes)
+  // ---------------------------------------------------------------------
+  var ICO = {
+    plane: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16 L22 8 L18 13 L22 18 L2 16 Z"/><path d="M9 13 L9 20 L6 18"/></svg>',
+    weather: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="4"/><path d="M12 3 L12 5 M4.2 6.2 L5.6 7.6 M19.8 6.2 L18.4 7.6 M3 13 L5 13 M19 13 L21 13"/></svg>',
+    bus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="7.5" cy="18" r="1.6"/><circle cx="16.5" cy="18" r="1.6"/><path d="M3 12 L21 12"/></svg>',
+    pin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 5 14 5 9 A7 7 0 0 1 19 9 C19 14 12 21 12 21 Z"/><circle cx="12" cy="9" r="2.4"/></svg>',
+    pinSmall: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C8770" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 5 14 5 9 A7 7 0 0 1 19 9 C19 14 12 21 12 21 Z"/><circle cx="12" cy="9" r="2"/></svg>',
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12 L11 15 L16 9"/></svg>',
+    x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
+    xSmall: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B45151" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
+    plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 L12 19 M5 12 L19 12"/></svg>',
+    arrow: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg>',
+    warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C97B33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 9 L12 14"/><circle cx="12" cy="17" r="0.6" fill="#C97B33"/></svg>',
+    drag: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B49A7F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 L16 6 M8 12 L16 12 M8 18 L16 18"/></svg>',
+    chevronOpen: 'transform:translateY(-50%) rotate(90deg);',
+    home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 L3 20 L21 20 L21 11"/><path d="M3 11 L12 4 L21 11"/><rect x="9.5" y="14" width="5" height="6"/></svg>',
+    ticket: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 C3 7.5 4 7 5.5 7 L18.5 7 C20 7 21 7.5 21 9 L21 10.5 A2 2 0 0 0 21 13.5 L21 15 C21 16.5 20 17 18.5 17 L5.5 17 C4 17 3 16.5 3 15 L3 13.5 A2 2 0 0 0 3 10.5 Z"/><path d="M10 7 L10 17" stroke-dasharray="2 2"/></svg>'
+  };
+
+  // ---------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------
+  function render() {
+    var day = dayById(state.activeDayId);
+    var app = document.getElementById('app');
+
+    var tabsHtml = DAYS.map(function (d) {
+      var active = d.id === state.activeDayId;
+      var style = active
+        ? 'background:#8B5E34;color:#fff;box-shadow:0 3px 8px rgba(139,94,52,0.3);'
+        : 'background:#fff;color:#8B5E34;border:1.5px solid #EADFCB;';
+      return '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(d.label) + '</button>';
+    }).join('');
+
+    var itemsHtml = day.items.map(function (it) {
+      return '<div style="display:flex;gap:9px;align-items:flex-start;">' +
+        '<div style="flex-shrink:0;width:46px;text-align:center;background:#FBEADA;border-radius:7px;padding:4px 3px;font-weight:600;font-size:10.5px;color:#B9713F;">' + esc(it.time) + '</div>' +
+        '<div style="flex-grow:1;"><div style="font-weight:700;font-size:12.5px;color:#4A3626;">' + esc(it.name) + '</div>' +
+        '<div style="font-size:11.5px;color:#8A7159;margin-top:1px;line-height:1.4;">' + esc(it.desc) + '</div></div></div>';
+    }).join('<div style="height:10px;"></div>');
+
+    var remaining = state.checklist.filter(function (c) { return c.dayId === state.activeDayId && !c.checked; }).length;
+    var badgeHtml = remaining > 0
+      ? '<span style="position:absolute;top:-3px;right:-3px;background:#E8A085;color:#fff;font-size:8px;font-weight:700;border-radius:999px;padding:1px 4px;line-height:1.3;">' + remaining + '</span>'
+      : '';
+
+    app.innerHTML =
+      '<div style="width:100%;min-height:100vh;background:#FBF1E4;position:relative;">' +
+        '<div style="width:100%;background:linear-gradient(135deg,#E8B98C 0%,#D9986A 100%);padding:26px 16px 20px;position:relative;overflow:hidden;">' +
+          '<div style="max-width:480px;margin:0 auto;position:relative;z-index:1;">' +
+            '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);border-radius:999px;padding:5px 12px;margin-bottom:10px;">' + ICO.plane + '<span style="font-weight:600;font-size:11px;color:#8B5E34;">TRAVEL GUIDE</span></div>' +
+            '<h1 style="margin:0 0 6px;font-weight:700;font-size:22px;color:#5A3A1E;line-height:1.3;max-width:78%;">東京親子7日遊懶人包</h1>' +
+            '<p style="margin:0;font-size:11.5px;color:#6B4425;line-height:1.6;max-width:78%;">12/04（五）06:40起飛．10:40抵達成田機場．7天6夜．親子出遊</p>' +
+          '</div>' +
+          '<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1" style="position:absolute;right:-20px;top:-20px;opacity:0.2;"><path d="M2 16 L22 8 L18 13 L22 18 L2 16 Z"/><path d="M9 13 L9 20 L6 18"/></svg>' +
+        '</div>' +
+
+        '<div class="toolbar">' +
+          '<button class="btn-icon" data-open-modal="weather">' + ICO.weather + '</button>' +
+          '<button class="btn-icon" data-open-modal="transport">' + ICO.bus + '</button>' +
+          '<button class="btn-icon" data-open-modal="map">' + ICO.pin + '</button>' +
+          '<button class="btn-icon" data-open-modal="checklist" style="position:relative;">' + ICO.check + badgeHtml + '</button>' +
+        '</div>' +
+
+        '<div class="wrap">' +
+          ((state.dbError || (state.dbChecked && !state.dbReady))
+            ? '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:11.5px;color:#A65C1E;line-height:1.6;">目前連不上資料庫，景點與清單暫時是唯讀，新增／刪除／打勾不會被存起來。' + (state.dbError ? '<br>原因：' + esc(state.dbError) : '') + '</div>'
+            : '') +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' + tabsHtml + '</div>' +
+          '<div class="card">' +
+            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.title) + '</h3></div>' +
+            '<div style="display:flex;flex-direction:column;">' + itemsHtml + '</div>' +
+          '</div>' +
+          '<div style="text-align:center;font-size:11px;color:#B49A7F;padding:4px 20px;">點右上角的圈圈圖示，查看當天的天氣、交通、地圖、準備清單</div>' +
+          '<div style="height:6px;"></div>' +
+          '<div style="text-align:center;font-size:11px;color:#B49A7F;">住宿資訊、一鍵訂票連結收在左側選單，點左側把手打開</div>' +
+        '</div>' +
+
+        renderQuickModal(day) +
+        renderConfirmAndAddOverlays() +
+
+        '<button class="handle" id="drawerHandle">' + ICO.arrow + '</button>' +
+        '<div class="edge-strip" id="edgeStrip"></div>' +
+        (state.drawerOpen ? '<div class="modal-mask" id="drawerMask" style="z-index:50;"></div>' : '') +
+        renderDrawer() +
+      '</div>';
+
+    bindEvents();
+  }
+
+  function renderQuickModal(day) {
+    if (!state.quickModal) return '';
+    var titleMap = { weather: '當天天氣重點', transport: '當天交通攻略', map: '當天景點地圖', checklist: '當天準備清單' };
+    var body = '';
+
+    if (state.quickModal === 'weather') {
+      body =
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
+          statBox('平均高溫', '11.9度') + statBox('平均氣溫', '7.6度') + statBox('平均低溫', '3.5度') +
+        '</div>' +
+        '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:11px;padding:11px;font-size:12px;color:#A65C1E;line-height:1.6;margin-bottom:10px;">' + esc(day.weatherNote) + '</div>' +
+        '<a href="' + JMA_URL + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FBF1E4;border-radius:11px;padding:11px 13px;">' +
+          '<div><div style="font-size:12px;font-weight:700;color:#4A3626;">查看即時天氣預報</div><div style="font-size:10px;color:#9C8770;margin-top:1px;">日本氣象廳官方 東京都預報</div></div>' +
+          '<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
+        '</a>' +
+        '<div style="font-size:9.5px;color:#B49A7F;margin-top:6px;line-height:1.5;">以上溫度為歷年12月平均值，非即時預報；建議出發前幾天點上方連結查詢當週實際天氣</div>';
+    }
+
+    if (state.quickModal === 'transport') {
+      if (day.othersArranged) {
+        body += '<div style="background:#FBF1E4;border-radius:11px;padding:12px;font-size:12px;color:#6B4425;line-height:1.6;margin-bottom:8px;">' + esc(day.othersNote) + '</div>';
+      }
+      body += day.transport.map(function (tbl) {
+        var rows = tbl.rows.map(function (row) {
+          return '<div style="display:flex;flex-direction:column;gap:1px;background:#fff;border-radius:8px;padding:7px 9px;font-size:11px;">' +
+            '<span style="color:#4A3626;font-weight:600;">' + esc(row.route) + '</span>' +
+            '<div style="display:flex;justify-content:space-between;"><span style="color:#9C8770;">' + esc(row.time) + '</span><span style="color:#B9713F;font-weight:700;">' + esc(row.price) + '</span></div></div>';
+        }).join('<div style="height:6px;"></div>');
+        var tips = tbl.tips.map(function (t) {
+          return '<div style="font-size:10.5px;color:#7A5426;line-height:1.5;display:flex;gap:4px;"><span style="flex-shrink:0;">・</span><span>' + esc(t) + '</span></div>';
+        }).join('<div style="height:4px;"></div>');
+        return '<div style="background:#FBF1E4;border-radius:12px;padding:11px;margin-bottom:8px;">' +
+          '<div style="font-weight:700;font-size:12px;color:#4A3626;margin-bottom:2px;">' + esc(tbl.title) + '</div>' +
+          '<div style="font-size:10px;color:#9C8770;margin-bottom:8px;">' + esc(tbl.subtitle) + '</div>' +
+          '<div style="margin-bottom:9px;">' + rows + '</div>' +
+          '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:10px;padding:10px;">' +
+            '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;">' + ICO.warn + '<span style="font-size:10.5px;font-weight:700;color:#A65C1E;">注意事項與應變</span></div>' +
+            tips +
+          '</div></div>';
+      }).join('');
+    }
+
+    if (state.quickModal === 'map') {
+      var places = state.places.filter(function (p) { return p.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
+      var placesHtml = places.map(function (p, idx) {
+        var dragCls = state.dragPlaceId === p.id ? ' dragging' : '';
+        return '<div class="place-row' + dragCls + '" data-place-id="' + p.id + '" data-idx="' + idx + '">' +
+          '<div class="drag-handle" data-drag-handle="' + p.id + '">' + ICO.drag + '</div>' +
+          '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+              '<div style="font-size:12.5px;font-weight:700;color:#4A3626;">' + esc(p.name) + '</div>' + ICO.pinSmall +
+            '</div>' +
+            '<div style="font-size:10.5px;color:#A6875F;line-height:1.5;margin-top:4px;">' + esc(p.note) + '</div>' +
+          '</a>' +
+          '<button data-del-place="' + p.id + '" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
+        '</div>';
+      }).join('<div style="height:7px;"></div>');
+      if (!places.length) placesHtml = '<div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有加景點，點上面「＋」新增</div>';
+      body = '<div id="placesList" style="display:flex;flex-direction:column;">' + placesHtml + '</div>';
+    }
+
+    if (state.quickModal === 'checklist') {
+      var items = state.checklist.filter(function (c) { return c.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
+      var itemsHtml2 = items.map(function (it) {
+        if (state.editingChecklistId === it.id) {
+          return '<div style="display:flex;align-items:center;gap:9px;">' +
+            '<div style="width:18px;"></div>' +
+            '<input type="text" id="editChecklistInput" value="' + esc(state.editingChecklistText) + '" placeholder="輸入項目內容" style="flex-grow:1;border:1.5px solid #EADFCB;border-radius:8px;padding:6px 9px;font-size:12.5px;background:#FFFFFF;color:#4A3626;">' +
+          '</div>';
+        }
+        var labelStyle = it.checked ? 'color:#B49A7F;text-decoration:line-through;' : 'color:#4A3626;';
+        return '<div style="display:flex;align-items:center;gap:9px;">' +
+          '<input type="checkbox" data-toggle-check="' + it.id + '" ' + (it.checked ? 'checked' : '') + '>' +
+          '<label data-edit-check="' + it.id + '" style="' + labelStyle + 'font-size:12.5px;cursor:pointer;flex-grow:1;">' + esc(it.label || '（點擊輸入內容）') + '</label>' +
+        '</div>';
+      }).join('<div style="height:9px;"></div>');
+      if (!items.length) itemsHtml2 = '<div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有準備項目，點上面「＋」新增</div>';
+      body = '<div style="display:flex;flex-direction:column;">' + itemsHtml2 + '</div>';
+    }
+
+    var addBtn = (state.quickModal === 'map' || state.quickModal === 'checklist')
+      ? '<button id="quickAddBtn" class="close-x" style="margin-right:6px;">' + ICO.plus + '</button>'
+      : '';
+
+    return '<div class="modal-mask" id="quickMask" style="z-index:60;"></div>' +
+      '<div class="modal-box" style="z-index:61;">' +
+        '<div class="modal-head">' +
+          '<span style="font-weight:700;font-size:14.5px;color:#5A3A1E;">' + titleMap[state.quickModal] + '</span>' +
+          '<div style="display:flex;align-items:center;">' + addBtn + '<button id="quickCloseBtn" class="close-x">' + ICO.x + '</button></div>' +
+        '</div>' +
+        body +
+      '</div>';
+  }
+
+  function renderConfirmAndAddOverlays() {
+    var out = '';
+    if (state.confirmDeletePlaceId) {
+      var target = state.places.filter(function (p) { return p.id === state.confirmDeletePlaceId; })[0];
+      out += '<div class="modal-mask" style="z-index:70;" data-confirm-cancel="1"></div>' +
+        '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
+          '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要移除「' + esc(target ? target.name : '') + '」嗎？</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button data-confirm-cancel="1" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:13px;">取消</button>' +
+            '<button data-confirm-del="1" style="flex:1;padding:10px;border-radius:10px;border:none;background:#C0524B;color:#fff;font-weight:700;font-size:13px;">確定移除</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.addPlaceOpen) {
+      var errHtml = state.addPlaceError
+        ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.addPlaceError) + '</div>'
+        : '';
+      out += '<div class="modal-mask" style="z-index:70;" data-add-cancel="1"></div>' +
+        '<div class="modal-box-top" id="addPlaceBox">' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">新增景點</div>' +
+          errHtml +
+          '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            labeledInput('地點名稱', 'newPlaceName', state.newPlace.name) +
+            labeledInput('Google地圖網址', 'newPlaceUrl', state.newPlace.url) +
+            labeledInput('備註', 'newPlaceNote', state.newPlace.note) +
+          '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button data-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
+            '<button data-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">新增</button>' +
+          '</div>' +
+        '</div>';
+    }
+    return out;
+  }
+
+  function statBox(label, value) {
+    return '<div style="flex:1 1 30%;background:#FBF1E4;border-radius:10px;padding:8px;text-align:center;">' +
+      '<div style="font-size:9px;color:#9C8770;">' + label + '</div>' +
+      '<div style="font-weight:700;font-size:15px;color:#B9713F;">' + value + '</div></div>';
+  }
+
+  function labeledInput(label, key, value) {
+    return '<input type="text" id="' + key + '" value="' + esc(value) + '" placeholder="' + label + '" style="width:100%;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:12px;height:30px;background:#FFFFFF;color:#4A3626;">';
+  }
+
+  function renderDrawer() {
+    var bookingHtml = BOOKING_LINKS.map(function (bk) {
+      return '<a href="' + bk.url + '" target="_blank" rel="noopener" class="booking-row">' +
+        '<div><div style="font-size:10.5px;font-weight:700;color:#4A3626;">' + esc(bk.label) + '</div><div style="font-size:9px;color:#9C8770;margin-top:1px;">' + esc(bk.desc) + '</div></div>' +
+        '<div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#FBEADA;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
+      '</a>';
+    }).join('<div style="height:6px;"></div>');
+
+    return '<div class="drawer' + (state.drawerOpen ? ' open' : '') + '" id="drawer">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 4px;">' +
+        '<span style="font-weight:700;font-size:14px;color:#5A3A1E;">參考資料</span>' +
+        '<button id="drawerCloseBtn" class="close-x">' + ICO.x + '</button>' +
+      '</div>' +
+      '<div style="font-size:10px;color:#9C8770;padding:0 4px 12px;">這兩項不隨天數變化，全程通用</div>' +
+      '<div style="background:#FBF1E4;border-radius:13px;margin-bottom:10px;padding:12px;">' +
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">' + ICO.home + '<span style="font-weight:700;font-size:12.5px;color:#5A3A1E;">住宿資訊</span></div>' +
+        '<h3 style="margin:0 0 3px;font-size:12px;color:#4A3626;">SCD155 池袋商圈大別墅</h3>' +
+        '<div style="font-size:9.5px;color:#9C8770;margin-bottom:7px;">1-chōme-5 Kamiikebukuro, Toshima City, Tokyo 170-0012</div>' +
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;">' +
+          '<span class="tag" style="font-size:9px;padding:3px 7px;">7間臥室</span><span class="tag" style="font-size:9px;padding:3px 7px;">1間衛浴</span>' +
+          '<span class="tag" style="font-size:9px;padding:3px 7px;">最多9人</span><span class="tag" style="font-size:9px;padding:3px 7px;">評分4.6</span>' +
+        '</div>' +
+        '<div style="font-size:10.5px;color:#6B4425;line-height:1.7;margin-bottom:8px;">・池袋站步行約10-15分鐘，8條地鐵線可達東京各大景點<br>・入住 15:00 後、退房 12:00 前<br>・飯店不提供行李寄放，退房後需自行前往車站置物櫃</div>' +
+        '<div style="background:#fff;border-radius:10px;padding:9px;">' +
+          '<div style="font-size:10px;font-weight:700;color:#B9713F;margin-bottom:4px;">為什麼沒有「房型比較」？</div>' +
+          '<div style="font-size:9.5px;color:#6B4425;line-height:1.6;">這是整棟包棟villa（一次租下全部7間房），不是傳統飯店按房型分開訂房，沒有標準房/豪華房的價格分級。</div>' +
+        '</div>' +
+        '<a href="' + HOTEL_MAP_URL + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border-radius:9px;padding:8px 10px;margin-top:8px;">' +
+          '<span style="font-size:10.5px;font-weight:700;color:#4A3626;">在地圖中開啟</span>' + ICO.arrow +
+        '</a>' +
+      '</div>' +
+      '<div style="background:#FBF1E4;border-radius:13px;padding:12px;">' +
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">' + ICO.ticket + '<span style="font-weight:700;font-size:12.5px;color:#5A3A1E;">一鍵訂票連結</span></div>' +
+        bookingHtml +
+      '</div>' +
+    '</div>';
+  }
+
+  // ---------------------------------------------------------------------
+  // Events
+  // ---------------------------------------------------------------------
+  function bindEvents() {
+    var app = document.getElementById('app');
+
+    fitAddPlaceBox();
+
+    Array.prototype.forEach.call(app.querySelectorAll('[data-day]'), function (el) {
+      el.addEventListener('click', function () { state.activeDayId = el.getAttribute('data-day'); state.quickModal = null; render(); });
+    });
+
+    Array.prototype.forEach.call(app.querySelectorAll('[data-open-modal]'), function (el) {
+      el.addEventListener('click', function () { state.quickModal = el.getAttribute('data-open-modal'); render(); });
+    });
+
+    var qClose = document.getElementById('quickCloseBtn');
+    if (qClose) qClose.addEventListener('click', function () { state.quickModal = null; state.addPlaceOpen = false; state.confirmDeletePlaceId = null; state.editingChecklistId = null; render(); });
+    var qMask = document.getElementById('quickMask');
+    if (qMask) qMask.addEventListener('click', function () { state.quickModal = null; state.addPlaceOpen = false; state.confirmDeletePlaceId = null; state.editingChecklistId = null; render(); });
+
+    var qAdd = document.getElementById('quickAddBtn');
+    if (qAdd) qAdd.addEventListener('click', function () {
+      if (state.quickModal === 'map') { state.newPlace = { name: '', url: '', note: '' }; state.addPlaceOpen = true; render(); }
+      if (state.quickModal === 'checklist') { addChecklistItem(); }
+    });
+
+    var handle = document.getElementById('drawerHandle');
+    if (handle) handle.addEventListener('click', function () { state.drawerOpen = true; render(); });
+    var drawerClose = document.getElementById('drawerCloseBtn');
+    if (drawerClose) drawerClose.addEventListener('click', function () { state.drawerOpen = false; render(); });
+    var drawerMask = document.getElementById('drawerMask');
+    if (drawerMask) drawerMask.addEventListener('click', function () { state.drawerOpen = false; render(); });
+
+    var edge = document.getElementById('edgeStrip');
+    if (edge) bindSwipeOpen(edge);
+    var drawerEl = document.getElementById('drawer');
+    if (drawerEl) bindSwipeClose(drawerEl);
+
+    // map: delete
+    Array.prototype.forEach.call(app.querySelectorAll('[data-del-place]'), function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); state.confirmDeletePlaceId = el.getAttribute('data-del-place'); render(); });
+    });
+    var confirmCancelEls = app.querySelectorAll('[data-confirm-cancel]');
+    Array.prototype.forEach.call(confirmCancelEls, function (el) { el.addEventListener('click', function () { state.confirmDeletePlaceId = null; render(); }); });
+    var confirmDelEl = app.querySelector('[data-confirm-del]');
+    if (confirmDelEl) confirmDelEl.addEventListener('click', function () {
+      var id = state.confirmDeletePlaceId;
+      state.confirmDeletePlaceId = null;
+      deletePlace(id);
+    });
+
+    // map: add place modal
+    var addCancelEls = app.querySelectorAll('[data-add-cancel]');
+    Array.prototype.forEach.call(addCancelEls, function (el) { el.addEventListener('click', function () { state.addPlaceOpen = false; state.addPlaceError = ''; render(); }); });
+    var addConfirmEl = app.querySelector('[data-add-confirm]');
+    if (addConfirmEl) addConfirmEl.addEventListener('click', function () {
+      var name = (document.getElementById('newPlaceName') || {}).value || '';
+      var url = (document.getElementById('newPlaceUrl') || {}).value || '';
+      var note = (document.getElementById('newPlaceNote') || {}).value || '';
+      if (!name.trim()) { return; }
+      if (!db) {
+        state.addPlaceError = '目前連不上資料庫，請檢查網路連線後再試一次';
+        render();
+        return;
+      }
+      state.newPlace = { name: name, url: url, note: note };
+      addPlace(name.trim(), url.trim(), note.trim());
+    });
+
+    // map: drag reorder
+    Array.prototype.forEach.call(app.querySelectorAll('[data-drag-handle]'), function (el) {
+      bindDragHandle(el);
+    });
+
+    // checklist: toggle / edit
+    Array.prototype.forEach.call(app.querySelectorAll('[data-toggle-check]'), function (el) {
+      el.addEventListener('change', function () { toggleChecklist(el.getAttribute('data-toggle-check')); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-edit-check]'), function (el) {
+      el.addEventListener('click', function () {
+        var id = el.getAttribute('data-edit-check');
+        var item = state.checklist.filter(function (c) { return c.id === id; })[0];
+        state.editingChecklistId = id;
+        state.editingChecklistText = item ? item.label : '';
+        render();
+        var inp = document.getElementById('editChecklistInput');
+        if (inp) { inp.focus(); inp.select(); }
+      });
+    });
+    var editInput = document.getElementById('editChecklistInput');
+    if (editInput) {
+      editInput.addEventListener('blur', function () { commitChecklistEdit(editInput.value); });
+      editInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { editInput.blur(); } });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Swipe handling for the drawer
+  // ---------------------------------------------------------------------
+  function bindSwipeOpen(el) {
+    var startX = null;
+    el.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      if (startX === null) return;
+      var endX = e.changedTouches[0].clientX;
+      if (endX - startX > 45) { state.drawerOpen = true; render(); }
+      startX = null;
+    }, { passive: true });
+  }
+  function bindSwipeClose(el) {
+    var startX = null;
+    el.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      if (startX === null) return;
+      var endX = e.changedTouches[0].clientX;
+      if (startX - endX > 45) { state.drawerOpen = false; render(); }
+      startX = null;
+    }, { passive: true });
+  }
+
+  // ---------------------------------------------------------------------
+  // Drag-to-reorder for places (touch-based)
+  // ---------------------------------------------------------------------
+  function bindDragHandle(handleEl) {
+    var placeId = handleEl.getAttribute('data-drag-handle');
+    handleEl.addEventListener('touchstart', function (e) {
+      e.preventDefault();
+      var list = document.getElementById('placesList');
+      if (!list) return;
+      var rows = Array.prototype.slice.call(list.children);
+      var startY = e.touches[0].clientY;
+      var rowHeight = rows[0] ? rows[0].getBoundingClientRect().height + 7 : 60;
+      var dayPlaces = state.places.filter(function (p) { return p.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
+      var curIndex = dayPlaces.map(function (p) { return p.id; }).indexOf(placeId);
+      state.dragPlaceId = placeId;
+      render();
+
+      function onMove(ev) {
+        var y = ev.touches[0].clientY;
+        var delta = y - startY;
+        var steps = Math.round(delta / rowHeight);
+        var newIndex = curIndex + steps;
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex > dayPlaces.length - 1) newIndex = dayPlaces.length - 1;
+        if (newIndex !== curIndex) {
+          var moved = dayPlaces.splice(curIndex, 1)[0];
+          dayPlaces.splice(newIndex, 0, moved);
+          curIndex = newIndex;
+          startY = y;
+          renderPlacesListOnly(dayPlaces);
+        }
+      }
+      function onEnd() {
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onEnd);
+        state.dragPlaceId = null;
+        commitPlacesOrder(dayPlaces);
+      }
+      document.addEventListener('touchmove', onMove, { passive: true });
+      document.addEventListener('touchend', onEnd, { passive: true });
+    }, { passive: false });
+  }
+
+  function renderPlacesListOnly(dayPlaces) {
+    var list = document.getElementById('placesList');
+    if (!list) return;
+    list.innerHTML = dayPlaces.map(function (p, idx) {
+      var dragCls = state.dragPlaceId === p.id ? ' dragging' : '';
+      return '<div class="place-row' + dragCls + '" data-place-id="' + p.id + '" data-idx="' + idx + '">' +
+        '<div class="drag-handle" data-drag-handle="' + p.id + '">' + ICO.drag + '</div>' +
+        '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+            '<div style="font-size:12.5px;font-weight:700;color:#4A3626;">' + esc(p.name) + '</div>' + ICO.pinSmall +
+          '</div>' +
+          '<div style="font-size:10.5px;color:#A6875F;line-height:1.5;margin-top:4px;">' + esc(p.note) + '</div>' +
+        '</a>' +
+        '<button data-del-place="' + p.id + '" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
+      '</div>';
+    }).join('<div style="height:7px;"></div>');
+    Array.prototype.forEach.call(list.querySelectorAll('[data-drag-handle]'), function (el) { bindDragHandle(el); });
+    Array.prototype.forEach.call(list.querySelectorAll('[data-del-place]'), function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); state.confirmDeletePlaceId = el.getAttribute('data-del-place'); render(); });
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // DB-backed actions
+  // ---------------------------------------------------------------------
+  function addPlace(name, url, note) {
+    if (!db) { state.addPlaceError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    var dayPlaces = state.places.filter(function (p) { return p.dayId === state.activeDayId; });
+    var maxOrder = dayPlaces.reduce(function (m, p) { return Math.max(m, p.order); }, -1);
+    db.collection('places').add({ dayId: state.activeDayId, name: name, url: url || '', note: note || '', order: maxOrder + 1 })
+      .then(function () {
+        state.addPlaceOpen = false;
+        state.addPlaceError = '';
+        render();
+      })
+      .catch(function (err) {
+        noteDbError('addPlace 失敗', err);
+        state.addPlaceError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function deletePlace(id) {
+    if (!db || !id) return;
+    db.doc('places/' + id).delete().catch(function (err) { noteDbError('deletePlace 失敗', err); });
+  }
+  function commitPlacesOrder(orderedList) {
+    if (!db) { render(); return; }
+    orderedList.forEach(function (p, idx) {
+      if (p.order !== idx) { db.doc('places/' + p.id).update({ order: idx }).catch(function (err) { noteDbError('reorder 失敗', err); }); }
+    });
+    render();
+  }
+  function addChecklistItem() {
+    if (!db) return;
+    var dayItems = state.checklist.filter(function (c) { return c.dayId === state.activeDayId; });
+    var minOrder = dayItems.reduce(function (m, c) { return Math.min(m, c.order); }, 0);
+    db.collection('checklist').add({ dayId: state.activeDayId, label: '', checked: false, order: minOrder - 1 })
+      .then(function (ref) { state.editingChecklistId = ref.id; state.editingChecklistText = ''; render();
+        var inp = document.getElementById('editChecklistInput'); if (inp) { inp.focus(); } })
+      .catch(function (err) { noteDbError('addChecklistItem 失敗', err); });
+  }
+  function toggleChecklist(id) {
+    if (!db) return;
+    var item = state.checklist.filter(function (c) { return c.id === id; })[0];
+    if (!item) return;
+    db.doc('checklist/' + id).update({ checked: !item.checked }).catch(function (err) { noteDbError('toggle 失敗', err); });
+  }
+  function commitChecklistEdit(text) {
+    var id = state.editingChecklistId;
+    state.editingChecklistId = null;
+    if (!db || !id) { render(); return; }
+    db.doc('checklist/' + id).update({ label: text }).catch(function (err) { noteDbError('edit 失敗', err); });
+    render();
+  }
+
+  // ---------------------------------------------------------------------
+  // DB init
+  // ---------------------------------------------------------------------
+  function snapshotToList(snap) {
+    return snap.docs.map(function (d) {
+      var data = d.data() || {};
+      data.id = d.id;
+      return data;
+    });
+  }
+
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBe9oXSs3tGdB0QYSthaVDG2U8Nu74B3DI",
+    authDomain: "travel-japan-7f1e8.firebaseapp.com",
+    projectId: "travel-japan-7f1e8",
+    storageBucket: "travel-japan-7f1e8.firebasestorage.app",
+    messagingSenderId: "746468043166",
+    appId: "1:746468043166:web:6c8fa9db052ffa0ece8e8f"
+  };
+
+  var SEED_PLACES = [
+    { id: 'p1', dayId: 'd1', name: '成田國際機場', note: '入境審查尖峰常需40-60分鐘，建議抓充裕緩衝', order: 0, url: 'https://www.google.com/maps/search/?api=1&query=Narita+International+Airport' },
+    { id: 'p2', dayId: 'd1', name: 'SCD155（飯店）', note: '飯店不提供行李寄放，退房後改用池袋站置物櫃', order: 1, url: 'https://maps.app.goo.gl/WwfyYf9xHSBx8cQ38?g_st=il' },
+    { id: 'p3', dayId: 'd1', name: '池袋 Sunshine City', note: '室內展望台／水族館，下雨天也不受影響', order: 2, url: 'https://www.google.com/maps/search/?api=1&query=Sunshine+City+Ikebukuro' },
+    { id: 'p4', dayId: 'd2', name: '淺草寺・雷門', note: '本堂若因法會暫停參拜，仲見世通不受影響', order: 0, url: 'https://www.google.com/maps/search/?api=1&query=Sensoji+Temple+Asakusa' },
+    { id: 'p5', dayId: 'd2', name: '上野恩賜公園・國立博物館', note: '博物館週一公休，臨時休館可改逛西洋美術館', order: 1, url: 'https://www.google.com/maps/search/?api=1&query=Ueno+Park+Tokyo' },
+    { id: 'p6', dayId: 'd3', name: '川越一番街', note: '部分老舖非每天營業，出發前建議上官網確認當週公休狀況', order: 0, url: 'https://www.google.com/maps/search/?api=1&query=Kurazukuri+Street+Kawagoe' },
+    { id: 'p7', dayId: 'd6', name: 'SHIBUYA SKY', note: '強風大雨屋頂可能關閉且不退款，建議先查當日風速預報', order: 0, url: 'https://www.google.com/maps/search/?api=1&query=Shibuya+Sky+Shibuya+Scramble+Square' },
+    { id: 'p8', dayId: 'd7', name: '柴又帝釋天', note: '範圍不大，雨天可縮短停留時間應變', order: 0, url: 'https://www.google.com/maps/search/?api=1&query=Shibamata+Taishakuten' },
+    { id: 'p9', dayId: 'd7', name: '成田國際機場', note: '建議起飛前3-3.5小時抵達機場', order: 1, url: 'https://www.google.com/maps/search/?api=1&query=Narita+International+Airport' }
+  ];
+  var SEED_CHECKLIST = [
+    { id: 'c1', dayId: 'd1', label: '護照（效期6個月以上）', checked: false, order: 0 },
+    { id: 'c2', dayId: 'd1', label: '機票電子憑證', checked: false, order: 1 },
+    { id: 'c3', dayId: 'd1', label: '訂房確認信', checked: false, order: 2 },
+    { id: 'c4', dayId: 'd1', label: '旅遊保險保單', checked: false, order: 3 },
+    { id: 'c5', dayId: 'd1', label: '日幣現金', checked: false, order: 4 },
+    { id: 'c6', dayId: 'd1', label: '信用卡（含國外交易功能）', checked: false, order: 5 },
+    { id: 'c7', dayId: 'd1', label: '網路SIM卡或eSIM', checked: false, order: 6 },
+    { id: 'c8', dayId: 'd1', label: '轉接頭／充電器', checked: false, order: 7 },
+    { id: 'c9', dayId: 'd1', label: '行動電源', checked: false, order: 8 },
+    { id: 'c10', dayId: 'd1', label: 'Suica／Pasmo儲值用零錢或卡片', checked: false, order: 9 },
+    { id: 'c11', dayId: 'd2', label: '好走防滑鞋', checked: false, order: 0 },
+    { id: 'c12', dayId: 'd2', label: '個人常備藥品', checked: false, order: 1 },
+    { id: 'c13', dayId: 'd3', label: '圍巾／保暖配件', checked: false, order: 0 },
+    { id: 'c14', dayId: 'd3', label: '輕便摺疊傘', checked: false, order: 1 },
+    { id: 'c15', dayId: 'd3', label: '現金零錢（當地巴士用）', checked: false, order: 2 },
+    { id: 'c16', dayId: 'd4', label: '防風外套（山區較冷）', checked: false, order: 0 },
+    { id: 'c17', dayId: 'd4', label: '前一晚提早休息', checked: false, order: 1 },
+    { id: 'c18', dayId: 'd5', label: '防風外套', checked: false, order: 0 },
+    { id: 'c19', dayId: 'd5', label: '暈車藥（視需要）', checked: false, order: 1 },
+    { id: 'c20', dayId: 'd6', label: '確認SHIBUYA SKY預約時段', checked: false, order: 0 },
+    { id: 'c21', dayId: 'd6', label: '退稅用護照正本', checked: false, order: 1 },
+    { id: 'c22', dayId: 'd6', label: '好走的鞋（走路量大）', checked: false, order: 2 },
+    { id: 'c23', dayId: 'd7', label: '退稅單據備妥', checked: false, order: 0 },
+    { id: 'c24', dayId: 'd7', label: '確認隨身物品與行李', checked: false, order: 1 },
+    { id: 'c25', dayId: 'd7', label: '登機證／護照', checked: false, order: 2 }
+  ];
+
+  // Offline fallback: show the default content (read-only) until Firestore delivers real data
+  state.places = SEED_PLACES.map(function (p) { return Object.assign({}, p); });
+  state.checklist = SEED_CHECKLIST.map(function (c) { return Object.assign({}, c); });
+
+  function explainDbError(err) {
+    var code = (err && (err.code || err.message)) ? String(err.code || err.message) : '未知錯誤';
+    var hint = '';
+    if (/operation-not-allowed|admin-restricted/.test(code)) hint = '請到Firebase主控台 → Authentication → Sign-in method 啟用「匿名」';
+    else if (/permission-denied|insufficient permissions/i.test(code)) hint = '請確認Firestore規則允許已登入者讀寫';
+    else if (/unauthorized-domain/.test(code)) hint = '請把這個網址的網域加入Firebase「授權網域」';
+    else if (/network|unavailable|offline/i.test(code)) hint = '請檢查網路連線';
+    else if (/failed-precondition|not-found/.test(code)) hint = '請確認已在Firebase建立Firestore資料庫';
+    return hint ? hint + '（' + code + '）' : code;
+  }
+  function noteDbError(what, err) {
+    console.error(what, err);
+    state.dbError = what + '：' + explainDbError(err);
+    render();
+  }
+
+  function seedIfEmpty(colName, seedRows) {
+    return db.collection(colName).limit(1).get().then(function (snap) {
+      if (!snap.empty) return;
+      var batch = db.batch();
+      seedRows.forEach(function (row) {
+        var id = row.id;
+        var data = {};
+        Object.keys(row).forEach(function (k) { if (k !== 'id') data[k] = row[k]; });
+        batch.set(db.collection(colName).doc(id), data);
+      });
+      return batch.commit();
+    });
+  }
+
+  function initDb() {
+    if (!window.firebase) { state.dbChecked = true; noteDbError('Firebase SDK 載入失敗', { code: 'sdk-not-loaded' }); return; }
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    } catch (e) { state.dbChecked = true; noteDbError('Firebase 初始化失敗', e); return; }
+    firebase.auth().signInAnonymously().then(function () {
+      db = firebase.firestore();
+      state.dbChecked = true;
+      state.dbReady = true;
+      return Promise.all([seedIfEmpty('places', SEED_PLACES), seedIfEmpty('checklist', SEED_CHECKLIST)]);
+    }).then(function () {
+      unsubPlaces = db.collection('places').onSnapshot(function (snap) {
+        state.places = snapshotToList(snap);
+        render();
+      }, function (err) { noteDbError('讀取景點失敗', err); });
+      unsubChecklist = db.collection('checklist').onSnapshot(function (snap) {
+        state.checklist = snapshotToList(snap);
+        render();
+      }, function (err) { noteDbError('讀取清單失敗', err); });
+      render();
+    }).catch(function (err) {
+      state.dbChecked = true;
+      noteDbError('資料庫連線失敗', err);
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Keep the "add place" form fully visible above the on-screen keyboard
+  // ---------------------------------------------------------------------
+  // (removed: previous JS forced a viewport-based max-height + overflow:hidden
+  // on the add-place box, which fought the CSS auto-height and clipped the
+  // bottom of the form on real phones. The box is compact enough to fit on
+  // its own; no JS sizing needed.)
+  function fitAddPlaceBox() { /* no-op, kept so any stray calls are harmless */ }
+
+  render();
+  initDb();
+})();
+</script>
+</body>
+</html>
