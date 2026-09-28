@@ -37,7 +37,7 @@
   .tag { background: #FBEADA; color: var(--tan); font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px; }
   .modal-mask { position: fixed; inset: 0; background: rgba(74,54,38,0.45); z-index: 60; }
   .modal-box { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 86%; max-width: 380px; max-height: 78vh; overflow-y: auto; background: #fff; border-radius: 18px; z-index: 61; padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
-  .modal-box-top { position: fixed; left: 50%; top: 10px; transform: translateX(-50%); width: 86%; max-width: 300px; height: auto; background: #fff; border-radius: 14px; z-index: 71; padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
+  .modal-box-top { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 86%; max-width: 300px; height: auto; background: #fff; border-radius: 14px; z-index: 71; padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
   .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .close-x { background: #FBF1E4; border: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .drawer { position: fixed; top: 0; left: 0; height: 100vh; width: 50%; min-width: 220px; max-width: 300px; background: #fff; z-index: 51; transition: transform 0.25s ease; overflow-y: auto; box-shadow: 6px 0 24px rgba(0,0,0,0.18); padding: 16px 10px 30px; transform: translateX(-100%); }
@@ -47,7 +47,8 @@
   .toolbar { position: fixed; top: 14px; right: 12px; z-index: 46; display: flex; flex-direction: column; gap: 8px; }
   .place-row, .booking-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #FBF1E4; border-radius: 11px; padding: 10px; }
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
-  .drag-handle { flex-shrink: 0; padding: 4px; touch-action: none; }
+  .drag-handle { flex-shrink: 0; padding: 12px 8px; margin: -8px -4px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+  .place-row { position: relative; }
 </style>
 </head>
 <body>
@@ -221,6 +222,7 @@
   var db = null;
   var unsubPlaces = null;
   var unsubChecklist = null;
+  var blankSwept = false;      // one-time cleanup of empty rows left over from earlier
 
   // ---------------------------------------------------------------------
   // Icons (small inline SVGs, original simple shapes)
@@ -247,6 +249,8 @@
   // Render
   // ---------------------------------------------------------------------
   function render() {
+    if ((typeof dragActive !== 'undefined' && dragActive) || isEditFocused()) { renderPending = true; return; }
+    renderPending = false;
     var day = dayById(state.activeDayId);
     var app = document.getElementById('app');
 
@@ -267,7 +271,7 @@
 
     var remaining = state.checklist.filter(function (c) { return c.dayId === state.activeDayId && !c.checked; }).length;
     var badgeHtml = remaining > 0
-      ? '<span style="position:absolute;top:-3px;right:-3px;background:#E8A085;color:#fff;font-size:8px;font-weight:700;border-radius:999px;padding:1px 4px;line-height:1.3;">' + remaining + '</span>'
+      ? '<span class="chk-badge" style="' + BADGE_STYLE + '">' + remaining + '</span>'
       : '';
 
     app.innerHTML =
@@ -312,6 +316,34 @@
       '</div>';
 
     bindEvents();
+    focusEditingInput(false);
+  }
+
+  function checklistRowHtml(it) {
+    if (state.editingChecklistId === it.id) {
+      return '<div class="check-row" data-check-row="' + it.id + '" style="display:flex;align-items:center;gap:9px;">' +
+        '<div style="width:18px;flex-shrink:0;"></div>' +
+        '<input type="text" id="editChecklistInput" value="' + esc(state.editingChecklistText) + '" placeholder="輸入項目內容" style="flex-grow:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:6px 9px;font-size:16px;background:#FFFFFF;color:#4A3626;">' +
+      '</div>';
+    }
+    var labelStyle = it.checked ? 'color:#B49A7F;text-decoration:line-through;' : 'color:#4A3626;';
+    return '<div class="check-row" data-check-row="' + it.id + '" style="display:flex;align-items:center;gap:9px;">' +
+      '<input type="checkbox" data-toggle-check="' + it.id + '" ' + (it.checked ? 'checked' : '') + '>' +
+      '<label data-edit-check="' + it.id + '" style="' + labelStyle + 'font-size:12.5px;cursor:pointer;flex-grow:1;">' + esc(it.label || '（點擊輸入內容）') + '</label>' +
+    '</div>';
+  }
+
+  function placeRowHtml(p) {
+    return '<div class="place-row" data-place-id="' + p.id + '">' +
+      '<div class="drag-handle" data-drag-handle="' + p.id + '" title="按住拖曳調整順序">' + ICO.drag + '</div>' +
+      '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+          '<div style="font-size:12.5px;font-weight:700;color:#4A3626;">' + esc(p.name) + '</div>' + ICO.pinSmall +
+        '</div>' +
+        '<div style="font-size:10.5px;color:#A6875F;line-height:1.5;margin-top:4px;">' + esc(p.note) + '</div>' +
+      '</a>' +
+      '<button data-del-place="' + p.id + '" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
+    '</div>';
   }
 
   function renderQuickModal(day) {
@@ -358,40 +390,18 @@
 
     if (state.quickModal === 'map') {
       var places = state.places.filter(function (p) { return p.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
-      var placesHtml = places.map(function (p, idx) {
-        var dragCls = state.dragPlaceId === p.id ? ' dragging' : '';
-        return '<div class="place-row' + dragCls + '" data-place-id="' + p.id + '" data-idx="' + idx + '">' +
-          '<div class="drag-handle" data-drag-handle="' + p.id + '">' + ICO.drag + '</div>' +
-          '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
-              '<div style="font-size:12.5px;font-weight:700;color:#4A3626;">' + esc(p.name) + '</div>' + ICO.pinSmall +
-            '</div>' +
-            '<div style="font-size:10.5px;color:#A6875F;line-height:1.5;margin-top:4px;">' + esc(p.note) + '</div>' +
-          '</a>' +
-          '<button data-del-place="' + p.id + '" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
-        '</div>';
-      }).join('<div style="height:7px;"></div>');
+      var placesHtml = places.map(placeRowHtml).join('');
       if (!places.length) placesHtml = '<div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有加景點，點上面「＋」新增</div>';
-      body = '<div id="placesList" style="display:flex;flex-direction:column;">' + placesHtml + '</div>';
+      body = '<div id="placesList" style="display:flex;flex-direction:column;gap:7px;">' + placesHtml + '</div>';
     }
 
     if (state.quickModal === 'checklist') {
       var items = state.checklist.filter(function (c) { return c.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
-      var itemsHtml2 = items.map(function (it) {
-        if (state.editingChecklistId === it.id) {
-          return '<div style="display:flex;align-items:center;gap:9px;">' +
-            '<div style="width:18px;"></div>' +
-            '<input type="text" id="editChecklistInput" value="' + esc(state.editingChecklistText) + '" placeholder="輸入項目內容" style="flex-grow:1;border:1.5px solid #EADFCB;border-radius:8px;padding:6px 9px;font-size:12.5px;background:#FFFFFF;color:#4A3626;">' +
-          '</div>';
-        }
-        var labelStyle = it.checked ? 'color:#B49A7F;text-decoration:line-through;' : 'color:#4A3626;';
-        return '<div style="display:flex;align-items:center;gap:9px;">' +
-          '<input type="checkbox" data-toggle-check="' + it.id + '" ' + (it.checked ? 'checked' : '') + '>' +
-          '<label data-edit-check="' + it.id + '" style="' + labelStyle + 'font-size:12.5px;cursor:pointer;flex-grow:1;">' + esc(it.label || '（點擊輸入內容）') + '</label>' +
-        '</div>';
-      }).join('<div style="height:9px;"></div>');
-      if (!items.length) itemsHtml2 = '<div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有準備項目，點上面「＋」新增</div>';
-      body = '<div style="display:flex;flex-direction:column;">' + itemsHtml2 + '</div>';
+      if (!items.length) {
+        body = '<div id="checklistList" style="display:flex;flex-direction:column;gap:9px;"><div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有準備項目，點上面「＋」新增</div></div>';
+      } else {
+        body = '<div id="checklistList" style="display:flex;flex-direction:column;gap:9px;">' + items.map(checklistRowHtml).join('') + '</div>';
+      }
     }
 
     var addBtn = (state.quickModal === 'map' || state.quickModal === 'checklist')
@@ -566,26 +576,8 @@
       bindDragHandle(el);
     });
 
-    // checklist: toggle / edit
-    Array.prototype.forEach.call(app.querySelectorAll('[data-toggle-check]'), function (el) {
-      el.addEventListener('change', function () { toggleChecklist(el.getAttribute('data-toggle-check')); });
-    });
-    Array.prototype.forEach.call(app.querySelectorAll('[data-edit-check]'), function (el) {
-      el.addEventListener('click', function () {
-        var id = el.getAttribute('data-edit-check');
-        var item = state.checklist.filter(function (c) { return c.id === id; })[0];
-        state.editingChecklistId = id;
-        state.editingChecklistText = item ? item.label : '';
-        render();
-        var inp = document.getElementById('editChecklistInput');
-        if (inp) { inp.focus(); inp.select(); }
-      });
-    });
-    var editInput = document.getElementById('editChecklistInput');
-    if (editInput) {
-      editInput.addEventListener('blur', function () { commitChecklistEdit(editInput.value); });
-      editInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { editInput.blur(); } });
-    }
+    // checklist rows (toggle / tap to edit / edit box)
+    Array.prototype.forEach.call(app.querySelectorAll('.check-row'), bindChecklistRow);
   }
 
   // ---------------------------------------------------------------------
@@ -615,65 +607,83 @@
   // ---------------------------------------------------------------------
   // Drag-to-reorder for places (touch-based)
   // ---------------------------------------------------------------------
+  var dragActive = false;      // while true, render() is deferred so the dragged row is never destroyed
+  var renderPending = false;
+
   function bindDragHandle(handleEl) {
     var placeId = handleEl.getAttribute('data-drag-handle');
-    handleEl.addEventListener('touchstart', function (e) {
-      e.preventDefault();
+    handleEl.addEventListener('pointerdown', function (e) {
+      if (e.button != null && e.button !== 0 && e.pointerType === 'mouse') return;
       var list = document.getElementById('placesList');
       if (!list) return;
-      var rows = Array.prototype.slice.call(list.children);
-      var startY = e.touches[0].clientY;
-      var rowHeight = rows[0] ? rows[0].getBoundingClientRect().height + 7 : 60;
-      var dayPlaces = state.places.filter(function (p) { return p.dayId === state.activeDayId; }).sort(function (a, b) { return a.order - b.order; });
-      var curIndex = dayPlaces.map(function (p) { return p.id; }).indexOf(placeId);
-      state.dragPlaceId = placeId;
-      render();
+      e.preventDefault();
+
+      var rows = Array.prototype.slice.call(list.querySelectorAll('.place-row'));
+      var startIdx = -1;
+      rows.forEach(function (r, i) { if (r.getAttribute('data-place-id') === placeId) startIdx = i; });
+      if (startIdx < 0) return;
+
+      // Measure everything once, before anything moves
+      var rects = rows.map(function (r) { var b = r.getBoundingClientRect(); return { top: b.top, height: b.height }; });
+      var gap = 7;
+      var startY = e.clientY;
+      var dragRow = rows[startIdx];
+      var dragH = rects[startIdx].height + gap;
+      var targetIdx = startIdx;
+
+      dragActive = true;
+      dragRow.classList.add('dragging');
+      dragRow.style.zIndex = '5';
+      dragRow.style.transition = 'none';
+      rows.forEach(function (r, i) { if (i !== startIdx) r.style.transition = 'transform 0.15s ease'; });
+      try { if (handleEl.setPointerCapture && e.pointerId != null) handleEl.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
 
       function onMove(ev) {
-        var y = ev.touches[0].clientY;
-        var delta = y - startY;
-        var steps = Math.round(delta / rowHeight);
-        var newIndex = curIndex + steps;
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex > dayPlaces.length - 1) newIndex = dayPlaces.length - 1;
-        if (newIndex !== curIndex) {
-          var moved = dayPlaces.splice(curIndex, 1)[0];
-          dayPlaces.splice(newIndex, 0, moved);
-          curIndex = newIndex;
-          startY = y;
-          renderPlacesListOnly(dayPlaces);
+        var dy = ev.clientY - startY;
+        // keep the dragged row inside the list
+        var minDy = rects[0].top - rects[startIdx].top;
+        var maxDy = (rects[rects.length - 1].top + rects[rects.length - 1].height) - (rects[startIdx].top + rects[startIdx].height);
+        dy = Math.max(minDy, Math.min(maxDy, dy));
+        dragRow.style.transform = 'translateY(' + dy + 'px)';
+
+        // Use the dragged row's leading edge (bottom when moving down, top when moving up),
+        // so dragging all the way to either end always passes the last/first row.
+        var edgeTop = rects[startIdx].top + dy;
+        var edgeBottom = edgeTop + rects[startIdx].height;
+        var t = startIdx;
+        rows.forEach(function (r, i) {
+          if (i === startIdx) return;
+          var mid = rects[i].top + rects[i].height / 2;
+          var shift = 0;
+          if (i > startIdx && edgeBottom > mid) { shift = -dragH; t = Math.max(t, i); }
+          else if (i < startIdx && edgeTop < mid) { shift = dragH; t = Math.min(t, i); }
+          r.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+        });
+        targetIdx = t;
+      }
+
+      function finish(commit) {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onCancel);
+        try { if (handleEl.releasePointerCapture && e.pointerId != null) handleEl.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        dragActive = false;
+        if (commit && targetIdx !== startIdx) {
+          var ids = rows.map(function (r) { return r.getAttribute('data-place-id'); });
+          var moved = ids.splice(startIdx, 1)[0];
+          ids.splice(targetIdx, 0, moved);
+          commitPlacesOrder(ids);   // re-renders
+        } else {
+          renderPending = false;
+          render();
         }
       }
-      function onEnd() {
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onEnd);
-        state.dragPlaceId = null;
-        commitPlacesOrder(dayPlaces);
-      }
-      document.addEventListener('touchmove', onMove, { passive: true });
-      document.addEventListener('touchend', onEnd, { passive: true });
-    }, { passive: false });
-  }
+      function onUp() { finish(true); }
+      function onCancel() { finish(false); }
 
-  function renderPlacesListOnly(dayPlaces) {
-    var list = document.getElementById('placesList');
-    if (!list) return;
-    list.innerHTML = dayPlaces.map(function (p, idx) {
-      var dragCls = state.dragPlaceId === p.id ? ' dragging' : '';
-      return '<div class="place-row' + dragCls + '" data-place-id="' + p.id + '" data-idx="' + idx + '">' +
-        '<div class="drag-handle" data-drag-handle="' + p.id + '">' + ICO.drag + '</div>' +
-        '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
-            '<div style="font-size:12.5px;font-weight:700;color:#4A3626;">' + esc(p.name) + '</div>' + ICO.pinSmall +
-          '</div>' +
-          '<div style="font-size:10.5px;color:#A6875F;line-height:1.5;margin-top:4px;">' + esc(p.note) + '</div>' +
-        '</a>' +
-        '<button data-del-place="' + p.id + '" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
-      '</div>';
-    }).join('<div style="height:7px;"></div>');
-    Array.prototype.forEach.call(list.querySelectorAll('[data-drag-handle]'), function (el) { bindDragHandle(el); });
-    Array.prototype.forEach.call(list.querySelectorAll('[data-del-place]'), function (el) {
-      el.addEventListener('click', function (e) { e.preventDefault(); state.confirmDeletePlaceId = el.getAttribute('data-del-place'); render(); });
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onCancel);
     });
   }
 
@@ -700,34 +710,142 @@
     if (!db || !id) return;
     db.doc('places/' + id).delete().catch(function (err) { noteDbError('deletePlace 失敗', err); });
   }
-  function commitPlacesOrder(orderedList) {
-    if (!db) { render(); return; }
-    orderedList.forEach(function (p, idx) {
-      if (p.order !== idx) { db.doc('places/' + p.id).update({ order: idx }).catch(function (err) { noteDbError('reorder 失敗', err); }); }
+  function commitPlacesOrder(orderedIds) {
+    // Update the screen right away, then save the new order
+    var changed = [];
+    orderedIds.forEach(function (id, idx) {
+      state.places.forEach(function (p) {
+        if (p.id === id && p.order !== idx) { p.order = idx; changed.push({ id: id, order: idx }); }
+      });
     });
+    if (db) {
+      changed.forEach(function (c) {
+        db.doc('places/' + c.id).update({ order: c.order }).catch(function (err) { noteDbError('reorder 失敗', err); });
+      });
+    }
     render();
   }
+  // ---- Checklist editing --------------------------------------------------
+  // Changes show on screen immediately (no waiting for the network); they are
+  // saved to Firebase when a connection exists. Only the row being edited is
+  // patched on blur, so buttons the finger is landing on are never destroyed.
+  var BADGE_STYLE = 'position:absolute;top:-3px;right:-3px;background:#E8A085;color:#fff;font-size:8px;font-weight:700;border-radius:999px;padding:1px 4px;line-height:1.3;';
+
+  function isLocalId(id) { return String(id).indexOf('local_') === 0; }
+  function findChecklist(id) { return state.checklist.filter(function (c) { return c.id === id; })[0]; }
+  function isEditFocused() { var a = document.activeElement; return !!(a && a.id === 'editChecklistInput'); }
+  function persistChecklist(id, op, data) {
+    if (!db || isLocalId(id)) return;
+    var ref = db.doc('checklist/' + id);
+    var pr = op === 'delete' ? ref.delete() : op === 'set' ? ref.set(data) : ref.update(data);
+    pr.catch(function (err) { noteDbError('checklist ' + op + ' 失敗', err); });
+  }
+  function scheduleRender(ms) {
+    setTimeout(function () { if (!dragActive && !isEditFocused()) render(); }, ms);
+  }
+  function focusEditingInput(selectAll) {
+    if (!state.editingChecklistId) return;
+    var inp = document.getElementById('editChecklistInput');
+    if (!inp) return;
+    inp.focus();
+    try { if (selectAll) inp.select(); else inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) { /* ignore */ }
+  }
+  function updateChecklistBadge() {
+    var btn = document.querySelector('[data-open-modal="checklist"]');
+    if (!btn) return;
+    var old = btn.querySelector('.chk-badge');
+    if (old) old.parentNode.removeChild(old);
+    var remaining = state.checklist.filter(function (c) { return c.dayId === state.activeDayId && !c.checked; }).length;
+    if (remaining > 0) {
+      var sp = document.createElement('span');
+      sp.className = 'chk-badge';
+      sp.setAttribute('style', BADGE_STYLE);
+      sp.textContent = String(remaining);
+      btn.appendChild(sp);
+    }
+  }
+  function patchChecklistRow(id) {
+    var row = document.querySelector('[data-check-row="' + id + '"]');
+    if (!row) return;
+    var item = findChecklist(id);
+    if (!item) { row.parentNode.removeChild(row); return; }
+    var tmp = document.createElement('div');
+    tmp.innerHTML = checklistRowHtml(item);
+    var fresh = tmp.firstChild;
+    row.parentNode.replaceChild(fresh, row);
+    bindChecklistRow(fresh);
+  }
+  function bindChecklistRow(row) {
+    var id = row.getAttribute('data-check-row');
+    var cb = row.querySelector('[data-toggle-check]');
+    if (cb) cb.addEventListener('change', function () { toggleChecklist(id); });
+    var lab = row.querySelector('[data-edit-check]');
+    if (lab) lab.addEventListener('click', function () { enterChecklistEdit(id); });
+    var inp = row.querySelector('#editChecklistInput');
+    if (inp) {
+      inp.addEventListener('input', function () { state.editingChecklistText = inp.value; });
+      inp.addEventListener('blur', function () { commitChecklistEdit(inp.value); });
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { inp.blur(); } });
+    }
+  }
+  function enterChecklistEdit(id) {
+    if (state.editingChecklistId && state.editingChecklistId !== id) flushChecklistEdit();
+    var item = findChecklist(id);
+    if (!item) return;
+    state.editingChecklistId = id;
+    state.editingChecklistText = item.label || '';
+    patchChecklistRow(id);
+    focusEditingInput(true);
+  }
+  function flushChecklistEdit() {
+    if (!state.editingChecklistId) return;
+    var inp = document.getElementById('editChecklistInput');
+    commitChecklistEdit(inp ? inp.value : state.editingChecklistText);
+  }
   function addChecklistItem() {
-    if (!db) return;
+    flushChecklistEdit();                                   // finish (or drop) a half-typed row first
     var dayItems = state.checklist.filter(function (c) { return c.dayId === state.activeDayId; });
     var minOrder = dayItems.reduce(function (m, c) { return Math.min(m, c.order); }, 0);
-    db.collection('checklist').add({ dayId: state.activeDayId, label: '', checked: false, order: minOrder - 1 })
-      .then(function (ref) { state.editingChecklistId = ref.id; state.editingChecklistText = ''; render();
-        var inp = document.getElementById('editChecklistInput'); if (inp) { inp.focus(); } })
-      .catch(function (err) { noteDbError('addChecklistItem 失敗', err); });
+    var data = { dayId: state.activeDayId, label: '', checked: false, order: minOrder - 1 };
+    var id;
+    if (db) {
+      var ref = db.collection('checklist').doc();           // id is created on the phone, no waiting
+      id = ref.id;
+      persistChecklist(id, 'set', data);
+    } else {
+      id = 'local_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    }
+    var item = { id: id };
+    Object.keys(data).forEach(function (k) { item[k] = data[k]; });
+    state.checklist.push(item);
+    state.editingChecklistId = id;
+    state.editingChecklistText = '';
+    render();                                               // synchronous, still inside the tap -> keyboard can open
   }
   function toggleChecklist(id) {
-    if (!db) return;
-    var item = state.checklist.filter(function (c) { return c.id === id; })[0];
+    var item = findChecklist(id);
     if (!item) return;
-    db.doc('checklist/' + id).update({ checked: !item.checked }).catch(function (err) { noteDbError('toggle 失敗', err); });
+    item.checked = !item.checked;
+    persistChecklist(id, 'update', { checked: item.checked });
+    render();
   }
   function commitChecklistEdit(text) {
     var id = state.editingChecklistId;
+    if (!id) return;
     state.editingChecklistId = null;
-    if (!db || !id) { render(); return; }
-    db.doc('checklist/' + id).update({ label: text }).catch(function (err) { noteDbError('edit 失敗', err); });
-    render();
+    var item = findChecklist(id);
+    var clean = String(text || '').trim();
+    if (!clean) {
+      // Nothing typed -> remove the whole row
+      state.checklist = state.checklist.filter(function (c) { return c.id !== id; });
+      persistChecklist(id, 'delete');
+    } else if (item) {
+      item.label = clean;
+      persistChecklist(id, 'update', { label: clean });
+    }
+    patchChecklistRow(id);
+    updateChecklistBadge();
+    if (renderPending || !document.querySelector('.check-row')) scheduleRender(300);
   }
 
   // ---------------------------------------------------------------------
@@ -840,6 +958,12 @@
       }, function (err) { noteDbError('讀取景點失敗', err); });
       unsubChecklist = db.collection('checklist').onSnapshot(function (snap) {
         state.checklist = snapshotToList(snap);
+        if (!blankSwept) {
+          blankSwept = true;
+          var blanks = state.checklist.filter(function (c) { return !String(c.label || '').trim() && c.id !== state.editingChecklistId; });
+          blanks.forEach(function (c) { db.doc('checklist/' + c.id).delete().catch(function (err) { noteDbError('delete 失敗', err); }); });
+          state.checklist = state.checklist.filter(function (c) { return blanks.indexOf(c) === -1; });
+        }
         render();
       }, function (err) { noteDbError('讀取清單失敗', err); });
       render();
@@ -850,13 +974,23 @@
   }
 
   // ---------------------------------------------------------------------
-  // Keep the "add place" form fully visible above the on-screen keyboard
+  // "Add place" window: centred on screen. When the phone keyboard opens, the
+  // visible area shrinks, so re-centre inside the visible part (never above the top).
   // ---------------------------------------------------------------------
-  // (removed: previous JS forced a viewport-based max-height + overflow:hidden
-  // on the add-place box, which fought the CSS auto-height and clipped the
-  // bottom of the form on real phones. The box is compact enough to fit on
-  // its own; no JS sizing needed.)
-  function fitAddPlaceBox() { /* no-op, kept so any stray calls are harmless */ }
+  function fitAddPlaceBox() {
+    var box = document.getElementById('addPlaceBox');
+    if (!box) return;
+    var vv = window.visualViewport;
+    if (!vv) { box.style.top = '50%'; return; }      // plain CSS centring
+    var h = box.offsetHeight;
+    var center = vv.offsetTop + vv.height / 2;
+    var minCenter = vv.offsetTop + h / 2 + 8;         // keep the top edge on screen
+    box.style.top = Math.max(center, minCenter) + 'px';
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitAddPlaceBox);
+    window.visualViewport.addEventListener('scroll', fitAddPlaceBox);
+  }
 
   render();
   initDb();
