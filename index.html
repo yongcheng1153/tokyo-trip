@@ -49,6 +49,10 @@
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .drag-handle { flex-shrink: 0; padding: 12px 8px; margin: -8px -4px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
   .place-row { position: relative; }
+  .item-acc-head { display: flex; gap: 9px; align-items: flex-start; width: 100%; text-align: left; background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; }
+  .item-acc .chev { display: inline-block; transition: transform 0.2s ease; flex-shrink: 0; margin-top: 3px; }
+  .item-acc:not(.open) .chev { transform: rotate(-90deg); }
+  .food-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 9px; }
   #expHost { position: fixed; inset: 0; z-index: 90; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, visibility 0s linear 0.18s; }
   #expHost.open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 0.18s ease; }
 </style>
@@ -366,6 +370,17 @@
     newPlace: { name: '', url: '', note: '' },
     addPlaceError: '',
     confirmDeletePlaceId: null,
+    links: [],
+    foodSpots: [],             // from db: {id, itemId, label, url, desc, order}  (food spots noted under a schedule item)
+    expandedItems: {},         // itemId -> true, which schedule items are expanded
+    addFoodItemId: null,       // itemId the "add food" dialog is open for, or null
+    newFood: { label: '', url: '', desc: '' },
+    addFoodError: '',
+    confirmDeleteFoodId: null,                 // from db: {id, label, url, desc, order}  (links the family added themselves)
+    addLinkOpen: false,
+    newLink: { label: '', url: '', desc: '' },
+    addLinkError: '',
+    confirmDeleteLinkId: null,
     editingChecklistId: null,
     editingChecklistText: '',
     dragPlaceId: null
@@ -374,6 +389,8 @@
   var db = null;
   var unsubPlaces = null;
   var unsubChecklist = null;
+  var unsubLinks = null;
+  var unsubFood = null;
   var blankSwept = false;      // one-time cleanup of empty rows left over from earlier
 
   // ---------------------------------------------------------------------
@@ -390,6 +407,7 @@
     x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
     xSmall: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B45151" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
     plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 L12 19 M5 12 L19 12"/></svg>',
+    chevDown: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></svg>',
     arrow: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg>',
     warn: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C97B33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><path d="M12 9 L12 14"/><circle cx="12" cy="17" r="0.6" fill="#C97B33"/></svg>',
     drag: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B49A7F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6 L16 6 M8 12 L16 12 M8 18 L16 18"/></svg>',
@@ -415,12 +433,7 @@
       return '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(d.label) + '</button>';
     }).join('');
 
-    var itemsHtml = day.items.map(function (it) {
-      return '<div style="display:flex;gap:9px;align-items:flex-start;">' +
-        '<div style="flex-shrink:0;width:46px;text-align:center;background:#FBEADA;border-radius:7px;padding:4px 3px;font-weight:600;font-size:10.5px;color:#B9713F;">' + esc(it.time) + '</div>' +
-        '<div style="flex-grow:1;"><div style="font-weight:700;font-size:12.5px;color:#4A3626;">' + esc(it.name) + '</div>' +
-        '<div style="font-size:11.5px;color:#8A7159;margin-top:1px;line-height:1.4;">' + esc(it.desc) + '</div></div></div>';
-    }).join('<div style="height:10px;"></div>');
+var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it, idx); }).join('<div style="height:10px;"></div>');
 
     var remaining = state.checklist.filter(function (c) { return c.dayId === state.activeDayId && !c.checked; }).length;
     var badgeHtml = remaining > 0
@@ -487,6 +500,38 @@
     '</div>';
   }
 
+  function foodRowHtml(f) {
+    return '<div class="food-row" data-food-id="' + f.id + '">' +
+      '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+        '<div style="min-width:0;"><div style="font-size:11.5px;font-weight:700;color:#4A3626;word-break:break-all;">' + esc(f.label) + '</div>' +
+        (f.desc ? '<div style="font-size:9.5px;color:#9C8770;margin-top:1px;word-break:break-all;">' + esc(f.desc) + '</div>' : '') + '</div>' +
+        ICO.pinSmall +
+      '</a>' +
+      '<button data-del-food="' + f.id + '" aria-label="移除這個美食點" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
+    '</div>';
+  }
+  function itemRowHtml(dayId, it, idx) {
+    var itemId = dayId + '-' + idx;
+    var expanded = !!state.expandedItems[itemId];
+    var spots = state.foodSpots.filter(function (f) { return f && f.itemId === itemId && f.label && /^https?:\/\//i.test(String(f.url || '')); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
+    var countTag = spots.length ? '<span style="flex-shrink:0;background:#FBEADA;color:#B9713F;font-size:9.5px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:6px;">' + spots.length + '</span>' : '';
+    var bodyHtml = '';
+    if (expanded) {
+      var body = spots.map(foodRowHtml).join('<div style="height:6px;"></div>') +
+        (spots.length ? '<div style="height:6px;"></div>' : '') +
+        '<button data-add-food-btn="' + itemId + '" style="width:100%;padding:7px;border-radius:9px;border:1.5px dashed #D9B58E;background:transparent;color:#8B5E34;font-weight:700;font-size:10.5px;">＋ 新增美食</button>';
+      bodyHtml = '<div class="item-acc-body"><div style="padding:9px 0 2px 55px;display:flex;flex-direction:column;gap:6px;">' + body + '</div></div>';
+    }
+    return '<div class="item-acc' + (expanded ? ' open' : '') + '" data-item-acc="' + itemId + '">' +
+      '<button type="button" class="item-acc-head" data-toggle-item="' + itemId + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">' +
+        '<span class="chev">' + ICO.chevDown + '</span>' +
+        '<div style="flex-shrink:0;width:46px;text-align:center;background:#FBEADA;border-radius:7px;padding:4px 3px;font-weight:600;font-size:10.5px;color:#B9713F;">' + esc(it.time) + '</div>' +
+        '<div style="flex-grow:1;min-width:0;"><div style="display:flex;align-items:center;"><div style="font-weight:700;font-size:12.5px;color:#4A3626;">' + esc(it.name) + '</div>' + countTag + '</div>' +
+        '<div style="font-size:11.5px;color:#8A7159;margin-top:1px;line-height:1.4;">' + esc(it.desc) + '</div></div>' +
+      '</button>' +
+      bodyHtml +
+    '</div>';
+  }
   function placeRowHtml(p) {
     return '<div class="place-row" data-place-id="' + p.id + '">' +
       '<div class="drag-handle" data-drag-handle="' + p.id + '" title="按住拖曳調整順序">' + ICO.drag + '</div>' +
@@ -585,6 +630,66 @@
           '</div>' +
         '</div>';
     }
+    if (state.confirmDeleteLinkId) {
+      var lk = state.links.filter(function (l) { return l.id === state.confirmDeleteLinkId; })[0];
+      out += '<div class="modal-mask" style="z-index:70;" data-link-confirm-cancel="1"></div>' +
+        '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
+          '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要移除連結「' + esc(lk ? lk.label : '') + '」嗎？</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button data-link-confirm-cancel="1" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:13px;">取消</button>' +
+            '<button data-link-confirm-del="1" style="flex:1;padding:10px;border-radius:10px;border:none;background:#C0524B;color:#fff;font-weight:700;font-size:13px;">確定移除</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.addLinkOpen) {
+      var linkErr = state.addLinkError
+        ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.addLinkError) + '</div>'
+        : '';
+      out += '<div class="modal-mask" style="z-index:70;" data-link-add-cancel="1"></div>' +
+        '<div class="modal-box-top" id="addPlaceBox">' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">新增連結</div>' +
+          linkErr +
+          '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            labeledInput('名稱（例如：teamLab預約）', 'newLinkLabel', state.newLink.label) +
+            labeledInput('網址（https://…）', 'newLinkUrl', state.newLink.url) +
+            labeledInput('說明（可不填）', 'newLinkDesc', state.newLink.desc) +
+          '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button data-link-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
+            '<button data-link-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">新增</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.confirmDeleteFoodId) {
+      var fd = state.foodSpots.filter(function (f) { return f.id === state.confirmDeleteFoodId; })[0];
+      out += '<div class="modal-mask" style="z-index:70;" data-food-confirm-cancel="1"></div>' +
+        '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
+          '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要移除美食點「' + esc(fd ? fd.label : '') + '」嗎？</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button data-food-confirm-cancel="1" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:13px;">取消</button>' +
+            '<button data-food-confirm-del="1" style="flex:1;padding:10px;border-radius:10px;border:none;background:#C0524B;color:#fff;font-weight:700;font-size:13px;">確定移除</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.addFoodItemId) {
+      var foodErr = state.addFoodError
+        ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.addFoodError) + '</div>'
+        : '';
+      out += '<div class="modal-mask" style="z-index:70;" data-food-add-cancel="1"></div>' +
+        '<div class="modal-box-top" id="addPlaceBox">' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">新增美食</div>' +
+          foodErr +
+          '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            labeledInput('店名', 'newFoodLabel', state.newFood.label) +
+            labeledInput('網址（Google地圖或官網）', 'newFoodUrl', state.newFood.url) +
+            labeledInput('備註（可不填）', 'newFoodDesc', state.newFood.desc) +
+          '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button data-food-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
+            '<button data-food-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">新增</button>' +
+          '</div>' +
+        '</div>';
+    }
     if (state.addPlaceOpen) {
       var errHtml = state.addPlaceError
         ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.addPlaceError) + '</div>'
@@ -625,6 +730,19 @@
       '</a>';
     }).join('<div style="height:6px;"></div>');
 
+    var ownLinks = state.links.filter(function (l) { return l.label && /^https?:\/\//i.test(String(l.url || '')); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); }).map(function (l) {
+      return '<div class="booking-row" data-link-id="' + l.id + '">' +
+        '<a href="' + esc(l.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+          '<div style="min-width:0;"><div style="font-size:10.5px;font-weight:700;color:#4A3626;word-break:break-all;">' + esc(l.label) + '</div>' +
+          (l.desc ? '<div style="font-size:9px;color:#9C8770;margin-top:1px;word-break:break-all;">' + esc(l.desc) + '</div>' : '') + '</div>' +
+          '<div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#FBEADA;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
+        '</a>' +
+        '<button data-del-link="' + l.id + '" aria-label="移除這個連結" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.x + '</button>' +
+      '</div>';
+    }).join('<div style="height:6px;"></div>');
+    var ownLinksHtml = (ownLinks ? '<div style="height:6px;"></div>' + ownLinks : '') +
+      '<button id="addLinkBtn" style="width:100%;margin-top:10px;padding:9px;border-radius:10px;border:1.5px dashed #D9B58E;background:transparent;color:#8B5E34;font-weight:700;font-size:11px;">＋ 新增連結</button>';
+
     return '<div class="drawer' + (state.drawerOpen ? ' open' : '') + '" id="drawer">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:0 4px;">' +
         '<span style="font-weight:700;font-size:14px;color:#5A3A1E;">參考資料</span>' +
@@ -650,7 +768,7 @@
       '</div>' +
       '<div style="background:#FBF1E4;border-radius:13px;padding:12px;">' +
         '<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">' + ICO.ticket + '<span style="font-weight:700;font-size:12.5px;color:#5A3A1E;">一鍵訂票連結</span></div>' +
-        bookingHtml +
+        bookingHtml + ownLinksHtml +
       '</div>' +
     '</div>';
   }
@@ -726,6 +844,64 @@
       }
       state.newPlace = { name: name, url: url, note: note };
       addPlace(name.trim(), url.trim(), note.trim());
+    });
+
+    // schedule items: expand/collapse, add/remove food spots
+    Array.prototype.forEach.call(app.querySelectorAll('[data-toggle-item]'), function (el) {
+      el.addEventListener('click', function () {
+        var id = el.getAttribute('data-toggle-item');
+        state.expandedItems[id] = !state.expandedItems[id];
+        render();
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-add-food-btn]'), function (el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        state.addFoodItemId = el.getAttribute('data-add-food-btn');
+        state.newFood = { label: '', url: '', desc: '' };
+        state.addFoodError = '';
+        render();
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-del-food]'), function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); state.confirmDeleteFoodId = el.getAttribute('data-del-food'); render(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-food-confirm-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteFoodId = null; render(); }); });
+    var foodDelEl = app.querySelector('[data-food-confirm-del]');
+    if (foodDelEl) foodDelEl.addEventListener('click', function () { var id = state.confirmDeleteFoodId; state.confirmDeleteFoodId = null; deleteFoodSpot(id); render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-food-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addFoodItemId = null; state.addFoodError = ''; render(); }); });
+    var foodAddEl = app.querySelector('[data-food-add-confirm]');
+    if (foodAddEl) foodAddEl.addEventListener('click', function () {
+      var label = ((document.getElementById('newFoodLabel') || {}).value || '').trim();
+      var url = ((document.getElementById('newFoodUrl') || {}).value || '').trim();
+      var desc = ((document.getElementById('newFoodDesc') || {}).value || '').trim();
+      state.newFood = { label: label, url: url, desc: desc };
+      var fixed = normalizeUrl(url);
+      if (!label) { state.addFoodError = '請輸入店名'; render(); return; }
+      if (!fixed) { state.addFoodError = '網址看起來不對，請貼上完整網址（例如 https://…）'; render(); return; }
+      addFoodSpot(state.addFoodItemId, label, fixed, desc);
+    });
+
+    // drawer: links added by the family
+    var addLinkBtn = document.getElementById('addLinkBtn');
+    if (addLinkBtn) addLinkBtn.addEventListener('click', function () { state.newLink = { label: '', url: '', desc: '' }; state.addLinkError = ''; state.addLinkOpen = true; render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-del-link]'), function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); state.confirmDeleteLinkId = el.getAttribute('data-del-link'); render(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-link-confirm-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteLinkId = null; render(); }); });
+    var linkDelEl = app.querySelector('[data-link-confirm-del]');
+    if (linkDelEl) linkDelEl.addEventListener('click', function () { var id = state.confirmDeleteLinkId; state.confirmDeleteLinkId = null; deleteLink(id); render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-link-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addLinkOpen = false; state.addLinkError = ''; render(); }); });
+    var linkAddEl = app.querySelector('[data-link-add-confirm]');
+    if (linkAddEl) linkAddEl.addEventListener('click', function () {
+      var label = ((document.getElementById('newLinkLabel') || {}).value || '').trim();
+      var url = ((document.getElementById('newLinkUrl') || {}).value || '').trim();
+      var desc = ((document.getElementById('newLinkDesc') || {}).value || '').trim();
+      state.newLink = { label: label, url: url, desc: desc };
+      var fixed = normalizeUrl(url);
+      if (!label) { state.addLinkError = '請輸入連結名稱'; render(); return; }
+      if (!fixed) { state.addLinkError = '網址看起來不對，請貼上完整網址（例如 https://…）'; render(); return; }
+      addLink(label, fixed, desc);
     });
 
     // map: drag reorder
@@ -863,6 +1039,45 @@
         render();
       });
   }
+  // Accepts only real web addresses; adds https:// when it is missing. Returns '' when it is not a usable address.
+  function normalizeUrl(raw) {
+    var u = String(raw || '').trim();
+    if (!u || /\s/.test(u)) return '';
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u;
+    if (!/^https?:\/\/[^\/?#.]+\.[^\/?#]+|^https?:\/\/localhost\b/i.test(u)) return '';
+    return u;
+  }
+  function addLink(label, url, desc) {
+    if (!db) { state.addLinkError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    var maxOrder = state.links.reduce(function (m, l) { return Math.max(m, l.order || 0); }, -1);
+    db.collection('links').add({ label: label, url: url, desc: desc || '', order: maxOrder + 1, createdAt: Date.now() })
+      .then(function () { state.addLinkOpen = false; state.addLinkError = ''; render(); })
+      .catch(function (err) {
+        noteDbError('addLink 失敗', err);
+        state.addLinkError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function deleteLink(id) {
+    if (!db || !id) return;
+    db.doc('links/' + id).delete().catch(function (err) { noteDbError('deleteLink 失敗', err); });
+  }
+  function addFoodSpot(itemId, label, url, desc) {
+    if (!db) { state.addFoodError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    var siblings = state.foodSpots.filter(function (f) { return f.itemId === itemId; });
+    var maxOrder = siblings.reduce(function (m, f) { return Math.max(m, f.order || 0); }, -1);
+    db.collection('foodSpots').add({ itemId: itemId, label: label, url: url, desc: desc || '', order: maxOrder + 1, createdAt: Date.now() })
+      .then(function () { state.addFoodItemId = null; state.addFoodError = ''; render(); })
+      .catch(function (err) {
+        noteDbError('addFoodSpot 失敗', err);
+        state.addFoodError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function deleteFoodSpot(id) {
+    if (!db || !id) return;
+    db.doc('foodSpots/' + id).delete().catch(function (err) { noteDbError('deleteFoodSpot 失敗', err); });
+  }
   function deletePlace(id) {
     if (!db || !id) return;
     db.doc('places/' + id).delete().catch(function (err) { noteDbError('deletePlace 失敗', err); });
@@ -890,7 +1105,7 @@
 
   function isLocalId(id) { return String(id).indexOf('local_') === 0; }
   function findChecklist(id) { return state.checklist.filter(function (c) { return c.id === id; })[0]; }
-  function isEditFocused() { var a = document.activeElement; return !!(a && a.id === 'editChecklistInput'); }
+  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc')); }
   function persistChecklist(id, op, data) {
     if (!db || isLocalId(id)) return;
     var ref = db.doc('checklist/' + id);
@@ -1124,6 +1339,14 @@
         }
         render();
       }, function (err) { noteDbError('讀取清單失敗', err); });
+      unsubLinks = db.collection('links').onSnapshot(function (snap) {
+        state.links = snapshotToList(snap);
+        render();
+      }, function (err) { noteDbError('讀取連結失敗', err); });
+      unsubFood = db.collection('foodSpots').onSnapshot(function (snap) {
+        state.foodSpots = snapshotToList(snap);
+        render();
+      }, function (err) { noteDbError('讀取美食點失敗', err); });
       render();
     }).catch(function (err) {
       state.dbChecked = true;
