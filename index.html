@@ -49,7 +49,7 @@
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .drag-handle { flex-shrink: 0; padding: 12px 8px; margin: -8px -4px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
   .place-row { position: relative; }
-  .item-acc-head { display: flex; gap: 9px; align-items: flex-start; width: 100%; text-align: left; background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; }
+  .item-acc-head { display: flex; gap: 9px; align-items: flex-start; flex: 1; min-width: 0; width: 100%; text-align: left; background: none; border: none; padding: 0; font-family: inherit; cursor: pointer; }
   .item-acc .chev { display: inline-block; transition: transform 0.2s ease; flex-shrink: 0; margin-top: 3px; }
   .item-acc:not(.open) .chev { transform: rotate(-90deg); }
   .food-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 9px; }
@@ -126,10 +126,10 @@
   .seg button { flex: 1; height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--dark); font-weight: 700; font-size: 14px; }
   .seg button.on { background: var(--dark); color: #fff; border-color: var(--dark); }
   ol.steps, ul.notes { margin: 6px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.8; }
-  .tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; background: #fff; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
-  .tabs button { flex: 1; height: 54px; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; }
-  .tabs button.on { color: var(--dark); box-shadow: inset 0 3px 0 var(--accent); }
-  .fab { position: absolute; right: 14px; bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 48px; padding: 0 20px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(139,94,52,0.35); }
+  .tabs { position: absolute; left: 14px; right: 14px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; gap: 2px; padding: 5px; border-radius: 30px; background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 8px 28px rgba(90,58,30,0.20), 0 1px 3px rgba(90,58,30,0.10); max-width: 440px; margin: 0 auto; }
+  .tabs button { flex: 1; height: 46px; border: none; border-radius: 25px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; transition: background 0.2s ease, color 0.2s ease; }
+  .tabs button.on { color: var(--dark); background: rgba(185,113,63,0.16); box-shadow: none; }
+  .fab { position: absolute; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 48px; padding: 0 20px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(139,94,52,0.35); }
   .sheet { position: absolute; inset: 0; z-index: 100; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .sheet-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; border-bottom: 1px solid var(--line); }
   .sheet-top b { font-size: 16px; color: #5A3A1E; }
@@ -145,13 +145,13 @@
   .dlg .derr { color: var(--danger); font-size: 13px; font-weight: 600; margin-top: 8px; min-height: 18px; }
   .dlg p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
   .dlg .row { margin-top: 4px; }
-  .toast { position: absolute; left: 50%; bottom: calc(130px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 300; background: rgba(74,54,38,0.92); color: #fff; font-size: 13px; padding: 9px 14px; border-radius: 999px; max-width: 90%; text-align: center; }
+  .toast { position: absolute; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 300; background: rgba(74,54,38,0.92); color: #fff; font-size: 13px; padding: 9px 14px; border-radius: 999px; max-width: 90%; text-align: center; }
   .check { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.5; margin-top: 10px; }
   .check input { width: 20px; height: 20px; margin: 2px 0 0; flex-shrink: 0; accent-color: #C97B4A; }
   .howto-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .howto-head h3 { margin: 0; }
   .dhandle { position: absolute; left: 0; top: 46%; z-index: 62; width: 24px; height: 56px; border: none; border-radius: 0 12px 12px 0; background: var(--dark); color: #fff; font-size: 16px; line-height: 1; box-shadow: 2px 2px 8px rgba(0,0,0,0.18); }
-  .edgestrip { position: absolute; left: 0; top: 0; bottom: calc(54px + env(safe-area-inset-bottom, 0px)); width: 18px; z-index: 59; }
+  .edgestrip { position: absolute; left: 0; top: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); width: 18px; z-index: 59; }
   .dmask { position: absolute; inset: 0; z-index: 90; background: rgba(74,54,38,0.45); display: none; }
   .dmask.open { display: block; }
   .drawer { position: absolute; top: 0; left: 0; bottom: 0; width: 86%; max-width: 380px; z-index: 91; background: #fff; transform: translateX(-102%); visibility: hidden; transition: transform 0.25s ease, visibility 0s linear 0.25s; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 40px; box-shadow: 6px 0 24px rgba(0,0,0,0.18); }
@@ -166,7 +166,7 @@
   table.gloss tr:first-child td { border-top: none; }
   table.gloss td.jp { font-weight: 700; color: var(--dark); width: 38%; padding-right: 8px; }
   table.gloss .nw { white-space: nowrap; }
-  .fab2 { position: absolute; right: 14px; bottom: calc(66px + 48px + 10px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
+  .fab2 { position: absolute; right: 14px; bottom: calc(84px + 48px + 10px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
   .tcard { background: #fff; border-radius: 16px; padding: 12px; margin-top: 12px; box-shadow: 0 2px 10px rgba(139,94,52,0.08); }
   .catgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 4px; margin-top: 14px; }
   .catbtn { background: none; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--muted); }
@@ -179,7 +179,7 @@
   .catacts:empty { display: none; }
   .catbtn.on { color: var(--dark); }
   .catbtn.on .ic { background: var(--dark); color: #fff; }
-  .fab3 { bottom: calc(66px + 48px + 10px + 40px + 10px + env(safe-area-inset-bottom, 0px)); }
+  .fab3 { bottom: calc(84px + 48px + 10px + 40px + 10px + env(safe-area-inset-bottom, 0px)); }
   .fab3[disabled] { opacity: 0.6; }
   .acc-head { display: flex; align-items: center; gap: 8px; }
   .acc-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; text-align: left; background: none; border: none; padding: 11px 2px; color: var(--text); font-family: inherit; }
@@ -367,6 +367,28 @@
   var HOTEL_MAP_URL = 'https://maps.app.goo.gl/WwfyYf9xHSBx8cQ38?g_st=il';
   var JMA_URL = 'https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=130000';
 
+  // The day's schedule: the built-in items plus the ones the family added, ordered by time.
+  // Built-in items keep their old position-based id (so food spots saved under them stay attached); added ones get 'x_' + doc id.
+  function timeKey(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : -1; }   // '全日' etc. sort first
+  // Edits/deletes of built-in items are saved as small override documents in the same collection, with the item's own id
+  // ('d2-0' ...), so nothing has to be copied out of the code and food spots saved under the item stay attached.
+  var OVERRIDE_ID = /^d\d+-\d+$/;
+  function dayItems(day) {
+    var ov = {};
+    state.scheduleItems.forEach(function (x) { if (x && OVERRIDE_ID.test(String(x.id))) ov[x.id] = x; });
+    var list = [];
+    day.items.forEach(function (it, i) {
+      var id = day.id + '-' + i, o = ov[id];
+      if (o && o.deleted) return;
+      var item = o ? { time: o.time || it.time, name: o.name || it.name, desc: typeof o.desc === 'string' ? o.desc : it.desc } : it;
+      list.push({ it: item, itemId: id, seq: i, custom: false });
+    });
+    state.scheduleItems.filter(function (x) { return x && !OVERRIDE_ID.test(String(x.id)) && x.dayId === day.id && x.name && /^\d{1,2}:\d{2}$/.test(String(x.time || '')); })
+      .sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); })
+      .forEach(function (x, j) { list.push({ it: { time: x.time, name: x.name, desc: x.desc || '' }, itemId: 'x_' + x.id, seq: 1000 + j, custom: true }); });
+    list.sort(function (a, b) { return (timeKey(a.it.time) - timeKey(b.it.time)) || (a.seq - b.seq); });
+    return list;
+  }
   function dayById(id) { for (var i = 0; i < DAYS.length; i++) { if (DAYS[i].id === id) return DAYS[i]; } return DAYS[0]; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
@@ -397,6 +419,12 @@
     newLink: { label: '', url: '', desc: '' },
     addLinkError: '',
     confirmDeleteLinkId: null,
+    scheduleItems: [],         // from db: {id, dayId, time, name, desc, createdAt}  (schedule items the family added themselves)
+    addItemOpen: false,
+    newItem: { time: '', name: '', desc: '' },
+    addItemError: '',
+    editItemId: null,          // itemId being edited in the add/edit dialog, or null when adding a new one
+    confirmDeleteItemId: null,
     editingChecklistId: null,
     editingChecklistText: '',
     dragPlaceId: null
@@ -407,6 +435,7 @@
   var unsubChecklist = null;
   var unsubLinks = null;
   var unsubFood = null;
+  var unsubItems = null;
   var blankSwept = false;      // one-time cleanup of empty rows left over from earlier
 
   // ---------------------------------------------------------------------
@@ -422,6 +451,8 @@
     check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12 L11 15 L16 9"/></svg>',
     x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
     xSmall: '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B45151" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>',
+    pencil: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+    tornDoc: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B84343" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4a1 1 0 0 1 1-1h7l4 4v2"/><path d="M14 3v4h4"/><path d="M3.5 12l2.5 2 2-2 2 2 2-2 2 2 2-2 2.5 2"/><path d="M6 18v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>',
     plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B5E34" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5 L12 19 M5 12 L19 12"/></svg>',
     chevDown: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9 L12 15 L18 9"/></svg>',
     arrow: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B9713F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 L17 7 M9 7 L17 7 L17 15"/></svg>',
@@ -449,7 +480,7 @@
       return '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(d.label) + '</button>';
     }).join('');
 
-var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it, idx); }).join('<div style="height:10px;"></div>');
+var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"></div>');
 
     var remaining = state.checklist.filter(function (c) { return c.dayId === state.activeDayId && !c.checked; }).length;
     var badgeHtml = remaining > 0
@@ -481,7 +512,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
             : '') +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' + tabsHtml + '</div>' +
           '<div class="card">' +
-            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.title) + '</h3></div>' +
+            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.title) + '</h3>' +
+              '<button class="close-x" id="addItemBtn" aria-label="新增行程" title="新增行程" style="margin-left:auto;width:30px;height:30px;">' + ICO.plus + '</button></div>' +
             '<div style="display:flex;flex-direction:column;">' + itemsHtml + '</div>' +
           '</div>' +
           '<div style="text-align:center;font-size:11px;color:#B49A7F;padding:4px 20px;">點右上角的圈圈圖示，查看當天的天氣、交通、地圖、準備清單</div>' +
@@ -526,11 +558,16 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       '<button data-del-food="' + f.id + '" aria-label="移除這個美食點" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
     '</div>';
   }
-  function itemRowHtml(dayId, it, idx) {
-    var itemId = dayId + '-' + idx;
+  function itemRowHtml(entry) {
+    var it = entry.it, itemId = entry.itemId;
     var expanded = !!state.expandedItems[itemId];
     var spots = state.foodSpots.filter(function (f) { return f && f.itemId === itemId && f.label && /^https?:\/\//i.test(String(f.url || '')); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
     var countTag = spots.length ? '<span style="flex-shrink:0;background:#FBEADA;color:#B9713F;font-size:9.5px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:6px;">' + spots.length + '</span>' : '';
+    var actionsHtml = expanded
+      ? '<div style="flex-shrink:0;display:flex;gap:6px;">' +
+          '<button data-edit-item="' + itemId + '" aria-label="編輯這個行程" title="編輯這個行程" style="width:28px;height:28px;border-radius:50%;background:#FBEADA;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.pencil + '</button>' +
+          '<button data-del-item="' + itemId + '" aria-label="刪除這個行程" title="刪除這個行程" style="width:28px;height:28px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.tornDoc + '</button></div>'
+      : '';
     var bodyHtml = '';
     if (expanded) {
       var body = spots.map(foodRowHtml).join('<div style="height:6px;"></div>') +
@@ -539,12 +576,13 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       bodyHtml = '<div class="item-acc-body"><div style="padding:9px 0 2px 55px;display:flex;flex-direction:column;gap:6px;">' + body + '</div></div>';
     }
     return '<div class="item-acc' + (expanded ? ' open' : '') + '" data-item-acc="' + itemId + '">' +
+      '<div style="display:flex;align-items:flex-start;gap:8px;">' +
       '<button type="button" class="item-acc-head" data-toggle-item="' + itemId + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">' +
         '<span class="chev">' + ICO.chevDown + '</span>' +
         '<div style="flex-shrink:0;width:46px;text-align:center;background:#FBEADA;border-radius:7px;padding:4px 3px;font-weight:600;font-size:10.5px;color:#B9713F;">' + esc(it.time) + '</div>' +
         '<div style="flex-grow:1;min-width:0;"><div style="display:flex;align-items:center;"><div style="font-weight:700;font-size:12.5px;color:#4A3626;">' + esc(it.name) + '</div>' + countTag + '</div>' +
-        '<div style="font-size:11.5px;color:#8A7159;margin-top:1px;line-height:1.4;">' + esc(it.desc) + '</div></div>' +
-      '</button>' +
+        (it.desc ? '<div style="font-size:11.5px;color:#8A7159;margin-top:1px;line-height:1.4;">' + esc(it.desc) + '</div>' : '') + '</div>' +
+      '</button>' + actionsHtml + '</div>' +
       bodyHtml +
     '</div>';
   }
@@ -673,6 +711,37 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
           '<div style="display:flex;gap:6px;margin-top:8px;">' +
             '<button data-link-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
             '<button data-link-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">新增</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.confirmDeleteItemId) {
+      var di = dayItems(dayById(state.activeDayId)).filter(function (e) { return e.itemId === state.confirmDeleteItemId; })[0];
+      out += '<div class="modal-mask" style="z-index:70;" data-item-confirm-cancel="1"></div>' +
+        '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
+          '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要刪除行程「' + esc(di ? di.it.name : '') + '」嗎？底下記的美食點也會一起刪除。</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button data-item-confirm-cancel="1" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:13px;">取消</button>' +
+            '<button data-item-confirm-del="1" style="flex:1;padding:10px;border-radius:10px;border:none;background:#C0524B;color:#fff;font-weight:700;font-size:13px;">確定刪除</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.addItemOpen) {
+      var itemErr = state.addItemError
+        ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.addItemError) + '</div>'
+        : '';
+      out += '<div class="modal-mask" style="z-index:70;" data-item-add-cancel="1"></div>' +
+        '<div class="modal-box-top" id="addPlaceBox">' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">' + (state.editItemId ? '編輯行程' : '新增行程（' + esc(dayById(state.activeDayId).label) + '）') + '</div>' +
+          itemErr +
+          '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">時間</span>' +
+              '<input type="time" id="newItemTime" value="' + esc(state.newItem.time) + '" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:14px;height:32px;background:#FFFFFF;color:#4A3626;"></div>' +
+            labeledInput('地點（例如：晚餐餐廳）', 'newItemName', state.newItem.name) +
+            labeledInput('備註（可不填）', 'newItemDesc', state.newItem.desc) +
+          '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button data-item-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
+            '<button data-item-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">' + (state.editItemId ? '儲存' : '新增') + '</button>' +
           '</div>' +
         '</div>';
     }
@@ -898,6 +967,38 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       addFoodSpot(state.addFoodItemId, label, fixed, desc);
     });
 
+    // schedule items added by the family
+    var addItemBtn = document.getElementById('addItemBtn');
+    if (addItemBtn) addItemBtn.addEventListener('click', function () { state.newItem = { time: '', name: '', desc: '' }; state.addItemError = ''; state.editItemId = null; state.addItemOpen = true; render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-edit-item]'), function (el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var id = el.getAttribute('data-edit-item');
+        var ent = dayItems(dayById(state.activeDayId)).filter(function (x) { return x.itemId === id; })[0];
+        if (!ent) return;
+        state.newItem = { time: /^\d{1,2}:\d{2}$/.test(ent.it.time) ? (ent.it.time.length === 4 ? '0' + ent.it.time : ent.it.time) : '', name: ent.it.name, desc: ent.it.desc || '' };
+        state.addItemError = ''; state.editItemId = id; state.addItemOpen = true; render();
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-del-item]'), function (el) {
+      el.addEventListener('click', function (e) { e.stopPropagation(); state.confirmDeleteItemId = el.getAttribute('data-del-item'); render(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-item-confirm-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteItemId = null; render(); }); });
+    var itemDelEl = app.querySelector('[data-item-confirm-del]');
+    if (itemDelEl) itemDelEl.addEventListener('click', function () { var id = state.confirmDeleteItemId; state.confirmDeleteItemId = null; deleteScheduleItem(id); render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-item-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addItemOpen = false; state.addItemError = ''; state.editItemId = null; render(); }); });
+    var itemAddEl = app.querySelector('[data-item-add-confirm]');
+    if (itemAddEl) itemAddEl.addEventListener('click', function () {
+      var time = ((document.getElementById('newItemTime') || {}).value || '').trim();
+      var name = ((document.getElementById('newItemName') || {}).value || '').trim();
+      var desc = ((document.getElementById('newItemDesc') || {}).value || '').trim();
+      state.newItem = { time: time, name: name, desc: desc };
+      if (!/^\d{1,2}:\d{2}$/.test(time)) { state.addItemError = '請選擇時間'; render(); return; }
+      if (!name) { state.addItemError = '請輸入地點'; render(); return; }
+      if (state.editItemId) saveItemEdit(state.editItemId, time, name, desc);
+      else addScheduleItem(state.activeDayId, time, name, desc);
+    });
+
     // drawer: links added by the family
     var addLinkBtn = document.getElementById('addLinkBtn');
     if (addLinkBtn) addLinkBtn.addEventListener('click', function () { state.newLink = { label: '', url: '', desc: '' }; state.addLinkError = ''; state.addLinkOpen = true; render(); });
@@ -1078,6 +1179,42 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     if (!db || !id) return;
     db.doc('links/' + id).delete().catch(function (err) { noteDbError('deleteLink 失敗', err); });
   }
+  function addScheduleItem(dayId, time, name, desc) {
+    if (!db) { state.addItemError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    db.collection('scheduleItems').add({ dayId: dayId, time: time, name: name, desc: desc || '', createdAt: Date.now() })
+      .then(function () { state.addItemOpen = false; state.addItemError = ''; render(); })
+      .catch(function (err) {
+        noteDbError('addScheduleItem 失敗', err);
+        state.addItemError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function itemDbError(err, what) {
+    noteDbError(what + ' 失敗', err);
+    state.addItemError = '儲存失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+    render();
+  }
+  // Saves an edit: added items are updated in place; built-in items get an override document under their own id
+  function saveItemEdit(itemId, time, name, desc) {
+    if (!db) { state.addItemError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    var custom = itemId.indexOf('x_') === 0;
+    var ref = db.doc('scheduleItems/' + (custom ? itemId.slice(2) : itemId));
+    var data = { time: time, name: name, desc: desc || '' };
+    if (!custom) { data.dayId = state.activeDayId; data.deleted = false; }
+    ref.set(data, { merge: true })
+      .then(function () { state.addItemOpen = false; state.addItemError = ''; state.editItemId = null; render(); })
+      .catch(function (err) { itemDbError(err, 'saveItemEdit'); });
+  }
+  // Removes the item together with the food spots saved under it (built-in items are hidden by an override document)
+  function deleteScheduleItem(itemId) {
+    if (!db || !itemId) return;
+    var custom = itemId.indexOf('x_') === 0;
+    var b = db.batch();
+    if (custom) b.delete(db.doc('scheduleItems/' + itemId.slice(2)));
+    else b.set(db.doc('scheduleItems/' + itemId), { dayId: state.activeDayId, deleted: true }, { merge: true });
+    state.foodSpots.forEach(function (f) { if (f && f.itemId === itemId) b.delete(db.doc('foodSpots/' + f.id)); });
+    b.commit().catch(function (err) { noteDbError('deleteScheduleItem 失敗', err); });
+  }
   function addFoodSpot(itemId, label, url, desc) {
     if (!db) { state.addFoodError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
     var siblings = state.foodSpots.filter(function (f) { return f.itemId === itemId; });
@@ -1121,7 +1258,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
 
   function isLocalId(id) { return String(id).indexOf('local_') === 0; }
   function findChecklist(id) { return state.checklist.filter(function (c) { return c.id === id; })[0]; }
-  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc')); }
+  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc' || a.id === 'newItemTime' || a.id === 'newItemName' || a.id === 'newItemDesc')); }
   function persistChecklist(id, op, data) {
     if (!db || isLocalId(id)) return;
     var ref = db.doc('checklist/' + id);
@@ -1363,6 +1500,10 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
         state.foodSpots = snapshotToList(snap);
         render();
       }, function (err) { noteDbError('讀取美食點失敗', err); });
+      unsubItems = db.collection('scheduleItems').onSnapshot(function (snap) {
+        state.scheduleItems = snapshotToList(snap);
+        render();
+      }, function (err) { noteDbError('讀取行程失敗', err); });
       render();
     }).catch(function (err) {
       state.dbChecked = true;
@@ -1552,8 +1693,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     wrap.addEventListener('click', function (e) { if (e.target.getAttribute && e.target.getAttribute('data-dlg-close')) close(); });
     onBind(wrap, close);
   }
-  function confirmBox(msg, okLabel, onOk) {
-    openDialog('<p>' + esc(msg) + '</p><div class="row"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1;background:#C0524B" data-ok>' + esc(okLabel) + '</button></div>', function (w, close) {
+  function confirmBox(msg, okLabel, onOk, noLabel) {
+    openDialog('<p>' + esc(msg) + '</p><div class="row"><button class="btn ghost" style="flex:1" data-no>' + esc(noLabel || '取消') + '</button><button class="btn" style="flex:1;background:#C0524B" data-ok>' + esc(okLabel) + '</button></div>', function (w, close) {
       w.querySelector('[data-no]').addEventListener('click', close);
       w.querySelector('[data-ok]').addEventListener('click', function () { close(); onOk(); });
     });
@@ -1805,9 +1946,12 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
         data.expenses.forEach(function (e) { if (e.date === oldDate) b.update(ref('expenses/' + e.id), { date: newDate }); });
         guard(b.commit(), '改日期失敗'); return { ok: true };
       },
+      // Deletes the day together with every expense on it (one atomic batch); the screen asks first when there are any
       deleteDay: function (date) {
-        if (data.expenses.some(function (e) { return e.date === date; })) return { ok: false, error: '這天還有帳目' };
-        guard(ref('days/' + date).delete(), '刪除日期失敗'); return { ok: true };
+        var b = newBatch();
+        b.delete(ref('days/' + date));
+        data.expenses.forEach(function (e) { if (e.date === date) b.delete(ref('expenses/' + e.id)); });
+        guard(b.commit(), '刪除日期失敗'); return { ok: true };
       },
       saveSettings: function (patch) { guard(ref('settings/main').set(patch, { merge: true }), '儲存設定失敗'); },
       addRate: function (rate, source) {
@@ -1895,13 +2039,13 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   })();
 
   // ------------------------------------------------------------------ views
-  function membersCard() {
+  function membersCard(asAcc) {
     var rows = state.members.map(function (m) {
       return '<div class="mrow"><span>' + esc(m.name) + '</span><span class="row"><button class="btn ghost small" data-rename="' + m.id + '">改名</button><button class="btn danger small" data-del-member="' + m.id + '">刪除</button></span></div>';
     }).join('');
-    return '<div class="card"><h3>旅伴</h3>' +
-      (rows || '<div class="muted">還沒有旅伴，先在下面新增每一位一起旅行的人。</div>') +
-      '<div class="row" style="margin-top:10px"><input type="text" id="newMember" placeholder="姓名或稱呼（例如：爸爸）" maxlength="12"><button class="btn" data-add-member>新增</button></div></div>';
+    var body = (rows || '<div class="muted">還沒有旅伴，先在下面新增每一位一起旅行的人。</div>') +
+      '<div class="row" style="margin-top:10px"><input type="text" id="newMember" placeholder="姓名或稱呼（例如：爸爸）" maxlength="12"><button class="btn" data-add-member>新增</button></div>';
+    return asAcc ? setAcc('members', '旅伴', body) : '<div class="card"><h3>旅伴</h3>' + body + '</div>';
   }
   function viewOnboarding() {
     return '<div class="card"><h3>先新增旅伴</h3><div class="muted">輸入每位一起旅行的人。之後每一筆帳都可以選「誰付的」和「誰要分攤」，系統會自動算出誰欠誰。</div></div>' + membersCard();
@@ -1941,10 +2085,15 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     else { body.style.maxHeight = body.scrollHeight + 'px'; void body.offsetHeight; body.style.maxHeight = '0px'; }
   }
 
+  // a settings section as a collapsible card (open/closed is remembered on this phone, like the day cards)
+  function setAcc(id, title, body) {
+    return accHtml('set:' + id, '<span class="acc-text"><span class="acc-title">' + esc(title) + '</span></span>', '', body, 'card');
+  }
+
   function howtoCard() {
     return accHtml('howto', '<span class="acc-text"><span class="acc-title">怎麼用</span></span>', '',
       '<ol class="steps">' +
-        '<li>先到「設定」新增旅伴，並填好預設匯率（1 日圓 = 幾台幣）。資料會同步，家人打開同一個網址就看到同一份</li>' +
+        '<li>先到「設定」新增旅伴；日圓匯率可按右下角「更新匯率」抓取，記帳時從清單挑。資料會同步，家人打開同一個網址就看到同一份</li>' +
         '<li>按右下角「<b>＋ 新的一天</b>」新增旅行的日期，一天一天加。每一天是一個大項目，可以收合</li>' +
         '<li>在某一天右邊按「＋」，或按右下角「＋ 記一筆」：填金額，選<b>誰付的</b>、<b>誰要分攤</b>。日期直接從已新增的天數裡選</li>' +
         '<li>「結算」會算出每個人該收或該付多少，並列出怎麼轉帳最省事</li>' +
@@ -2011,11 +2160,11 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     var meOpts = '<option value="">（不指定）</option>' + state.members.map(function (m) {
       return '<option value="' + m.id + '"' + (lsGet('expenses.me') === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>';
     }).join('');
-    return membersCard() +
-      '<div class="card"><h3>我是誰</h3><div class="muted">這支手機記帳時，「誰付的」會預設成這個人（只存在這支手機）。</div><div style="margin-top:8px"><select id="meSelect">' + meOpts + '</select></div></div>' +
-      '<div class="card"><h3>資料儲存（Firebase 同步）</h3><div class="muted">資料存在你的Firebase，拿到這個網址的家人打開都會看到同一份，不用註冊或登入。斷線時會先存在手機，連上網路後自動補上傳。匯出備份可以另外留一份在自己手上。</div>' +
+    return membersCard(true) +
+      setAcc('me', '我是誰', '<div class="muted">這支手機記帳時，「誰付的」會預設成這個人（只存在這支手機）。</div><div style="margin-top:8px"><select id="meSelect">' + meOpts + '</select></div>') +
+      setAcc('data', '資料儲存（Firebase 同步）', '<div class="muted">資料存在你的Firebase，拿到這個網址的家人打開都會看到同一份，不用註冊或登入。斷線時會先存在手機，連上網路後自動補上傳。匯出備份可以另外留一份在自己手上。</div>' +
       '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small" data-export>匯出備份</button><button class="btn ghost small" data-import>匯入備份</button><button class="btn danger small" data-clear>清除全部資料</button></div>' +
-      (state.localInfo ? '<div class="muted" style="margin-top:12px">這支手機還有以前只存在手機的資料（' + state.localInfo.members + ' 位旅伴、' + state.localInfo.expenses + ' 筆帳目）。</div><div style="margin-top:8px"><button class="btn small" data-mig-upload>上傳到Firebase</button></div>' : '') + '</div>' +
+      (state.localInfo ? '<div class="muted" style="margin-top:12px">這支手機還有以前只存在手機的資料（' + state.localInfo.members + ' 位旅伴、' + state.localInfo.expenses + ' 筆帳目）。</div><div style="margin-top:8px"><button class="btn small" data-mig-upload>上傳到Firebase</button></div>' : '')) +
       rateCard();
   }
   function rateCard() {
@@ -2023,9 +2172,9 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       return '<div class="mrow"><span><b>' + fmtMD(r.fetchedAt) + '</b>　1 日圓 = ' + r.rate.toFixed(4) + ' 台幣<span class="muted" style="display:block;font-size:12px">' + esc(r.source) + '　' + fmtHM(r.fetchedAt) + '</span></span>' +
         '<span class="row"><button class="btn danger small" data-del-rate="' + r.id + '">刪除</button></span></div>';
     }).join('');
-    return '<div class="card"><h3>匯率紀錄</h3><div class="muted">按右下角的「更新匯率」才會抓現在的匯率，不會自動更新。每次抓到的匯率會存成一筆紀錄，記帳時可以挑要用哪一筆。</div>' +
+    return setAcc('rates', '匯率紀錄', '<div class="muted">按右下角的「更新匯率」才會抓現在的匯率，不會自動更新。每次抓到的匯率會存成一筆紀錄，記帳時可以挑要用哪一筆。</div>' +
       '<div class="row" style="margin-top:10px"><button class="btn ghost small" data-add-rate-manual>手動輸入</button></div>' +
-      (rows ? '<div style="margin-top:12px">' + rows + '</div>' : '<div class="muted" style="margin-top:12px">還沒有任何匯率紀錄。</div>') + '</div>';
+      (rows ? '<div style="margin-top:12px">' + rows + '</div>' : '<div class="muted" style="margin-top:12px">還沒有任何匯率紀錄。</div>'));
   }
 
   // ------------------------------------------------------------------ render
@@ -2215,7 +2364,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   }
   function deleteDayFlow(date) {
     var n = dayCount(date);
-    if (n) { toast(fmtDate(date) + ' 還有 ' + n + ' 筆帳目，請先刪除，或編輯帳目改到別天'); return; }
+    if (n) { confirmBox('內部存有帳目，確認刪除？', '是', function () { Store.deleteDay(date); }, '否'); return; }
     confirmBox('確定要刪除 ' + fmtDate(date) + ' 嗎？', '刪除', function () { Store.deleteDay(date); });
   }
   function openDayMenu(date) {
@@ -2316,7 +2465,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     if (!rates.length) return '';
     var sel = matchingRateOptionValue(f.rate);
     var opts = '<option value=""' + (sel === '' ? ' selected' : '') + '>手動輸入…</option>' + rates.map(function (r) {
-      return '<option value="' + r.rate + '"' + (sel === String(r.rate) ? ' selected' : '') + '>' + r.rate.toFixed(4) + '（' + fmtDateTime(r.fetchedAt) + '　' + esc(r.source) + '）</option>';
+      return '<option value="' + r.rate + '"' + (sel === String(r.rate) ? ' selected' : '') + '>' + r.rate.toFixed(4) + '（' + fmtDateTime(r.fetchedAt) + '）</option>';
     }).join('');
     return '<select id="f_rateSelect">' + opts + '</select>';
   }
