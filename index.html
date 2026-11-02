@@ -94,6 +94,7 @@
   .exp .l { min-width: 0; }
   .exp .t { font-size: 14px; font-weight: 700; }
   .exp .m { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
+  .exp .n { flex: 1 1 0; min-width: 0; font-size: 12px; color: var(--muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
   .exp .r { text-align: right; flex-shrink: 0; }
   .exp .a { font-size: 14px; font-weight: 700; color: var(--dark); }
   .tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: var(--soft); color: var(--accent); margin-left: 4px; }
@@ -166,6 +167,20 @@
   table.gloss td.jp { font-weight: 700; color: var(--dark); width: 38%; padding-right: 8px; }
   table.gloss .nw { white-space: nowrap; }
   .fab2 { position: absolute; right: 14px; bottom: calc(66px + 48px + 10px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
+  .tcard { background: #fff; border-radius: 16px; padding: 12px; margin-top: 12px; box-shadow: 0 2px 10px rgba(139,94,52,0.08); }
+  .catgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 4px; margin-top: 14px; }
+  .catbtn { background: none; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .catbtn .ic { width: 44px; height: 44px; border-radius: 50%; background: var(--soft); color: var(--dark); display: flex; align-items: center; justify-content: center; }
+  .catbtn.add .ic { background: #fff; border: 1.5px dashed var(--muted); color: var(--muted); }
+  .catbtn .ic .bd { fill: var(--soft); stroke: none; }
+  .catbtn.on .ic .bd { fill: var(--dark); }
+  .catbtn .ic text { fill: currentColor; stroke: none; font-size: 9px; font-weight: 800; font-family: inherit; }
+  .catacts { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+  .catacts:empty { display: none; }
+  .catbtn.on { color: var(--dark); }
+  .catbtn.on .ic { background: var(--dark); color: #fff; }
+  .fab3 { bottom: calc(66px + 48px + 10px + 40px + 10px + env(safe-area-inset-bottom, 0px)); }
+  .fab3[disabled] { opacity: 0.6; }
   .acc-head { display: flex; align-items: center; gap: 8px; }
   .acc-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; text-align: left; background: none; border: none; padding: 11px 2px; color: var(--text); font-family: inherit; }
   .acc-toggle .chev { display: inline-block; width: 16px; color: var(--accent); font-size: 14px; transition: transform 0.2s ease; flex-shrink: 0; }
@@ -196,6 +211,7 @@
       <main class="wrap" id="view"></main>
     </div>
   </div>
+  <button id="fabRate" class="fab2 fab3">⟳ 更新匯率</button>
   <button id="fabDay" class="fab2">＋ 新的一天</button>
   <button id="fab" class="fab">＋ 記一筆</button>
   <nav id="tabs" class="tabs"></nav>
@@ -221,7 +237,7 @@
     {
       id: 'd1', label: '12/4 抵達日', title: 'Day 1．抵達日．池袋周邊',
       items: [
-        { time: '10:55', name: '成田機場抵達', desc: '入境領行李，購買Suica／Pasmo交通卡' },
+        { time: '10:40', name: '成田機場抵達', desc: '入境領行李，購買Suica／Pasmo交通卡' },
         { time: '12:00', name: '搭NEX前往池袋', desc: '約80-90分鐘直達，不用轉車' },
         { time: '14:00', name: '飯店Check-in', desc: '放行李、稍作休息' },
         { time: '15:30', name: '池袋Sunshine City', desc: '展望台／水族館自由選擇，停留約2小時' },
@@ -318,7 +334,7 @@
       ]
     },
     {
-      id: 'd7', label: '12/10 柴又＋返程', title: 'Day 7．柴又老街．返程日（19:45班機）',
+      id: 'd7', label: '12/10 柴又＋返程', title: 'Day 7．柴又老街．返程日（19:55班機）',
       items: [
         { time: '09:00', name: '飯店退房', desc: '行李改寄放池袋站置物櫃或ecbo cloak合作店家' },
         { time: '09:30', name: '柴又帝釋天・參道老街', desc: '帝釋天、參道、山本亭庭園，停留約2小時' },
@@ -326,7 +342,7 @@
         { time: '13:00', name: '返回池袋取行李', desc: '確認隨身物品與退稅單據' },
         { time: '14:30', name: '搭NEX前往機場', desc: '約80-90分鐘' },
         { time: '16:00', name: '抵達成田機場：先退稅，再託運', desc: '先到「免稅手續機台」掃護照（出境大廳、託運行李之前），辦完再報到託運、逛免稅店' },
-        { time: '19:45', name: '班機起飛', desc: '預留約3.5小時緩衝，從容不趕' }
+        { time: '19:55', name: '班機起飛', desc: '預留約3.5小時緩衝，從容不趕' }
       ],
       weatherNote: '若大雨強風導致京成線誤點，柴又範圍不大，可縮短停留時間至1小時應變，不影響返程。',
       othersArranged: false,
@@ -336,7 +352,7 @@
           tips: ['最晚13:30前還沒回到池袋，就直接放棄取行李原訂順序，改計程車或宅配送行李到機場'] },
         { title: '機場 → 成田特快 N\'EX', subtitle: '池袋直達成田機場，全車指定席',
           rows: [{ route: '池袋 → 成田機場', time: '約80-90分', price: '約¥3,070' }],
-          tips: ['19:45的班機，14:30從池袋出發、16:00抵達機場，預留約3.5小時緩衝，時間相當充裕'] }
+          tips: ['19:55的班機，14:30從池袋出發、16:00抵達機場，預留約3.5小時緩衝，時間相當充裕'] }
       ]
     }
   ];
@@ -446,7 +462,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
           '<div style="max-width:480px;margin:0 auto;position:relative;z-index:1;">' +
             '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);border-radius:999px;padding:5px 12px;margin-bottom:10px;">' + ICO.plane + '<span style="font-weight:600;font-size:11px;color:#8B5E34;">TRAVEL GUIDE</span></div>' +
             '<h1 style="margin:0 0 6px;font-weight:700;font-size:22px;color:#5A3A1E;line-height:1.3;max-width:78%;">東京親子7日遊懶人包</h1>' +
-            '<p style="margin:0;font-size:11.5px;color:#6B4425;line-height:1.6;max-width:78%;">12/04（五）06:50起飛．10:55抵達成田機場．7天6夜．親子出遊</p>' +
+            '<p style="margin:0;font-size:11.5px;color:#6B4425;line-height:1.6;max-width:78%;">12/04（五）06:40起飛．10:40抵達成田機場．7天6夜．親子出遊</p>' +
           '</div>' +
           '<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1" style="position:absolute;right:-20px;top:-20px;opacity:0.2;"><path d="M2 16 L22 8 L18 13 L22 18 L2 16 Z"/><path d="M9 13 L9 20 L6 18"/></svg>' +
         '</div>' +
@@ -1384,10 +1400,21 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   function $(id) { return root.getElementById(id); }
 
   var TAX_THRESHOLD = 5000;   // yen, tax-excluded, per store per day (Japan Tourism Agency, refund method from 2026-11-01)
+  var CAT_ICONS = {
+    '餐飲': '<path d="M7 3v7M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 3c-2 2-3 4-3 7 0 2 1 3 3 3v8"/>',
+    '交通': '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l2-4M15 21l-2-4"/><circle cx="9" cy="14" r=".8"/><circle cx="15" cy="14" r=".8"/>',
+    '住宿': '<path d="M3 18V7M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="1.6"/>',
+    '門票體驗': '<path d="M3 7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a2 2 0 0 0 0 4v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/>',
+    '購物': '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    '藥妝': '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>',
+    '伴手禮': '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-2 0-4-1-4-3s3-2 4 3c1-5 4-5 4-3s-2 3-4 3"/>',
+    '娛樂': '<rect x="3" y="8" width="18" height="10" rx="5"/><path d="M8 11v4M6 13h4"/><circle cx="15.5" cy="12" r=".7" fill="currentColor"/><circle cx="17.5" cy="14" r=".7" fill="currentColor"/>',
+    '其他': '<circle cx="6" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18" cy="12" r="1.4" fill="currentColor"/>'
+  };
   var CATEGORIES = [
     { label: '餐飲', goods: false }, { label: '交通', goods: false }, { label: '住宿', goods: false },
     { label: '門票體驗', goods: false }, { label: '購物', goods: true }, { label: '藥妝', goods: true },
-    { label: '伴手禮', goods: true }, { label: '其他', goods: true }
+    { label: '伴手禮', goods: true }, { label: '娛樂', goods: false }, { label: '其他', goods: true }
   ];
 
   // ------------------------------------------------------------------ helpers
@@ -1399,6 +1426,23 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     var p = String(iso || '').split('-'); if (p.length !== 3) return iso || '';
     var d = new Date(+p[0], +p[1] - 1, +p[2]);
     return p[1] + '/' + p[2] + '（' + '日一二三四五六'.charAt(d.getDay()) + '）';
+  }
+  function fmtDateTime(ms) {
+    if (!ms) return '';
+    var d = new Date(ms), p2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return (d.getMonth() + 1) + '/' + p2(d.getDate()) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  }
+  // Just the calendar date part (the day it was added), for showing up front in the rate-history list.
+  function fmtMD(ms) {
+    if (!ms) return '';
+    var d = new Date(ms), p2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return (d.getMonth() + 1) + '/' + p2(d.getDate());
+  }
+  // Just the time-of-day part, to pair with fmtMD when the date is already shown separately.
+  function fmtHM(ms) {
+    if (!ms) return '';
+    var d = new Date(ms), p2 = function (n) { return n < 10 ? '0' + n : '' + n; };
+    return p2(d.getHours()) + ':' + p2(d.getMinutes());
   }
   function ymd(d) {
     var m = String(d.getMonth() + 1), day = String(d.getDate());
@@ -1479,11 +1523,13 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   window.ExpenseCalc = { splitMinor: splitMinor, computeBalances: computeBalances, settlements: settlements, taxGroups: taxGroups, taxInfo: taxInfo, minorOf: minorOf };
 
   // ------------------------------------------------------------------ state
-  var state = { tab: 'list', members: [], expenses: [], days: [], rate: null, storageMessage: '', loading: true, sync: 'loading', localInfo: null };
+  var state = { tab: 'list', members: [], expenses: [], days: [], rate: null, rates: [], cats: [], rateFetching: false, storageMessage: '', loading: true, sync: 'loading', localInfo: null };
   var renderPending = false;
   var formState = null, formId = null;
 
   function memberName(id) { for (var i = 0; i < state.members.length; i++) { if (state.members[i].id === id) return state.members[i].name; } return '（已刪除）'; }
+  function sortedRates() { return state.rates.slice().sort(function (a, b) { return (b.fetchedAt || 0) - (a.fetchedAt || 0); }); }
+  function latestRate() { var r = sortedRates(); return r.length ? r[0].rate : (state.rate || null); }
   function sortedExpenses() {
     return state.expenses.slice().sort(function (a, b) {
       if (a.date !== b.date) return a.date < b.date ? 1 : -1;
@@ -1555,7 +1601,14 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     var taxFree = e.currency === 'JPY' && e.taxFree === true;
     return { id: e.id, date: e.date, title: str(e.title) ? e.title : cat, category: cat, currency: e.currency, amount: e.amount, rate: rate,
       payerId: e.payerId, participantIds: parts, taxFree: taxFree, store: taxFree && typeof e.store === 'string' ? e.store : '',
-      taxRate: Number(e.taxRate) === 8 ? 8 : 10, consumed: taxFree && e.consumed === true, createdAt: num(e.createdAt) ? e.createdAt : 0 };
+      taxRate: Number(e.taxRate) === 8 ? 8 : 10, consumed: taxFree && e.consumed === true, createdAt: num(e.createdAt) ? e.createdAt : 0, note: typeof e.note === 'string' ? e.note : '' };
+  }
+  // A saved exchange-rate entry: 1 JPY = ? TWD, fetched (or typed) at a point in time, kept as history so a past
+  // expense can be re-matched and new ones can pick which snapshot to use.
+  function cleanCat(c) { return (c && str(c.id) && str(c.name)) ? { id: c.id, name: c.name, order: num(c.order) ? c.order : 0 } : null; }
+  function cleanRate(r) {
+    if (!r || !str(r.id) || !num(r.rate) || !(r.rate > 0)) return null;
+    return { id: r.id, rate: r.rate, fetchedAt: num(r.fetchedAt) ? r.fetchedAt : 0, source: str(r.source) ? r.source : '手動輸入' };
   }
   // Returns { data, skipped } or null when the shape is wrong. Used for backups and for the old this-phone data.
   function normalize(p) {
@@ -1595,10 +1648,10 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
 
   var Store = (function () {
     var fs = null, started = false, attached = false, ready = false, readyTimer = null;
-    var data = { members: [], expenses: [], days: [], settings: {} };
+    var data = { members: [], expenses: [], days: [], settings: {}, rates: [], cats: [] };
     var dayDocs = [], daysLoaded = false;  // dates that already have their own document
     var first = {}, meta = {}, askedDays = {};
-    var h = { onMembers: noop, onExpenses: noop, onDays: noop, onSettings: noop, onStatus: noop, onReady: noop };
+    var h = { onMembers: noop, onExpenses: noop, onDays: noop, onSettings: noop, onRates: noop, onCats: noop, onStatus: noop, onReady: noop };
     function noop() {}
 
     function fail(what, err) { console.error(what, err); h.onStatus({ message: what + '：' + explainDbError(err) }); }
@@ -1655,7 +1708,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       h.onStatus({ sync: !ready ? 'loading' : !heardFromFirebase ? 'offline' : pending ? 'pending' : cached ? 'offline' : 'synced' });
     }
     function becomeReady() { if (ready) return; ready = true; clearTimeout(readyTimer); h.onReady(); syncState(); }
-    function gotFirst(name) { first[name] = true; if (first.members && first.expenses && first.days && first.settings) becomeReady(); }
+    function gotFirst(name) { first[name] = true; if (first.members && first.expenses && first.days && first.settings && first.rates) becomeReady(); }
     function docsOf(snap) { return snap.docs.map(function (d) { var x = d.data() || {}; x.id = d.id; return x; }); }
     function listen(name, onData) {
       fs.collection(name).onSnapshot({ includeMetadataChanges: true }, function (snap) {
@@ -1686,6 +1739,14 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
         data.settings = d && num(d.rate) && d.rate > 0 ? { rate: d.rate } : {};
         h.onSettings(cloneJson(data.settings)); gotFirst('settings'); syncState();
       }, function (err) { fail('讀取失敗', err); gotFirst('settings'); });
+      listen('rates', function (snap) {
+        data.rates = docsOf(snap).map(cleanRate).filter(Boolean);
+        h.onRates(cloneJson(data.rates));
+      });
+      listen('cats', function (snap) {
+        data.cats = docsOf(snap).map(cleanCat).filter(Boolean).sort(function (a, b) { return a.order - b.order; });
+        h.onCats(cloneJson(data.cats));
+      });
     }
 
     // ---- data from the earlier this-phone-only version, if this phone still has some
@@ -1749,16 +1810,35 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
         guard(ref('days/' + date).delete(), '刪除日期失敗'); return { ok: true };
       },
       saveSettings: function (patch) { guard(ref('settings/main').set(patch, { merge: true }), '儲存設定失敗'); },
+      addRate: function (rate, source) {
+        var id = newId('r_');
+        guard(ref('rates/' + id).set({ rate: rate, fetchedAt: Date.now(), source: source || '手動輸入' }), '新增匯率失敗');
+        return id;
+      },
+      addCat: function (name) {
+        var order = data.cats.reduce(function (m, x) { return Math.max(m, x.order); }, 0) + 1;
+        guard(ref('cats/' + newId('c_')).set({ name: name, order: order }), '新增分類失敗');
+      },
+      renameCat: function (id, oldName, newName) {
+        var b = newBatch();
+        b.update(ref('cats/' + id), { name: newName });
+        data.expenses.forEach(function (e) { if (e.category === oldName) b.update(ref('expenses/' + e.id), { category: newName }); });
+        guard(b.commit(), '改分類名稱失敗');
+      },
+      deleteCat: function (id) { guard(ref('cats/' + id).delete(), '刪除分類失敗'); },
+      deleteRate: function (id) { guard(ref('rates/' + id).delete(), '刪除匯率失敗'); },
       clearAll: function () {
         var ops = [];
         data.members.forEach(function (m) { ops.push(['delete', 'members/' + m.id]); });
         data.expenses.forEach(function (e) { ops.push(['delete', 'expenses/' + e.id]); });
         dayDocs.forEach(function (d) { ops.push(['delete', 'days/' + d]); });
+        data.rates.forEach(function (r) { ops.push(['delete', 'rates/' + r.id]); });
+        data.cats.forEach(function (c) { ops.push(['delete', 'cats/' + c.id]); });
         ops.push(['delete', 'settings/main']);
         return runOps(ops, '清除失敗');
       },
       exportJson: function () {
-        return JSON.stringify({ app: 'trip-expenses', v: 1, exportedAt: new Date().toISOString(), members: data.members, days: data.days, expenses: data.expenses, settings: data.settings }, null, 1);
+        return JSON.stringify({ app: 'trip-expenses', v: 1, exportedAt: new Date().toISOString(), members: data.members, days: data.days, expenses: data.expenses, settings: data.settings, rates: data.rates }, null, 1);
       },
       // Checks a backup without changing anything. Returns { ok, error } or { ok, members, expenses, days, skipped }
       previewImport: function (text) {
@@ -1834,7 +1914,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     var sub = e.currency === 'JPY' ? '<div class="m">≈ ' + fmtTwd(expenseTwd(e)) + '</div>' : '';
     return '<button class="exp" data-edit="' + e.id + '"><div class="l"><div class="t">' + esc(e.title) + tags + '</div>' +
       '<div class="m">' + esc(e.category) + ' · ' + esc(memberName(e.payerId)) + ' 付 · ' + who + '</div></div>' +
-      '<div class="r"><div class="a">' + main + '</div>' + sub + '</div></button>';
+      (e.note ? '<div class="n">' + esc(e.note) + '</div>' : '') + '<div class="r"><div class="a">' + main + '</div>' + sub + '</div></button>';
   }
   // ---- accordion (how-to card and each day) ----
   function accClosedSet() { try { var a = JSON.parse(lsGet('expenses.accClosed') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -1936,8 +2016,16 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       '<div class="card"><h3>資料儲存（Firebase 同步）</h3><div class="muted">資料存在你的Firebase，拿到這個網址的家人打開都會看到同一份，不用註冊或登入。斷線時會先存在手機，連上網路後自動補上傳。匯出備份可以另外留一份在自己手上。</div>' +
       '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small" data-export>匯出備份</button><button class="btn ghost small" data-import>匯入備份</button><button class="btn danger small" data-clear>清除全部資料</button></div>' +
       (state.localInfo ? '<div class="muted" style="margin-top:12px">這支手機還有以前只存在手機的資料（' + state.localInfo.members + ' 位旅伴、' + state.localInfo.expenses + ' 筆帳目）。</div><div style="margin-top:8px"><button class="btn small" data-mig-upload>上傳到Firebase</button></div>' : '') + '</div>' +
-      '<div class="card"><h3>預設匯率</h3><div class="muted">1 日圓 = ? 台幣。記日圓帳目時會自動帶入。每一筆記下後匯率就鎖定，之後再改預設匯率，不會影響已經記的帳。</div>' +
-      '<div class="row" style="margin-top:8px"><input type="number" id="rateInput" step="0.0001" min="0" inputmode="decimal" placeholder="例如 0.2" value="' + (state.rate || '') + '"></div></div>';
+      rateCard();
+  }
+  function rateCard() {
+    var rows = sortedRates().map(function (r) {
+      return '<div class="mrow"><span><b>' + fmtMD(r.fetchedAt) + '</b>　1 日圓 = ' + r.rate.toFixed(4) + ' 台幣<span class="muted" style="display:block;font-size:12px">' + esc(r.source) + '　' + fmtHM(r.fetchedAt) + '</span></span>' +
+        '<span class="row"><button class="btn danger small" data-del-rate="' + r.id + '">刪除</button></span></div>';
+    }).join('');
+    return '<div class="card"><h3>匯率紀錄</h3><div class="muted">按右下角的「更新匯率」才會抓現在的匯率，不會自動更新。每次抓到的匯率會存成一筆紀錄，記帳時可以挑要用哪一筆。</div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn ghost small" data-add-rate-manual>手動輸入</button></div>' +
+      (rows ? '<div style="margin-top:12px">' + rows + '</div>' : '<div class="muted" style="margin-top:12px">還沒有任何匯率紀錄。</div>') + '</div>';
   }
 
   // ------------------------------------------------------------------ render
@@ -1999,10 +2087,36 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   function renameMember(id) {
     askText('旅伴名稱', memberName(id), function (v) { Store.updateMember(id, { name: v }); });
   }
-  function saveRate(v) {
-    var r = parseFloat(v);
-    if (!(r > 0)) return;
-    Store.saveSettings({ rate: r });
+  // Manual-trigger only: nothing fetches on a schedule or on page load. Source: open.er-api.com (free, no key,
+  // daily-updated). Each successful fetch becomes a new entry in the rate history, it never overwrites one.
+  function setRateFabState(fetching) {
+    var b = $('fabRate'); if (!b) return;
+    b.disabled = !!fetching;
+    b.textContent = fetching ? '更新中…' : '⟳ 更新匯率';
+  }
+  function fetchRateNow() {
+    if (state.rateFetching) return;
+    state.rateFetching = true; setRateFabState(true);
+    fetch('https://open.er-api.com/v6/latest/JPY')
+      .then(function (res) { if (!res.ok) throw new Error('http-' + res.status); return res.json(); })
+      .then(function (j) {
+        var rate = j && j.rates && j.rates.TWD;
+        if (j.result !== 'success' || !(rate > 0)) throw new Error('bad-data');
+        Store.addRate(rate, 'open.er-api.com');
+        toast('已抓取匯率 1 日圓 = ' + rate.toFixed(4) + ' 台幣');
+      })
+      .catch(function () { toast('抓取匯率失敗，請檢查網路，或手動輸入'); })
+      .then(function () { state.rateFetching = false; setRateFabState(false); });
+  }
+  function addRateManual() {
+    askText('手動輸入匯率（1 日圓 = ? 台幣）', '', function (v) {
+      var r = parseFloat(v);
+      if (!(r > 0)) { toast('請輸入大於 0 的數字'); return; }
+      Store.addRate(r, '手動輸入');
+    });
+  }
+  function deleteRate(id) {
+    confirmBox('確定要刪除這筆匯率紀錄嗎？已經用到它的帳目不受影響。', '刪除', function () { Store.deleteRate(id); });
   }
 
   function copyText(text, ta) {
@@ -2122,14 +2236,89 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   function newFormState(presetDate) {
     var me = lsGet('expenses.me');
     var payer = state.members.some(function (m) { return m.id === me; }) ? me : state.members[0].id;
-    return { date: defaultDay(presetDate), title: '', category: '餐飲', currency: 'JPY', amount: '', rate: state.rate ? String(state.rate) : '',
-      payerId: payer, participantIds: state.members.map(function (m) { return m.id; }), taxFree: false, store: '', taxRate: 10, consumed: false };
+    var r0 = latestRate();
+    return { date: defaultDay(presetDate), title: '', category: '餐飲', currency: 'JPY', amount: '', rate: r0 ? String(r0) : '',
+      payerId: payer, participantIds: state.members.map(function (m) { return m.id; }), taxFree: false, store: '', taxRate: 10, consumed: false, note: '' };
   }
   function formFromExpense(e) {
+    var r0 = latestRate();
     return { date: e.date, title: e.title, category: e.category, currency: e.currency, amount: String(e.amount),
-      rate: e.currency === 'JPY' ? String(e.rate) : (state.rate ? String(state.rate) : ''),
+      rate: e.currency === 'JPY' ? String(e.rate) : (r0 ? String(r0) : ''),
       payerId: e.payerId, participantIds: (e.participantIds || []).slice(), taxFree: !!e.taxFree, store: e.store || '',
-      taxRate: Number(e.taxRate) || 10, consumed: !!e.consumed };
+      taxRate: Number(e.taxRate) || 10, consumed: !!e.consumed, note: e.note || '' };
+  }
+  // The <option> for the rate-select whose value is closest to the form's current rate (so re-opening a saved
+  // expense still shows something sensible); '' (manual) when nothing saved matches closely enough.
+  function matchingRateOptionValue(rateStr) {
+    var r = parseFloat(rateStr), rates = sortedRates();
+    if (!(r > 0) || !rates.length) return '';
+    for (var i = 0; i < rates.length; i++) { if (Math.abs(rates[i].rate - r) < 0.00005) return String(rates[i].rate); }
+    return '';
+  }
+  var WRENCH = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>';
+  function catBtn(label, on, inner, extra, attr) {
+    return '<button type="button" class="catbtn' + (on ? ' on' : '') + (extra || '') + '" ' + attr + '><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg></span>' + esc(label) + '</button>';
+  }
+  function catGridHtml(sel) {
+    var html = CATEGORIES.map(function (c) { return catBtn(c.label, c.label === sel, CAT_ICONS[c.label], '', 'data-cat="' + esc(c.label) + '"'); }).join('');
+    state.cats.forEach(function (c, i) {
+      html += catBtn(c.name, c.name === sel, WRENCH + '<circle class="bd" cx="12" cy="12" r="4.4"/><text x="12" y="15" text-anchor="middle">' + (i + 1) + '</text>', '', 'data-cat="' + esc(c.name) + '"');
+    });
+    return html + catBtn('新增', false, '<path d="M12 6v12M6 12h12"/>', ' add', 'data-cat-add="1"');
+  }
+  function selectedCustomCat() {
+    var c = null;
+    if (formState) state.cats.forEach(function (x) { if (x.name === formState.category) c = x; });
+    return c;
+  }
+  function renderCatActs() {
+    var el = $('f_catActs'); if (!el) return;
+    var c = selectedCustomCat();
+    el.innerHTML = c ? '<button type="button" class="btn ghost small" data-cat-rename="' + c.id + '">改名「' + esc(c.name) + '」</button><button type="button" class="btn danger small" data-cat-del="' + c.id + '">刪除「' + esc(c.name) + '」</button>' : '';
+  }
+  function renderCatGrid() { var el = $('f_cats'); if (el && formState) { el.innerHTML = catGridHtml(formState.category); renderCatActs(); } }
+  function renameCategory(id) {
+    var c = null; state.cats.forEach(function (x) { if (x.id === id) c = x; });
+    if (!c) return;
+    askText('分類新名稱（最多 6 個字）', c.name, function (v) {
+      v = v.trim().slice(0, 6);
+      if (v === c.name) return;
+      var dup = CATEGORIES.some(function (x) { return x.label === v; }) || state.cats.some(function (x) { return x.name === v; });
+      if (dup) { toast('已經有「' + v + '」了'); return; }
+      if (formState && formState.category === c.name) formState.category = v;
+      Store.renameCat(c.id, c.name, v);
+      renderCatGrid();
+      toast('已改名，用到它的帳目也一併更新');
+    });
+  }
+  function deleteCategory(id) {
+    var c = null; state.cats.forEach(function (x) { if (x.id === id) c = x; });
+    if (!c) return;
+    var used = state.expenses.filter(function (e) { return e.category === c.name; }).length;
+    confirmBox('確定要刪除分類「' + c.name + '」嗎？' + (used ? '已有 ' + used + ' 筆帳目用到它，帳目會保留，分類名稱照舊顯示。' : ''), '刪除', function () {
+      if (formState && formState.category === c.name) formState.category = '其他';
+      Store.deleteCat(c.id);
+      renderCatGrid();
+    });
+  }
+  function addCategory() {
+    if (state.cats.length >= 9) { toast('自訂分類最多 9 個'); return; }
+    askText('新分類名稱（最多 6 個字）', '', function (v) {
+      v = v.trim().slice(0, 6);
+      var dup = CATEGORIES.some(function (c) { return c.label === v; }) || state.cats.some(function (c) { return c.name === v; });
+      if (dup) { toast('已經有「' + v + '」了'); return; }
+      Store.addCat(v);
+      if (formState) { formState.category = v; renderCatGrid(); }
+    });
+  }
+  function rateSelectHtml(f) {
+    var rates = sortedRates();
+    if (!rates.length) return '';
+    var sel = matchingRateOptionValue(f.rate);
+    var opts = '<option value=""' + (sel === '' ? ' selected' : '') + '>手動輸入…</option>' + rates.map(function (r) {
+      return '<option value="' + r.rate + '"' + (sel === String(r.rate) ? ' selected' : '') + '>' + r.rate.toFixed(4) + '（' + fmtDateTime(r.fetchedAt) + '　' + esc(r.source) + '）</option>';
+    }).join('');
+    return '<select id="f_rateSelect">' + opts + '</select>';
   }
   function formHtml(f, isEdit) {
     var chips = state.members.map(function (m) {
@@ -2138,20 +2327,21 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     var payer = state.members.map(function (m) { return '<option value="' + m.id + '"' + (m.id === f.payerId ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
     var dayOpts = state.days.slice().reverse().map(function (d) { return '<option value="' + d + '"' + (d === f.date ? ' selected' : '') + '>' + esc(fmtDate(d)) + '</option>'; }).join('');
     if (f.date && state.days.indexOf(f.date) === -1) dayOpts = '<option value="' + esc(f.date) + '" selected>' + esc(fmtDate(f.date)) + '</option>' + dayOpts;
-    var cats = CATEGORIES.map(function (c) { return '<option' + (c.label === f.category ? ' selected' : '') + '>' + c.label + '</option>'; }).join('');
+    var cats = catGridHtml(f.category);
     return '<div class="sheet"><div class="sheet-top"><button class="btn ghost small" data-f="cancel">取消</button><b>' + (isEdit ? '編輯帳目' : '記一筆') + '</b><button class="btn small" data-f="save">儲存</button></div><div class="sheet-body">' +
       '<label class="f" for="f_date">日期（從已新增的天數選）</label><select id="f_date">' + dayOpts + '</select><div class="hint tight">沒有想要的日期？先取消，按右下角「＋ 新的一天」新增。</div>' +
-      '<label class="f" for="f_title">品項</label><input type="text" id="f_title" placeholder="例如：拉麵、Suica儲值" value="' + esc(f.title) + '">' +
-      '<label class="f" for="f_category">分類</label><select id="f_category">' + cats + '</select>' +
+      '<div class="tcard"><input type="text" id="f_title" aria-label="品項" placeholder="品項，例如：拉麵、Suica儲值" value="' + esc(f.title) + '"><div class="catgrid" id="f_cats">' + cats + '</div><div class="catacts" id="f_catActs"></div></div>' +
       '<label class="f">幣別</label><div class="seg"><button type="button" data-cur="JPY" class="' + (f.currency === 'JPY' ? 'on' : '') + '">日圓 ¥</button><button type="button" data-cur="TWD" class="' + (f.currency === 'TWD' ? 'on' : '') + '">台幣 NT$</button></div>' +
       '<label class="f" for="f_amount">金額（含稅、實際付的）</label><input type="number" id="f_amount" inputmode="decimal" min="0" step="any" placeholder="0" value="' + esc(f.amount) + '">' +
-      '<div id="f_rateWrap"><label class="f" for="f_rate">匯率：1 日圓 = ? 台幣</label><input type="number" id="f_rate" inputmode="decimal" min="0" step="any" placeholder="例如 0.2" value="' + esc(f.rate) + '"><div class="hint" id="f_twdPreview"></div></div>' +
+      '<div id="f_rateWrap"><label class="f" for="f_rate">匯率：1 日圓 = ? 台幣</label>' + rateSelectHtml(f) +
+      '<input type="number" id="f_rate" inputmode="decimal" min="0" step="any" placeholder="例如 0.2" value="' + esc(f.rate) + '"><div class="hint" id="f_twdPreview"></div></div>' +
       '<label class="f" for="f_payer">誰付的</label><select id="f_payer">' + payer + '</select>' +
       '<label class="f">誰要分攤（平均分）</label><div>' + chips + '<button type="button" class="chip" data-allparts="1">全選</button></div><div class="hint" id="f_shares"></div>' +
       '<div id="f_taxWrap" class="box"><label class="check" style="margin-top:0"><input type="checkbox" id="f_taxfree"' + (f.taxFree ? ' checked' : '') + '><span>在免稅店購買，打算辦退稅</span></label>' +
       '<div id="f_taxFields"><label class="f" for="f_store">店名（同一家店請寫一樣）</label><input type="text" id="f_store" placeholder="例如：Bic Camera 池袋" value="' + esc(f.store) + '"><div class="hist" id="f_storeHist"></div>' +
       '<label class="f">稅率</label><div class="seg"><button type="button" data-taxrate="10" class="' + (f.taxRate === 10 ? 'on' : '') + '">10%（一般商品）</button><button type="button" data-taxrate="8" class="' + (f.taxRate === 8 ? 'on' : '') + '">8%（食品飲料）</button></div>' +
       '<label class="check"><input type="checkbox" id="f_consumed"' + (f.consumed ? ' checked' : '') + '><span>已經吃掉或用掉（不能退稅）</span></label><div class="hint" id="f_taxPreview"></div></div></div>' +
+      '<label class="f" for="f_note">備註（選填）</label><input type="text" id="f_note" maxlength="60" placeholder="例如：和牛套餐、帶給媽媽的" value="' + esc(f.note) + '">' +
       '<div class="err" id="fError"></div>' +
       (isEdit ? '<button class="btn danger" style="width:100%;margin-top:14px" data-f="delete">刪除這筆帳目</button>' : '') +
       '</div></div>';
@@ -2164,6 +2354,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     q('f_rateWrap').style.display = jpy ? '' : 'none';
     q('f_taxWrap').style.display = canTax ? '' : 'none';
     q('f_taxFields').style.display = (canTax && f.taxFree) ? '' : 'none';
+    Array.prototype.forEach.call(root.querySelectorAll('[data-cat]'), function (b) { b.className = 'catbtn' + (b.getAttribute('data-cat') === f.category ? ' on' : ''); });
+    renderCatActs();
     Array.prototype.forEach.call(root.querySelectorAll('[data-cur]'), function (b) { b.className = b.getAttribute('data-cur') === f.currency ? 'on' : ''; });
     Array.prototype.forEach.call(root.querySelectorAll('[data-taxrate]'), function (b) { b.className = Number(b.getAttribute('data-taxrate')) === f.taxRate ? 'on' : ''; });
     Array.prototype.forEach.call(root.querySelectorAll('[data-part]'), function (b) { b.className = 'chip' + (f.participantIds.indexOf(b.getAttribute('data-part')) > -1 ? ' on' : ''); });
@@ -2224,8 +2416,12 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     sheet.addEventListener('input', function (e) {
       var id = e.target.id, f = formState;
       if (id === 'f_amount') f.amount = e.target.value;
-      else if (id === 'f_rate') f.rate = e.target.value;
+      else if (id === 'f_rate') {
+        f.rate = e.target.value;
+        var rs = $('f_rateSelect'); if (rs) rs.value = matchingRateOptionValue(f.rate);
+      }
       else if (id === 'f_title') f.title = e.target.value;
+      else if (id === 'f_note') f.note = e.target.value;
       else if (id === 'f_store') f.store = e.target.value;
       else if (id === 'f_date') f.date = e.target.value;
       else return;
@@ -2233,18 +2429,25 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
     });
     sheet.addEventListener('change', function (e) {
       var id = e.target.id, f = formState;
-      if (id === 'f_category') f.category = e.target.value;
-      else if (id === 'f_payer') f.payerId = e.target.value;
+      if (id === 'f_payer') f.payerId = e.target.value;
       else if (id === 'f_taxfree') f.taxFree = e.target.checked;
       else if (id === 'f_consumed') f.consumed = e.target.checked;
       else if (id === 'f_date') f.date = e.target.value;
+      else if (id === 'f_rateSelect') {
+        if (e.target.value) { f.rate = e.target.value; var ri = $('f_rate'); if (ri) ri.value = f.rate; updateFormPreview(); }
+        return;
+      }
       else return;
       applyFormVisibility();
     });
     sheet.addEventListener('click', function (e) {
       var t = e.target.closest ? e.target.closest('button') : null; if (!t) return;
       var f = formState;
-      if (t.hasAttribute('data-cur')) { f.currency = t.getAttribute('data-cur'); applyFormVisibility(); }
+      if (t.hasAttribute('data-cat-add')) addCategory();
+      else if (t.hasAttribute('data-cat-rename')) renameCategory(t.getAttribute('data-cat-rename'));
+      else if (t.hasAttribute('data-cat-del')) deleteCategory(t.getAttribute('data-cat-del'));
+      else if (t.hasAttribute('data-cat')) { f.category = t.getAttribute('data-cat'); applyFormVisibility(); }
+      else if (t.hasAttribute('data-cur')) { f.currency = t.getAttribute('data-cur'); applyFormVisibility(); }
       else if (t.hasAttribute('data-store')) {
         f.store = t.getAttribute('data-store');
         var si = $('f_store'); si.value = f.store; si.blur();
@@ -2295,7 +2498,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       date: f.date, title: String(f.title).trim() || f.category, category: f.category, currency: f.currency,
       amount: amount, rate: rate, payerId: f.payerId, participantIds: ordered,
       taxFree: !!taxFree, store: taxFree ? String(f.store).trim() : '', taxRate: Number(f.taxRate) || 10, consumed: !!(taxFree && f.consumed),
-      createdAt: existing && existing.createdAt ? existing.createdAt : Date.now()
+      createdAt: existing && existing.createdAt ? existing.createdAt : Date.now(),
+      note: String(f.note || '').trim()
     };
     setAccClosed('day:' + data.date, false);
     if (formId) Store.setExpense(formId, data); else Store.addExpense(data);
@@ -2377,6 +2581,7 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
   function bindStatic() {
     $('fab').addEventListener('click', function () { openForm(null); });
     $('fabDay').addEventListener('click', openNewDay);
+    $('fabRate').addEventListener('click', fetchRateNow);
     $('banner').addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
       if (b.hasAttribute('data-mig-upload')) uploadLocalData(b);
@@ -2411,6 +2616,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       else if (t.hasAttribute('data-clear')) clearAllData();
       else if (t.hasAttribute('data-del-member')) deleteMember(t.getAttribute('data-del-member'));
       else if (t.hasAttribute('data-rename')) renameMember(t.getAttribute('data-rename'));
+      else if (t.hasAttribute('data-add-rate-manual')) addRateManual();
+      else if (t.hasAttribute('data-del-rate')) deleteRate(t.getAttribute('data-del-rate'));
     });
     view.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && e.target.id === 'newMember') {
@@ -2421,7 +2628,6 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       }
     });
     view.addEventListener('change', function (e) {
-      if (e.target.id === 'rateInput') saveRate(e.target.value);
       if (e.target.id === 'meSelect') lsSet('expenses.me', e.target.value);
     });
     view.addEventListener('focusout', function () {
@@ -2440,6 +2646,8 @@ var itemsHtml = day.items.map(function (it, idx) { return itemRowHtml(day.id, it
       onExpenses: function (list) { state.expenses = list; renderView(); },
       onDays: function (list) { state.days = list.map(function (d) { return d.date; }).sort(); renderView(); },
       onSettings: function (st) { state.rate = st && st.rate > 0 ? Number(st.rate) : null; renderView(); },
+      onRates: function (list) { state.rates = list; renderView(); },
+      onCats: function (list) { state.cats = list; if (formState) renderCatGrid(); },
       onStatus: function (st) {
         if (st.message !== undefined) state.storageMessage = st.message;
         if (st.sync) { state.sync = st.sync; if (st.sync === 'synced') state.storageMessage = ''; }
