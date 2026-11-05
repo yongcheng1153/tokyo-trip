@@ -383,13 +383,43 @@
       var item = o ? { time: o.time || it.time, name: o.name || it.name, desc: typeof o.desc === 'string' ? o.desc : it.desc } : it;
       list.push({ it: item, itemId: id, seq: i, custom: false });
     });
-    state.scheduleItems.filter(function (x) { return x && !OVERRIDE_ID.test(String(x.id)) && x.dayId === day.id && x.name && /^\d{1,2}:\d{2}$/.test(String(x.time || '')); })
+    state.scheduleItems.filter(function (x) { return x && !OVERRIDE_ID.test(String(x.id)) && String(x.id).indexOf('day_') !== 0 && x.dayId === day.id && x.name && /^\d{1,2}:\d{2}$/.test(String(x.time || '')); })
       .sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); })
       .forEach(function (x, j) { list.push({ it: { time: x.time, name: x.name, desc: x.desc || '' }, itemId: 'x_' + x.id, seq: 1000 + j, custom: true }); });
     list.sort(function (a, b) { return (timeKey(a.it.time) - timeKey(b.it.time)) || (a.seq - b.seq); });
     return list;
   }
-  function dayById(id) { for (var i = 0; i < DAYS.length; i++) { if (DAYS[i].id === id) return DAYS[i]; } return DAYS[0]; }
+  // Day tabs: a date plus a place name, shown joined ('12/5 淺草・上野') and ordered by date.
+  // The built-in label supplies the defaults; edits are saved in scheduleItems under 'day_<id>'.
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function dayDefaults(day) {
+    var m = /^(\d+)\/(\d+)\s*(.*)$/.exec(day.label || '');
+    return m ? { date: '2026-' + pad2(+m[1]) + '-' + pad2(+m[2]), place: m[3] } : { date: '2026-12-04', place: day.label || '' };
+  }
+  function dayOverride(id) { var o = null; state.scheduleItems.forEach(function (x) { if (x && x.id === 'day_' + id) o = x; }); return o; }
+  function customDay(id) { return { id: id, label: '', title: '', items: [], weatherNote: '', othersArranged: false, transport: [], custom: true }; }
+  // The days shown: built-in days that were not removed, plus the days the family added ('day_c…' documents)
+  function allDays() {
+    var list = DAYS.filter(function (d) { var o = dayOverride(d.id); return !(o && o.deleted === true); });
+    state.scheduleItems.forEach(function (x) {
+      if (x && /^day_c/.test(String(x.id)) && x.custom === true && /^\d{4}-\d{2}-\d{2}$/.test(String(x.date || '')) && typeof x.place === 'string' && x.place.trim()) list.push(customDay(String(x.id).slice(4)));
+    });
+    return list.length ? list : DAYS.slice();
+  }
+  function removedBuiltinDays() { return DAYS.filter(function (d) { var o = dayOverride(d.id); return !!(o && o.deleted === true); }); }
+  function dayInfo(day) {
+    var d = dayDefaults(day), o = dayOverride(day.id);
+    var date = o && /^\d{4}-\d{2}-\d{2}$/.test(String(o.date || '')) ? o.date : d.date;
+    var place = o && typeof o.place === 'string' && o.place.trim() ? o.place.trim() : d.place;
+    var p = date.split('-');
+    return { date: date, place: place, label: (+p[1]) + '/' + (+p[2]) + (place ? ' ' + place : '') };
+  }
+  function orderedDays() {
+    return allDays().map(function (d, i) { return { d: d, i: i, date: dayInfo(d).date }; })
+      .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i; })
+      .map(function (x) { return x.d; });
+  }
+  function dayById(id) { var l = allDays(); for (var i = 0; i < l.length; i++) { if (l[i].id === id) return l[i]; } return orderedDays()[0]; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   // ---------------------------------------------------------------------
@@ -423,6 +453,11 @@
     addItemOpen: false,
     newItem: { time: '', name: '', desc: '' },
     addItemError: '',
+    editDayOpen: false,
+    dayForm: { date: '', place: '' },
+    editDayError: '',
+    editDayId: null,           // day being edited in the dialog, or null when adding a new day
+    confirmDeleteDayId: null,
     editItemId: null,          // itemId being edited in the add/edit dialog, or null when adding a new one
     confirmDeleteItemId: null,
     editingChecklistId: null,
@@ -470,15 +505,18 @@
     if ((typeof dragActive !== 'undefined' && dragActive) || isEditFocused()) { renderPending = true; return; }
     renderPending = false;
     var day = dayById(state.activeDayId);
+    state.activeDayId = day.id;
     var app = document.getElementById('app');
 
-    var tabsHtml = DAYS.map(function (d) {
+    var tabsHtml = orderedDays().map(function (d) {
       var active = d.id === state.activeDayId;
       var style = active
         ? 'background:#8B5E34;color:#fff;box-shadow:0 3px 8px rgba(139,94,52,0.3);'
         : 'background:#fff;color:#8B5E34;border:1.5px solid #EADFCB;';
-      return '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(d.label) + '</button>';
-    }).join('');
+      var pillHtml = '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(dayInfo(d).label) + '</button>';
+      return !active ? pillHtml : '<div style="display:flex;gap:6px;flex-shrink:0;">' + pillHtml + '<button class="pill" id="editDayBtn" aria-label="編輯日期與地點" title="編輯日期與地點" style="background:#fff;border:1.5px solid #EADFCB;width:36px;padding:0;display:flex;align-items:center;justify-content:center;">' + ICO.pencil + '</button>' + '</div>';
+    }).join('') +
+      '<button class="pill" id="addDayBtn" aria-label="新增一天" title="新增一天" style="background:transparent;border:1.5px dashed #9C8770;width:36px;height:36px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9C8770" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
 
 var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"></div>');
 
@@ -510,9 +548,9 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
           ((state.dbError || (state.dbChecked && !state.dbReady))
             ? '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:11.5px;color:#A65C1E;line-height:1.6;">目前連不上資料庫，景點與清單暫時是唯讀，新增／刪除／打勾不會被存起來。' + (state.dbError ? '<br>原因：' + esc(state.dbError) : '') + '</div>'
             : '') +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">' + tabsHtml + '</div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding-right:44px;">' + tabsHtml + '</div>' +
           '<div class="card">' +
-            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.title) + '</h3>' +
+            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.custom ? 'Day ' + (orderedDays().map(function (d) { return d.id; }).indexOf(day.id) + 1) + '．' + dayInfo(day).place : day.title) + '</h3>' +
               '<button class="close-x" id="addItemBtn" aria-label="新增行程" title="新增行程" style="margin-left:auto;width:30px;height:30px;">' + ICO.plus + '</button></div>' +
             '<div style="display:flex;flex-direction:column;">' + itemsHtml + '</div>' +
           '</div>' +
@@ -609,7 +647,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
           statBox('平均高溫', '11.9度') + statBox('平均氣溫', '7.6度') + statBox('平均低溫', '3.5度') +
         '</div>' +
-        '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:11px;padding:11px;font-size:12px;color:#A65C1E;line-height:1.6;margin-bottom:10px;">' + esc(day.weatherNote) + '</div>' +
+        (day.weatherNote ? '<div style="background:#FDF0E4;border:1.5px solid #F0C9A0;border-radius:11px;padding:11px;font-size:12px;color:#A65C1E;line-height:1.6;margin-bottom:10px;">' + esc(day.weatherNote) + '</div>' : '') +
         '<a href="' + JMA_URL + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#FBF1E4;border-radius:11px;padding:11px 13px;">' +
           '<div><div style="font-size:12px;font-weight:700;color:#4A3626;">查看即時天氣預報</div><div style="font-size:10px;color:#9C8770;margin-top:1px;">日本氣象廳官方 東京都預報</div></div>' +
           '<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
@@ -621,6 +659,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       if (day.othersArranged) {
         body += '<div style="background:#FBF1E4;border-radius:11px;padding:12px;font-size:12px;color:#6B4425;line-height:1.6;margin-bottom:8px;">' + esc(day.othersNote) + '</div>';
       }
+      if (!day.transport.length && !day.othersArranged) body += '<div style="font-size:12px;color:#B49A7F;text-align:center;padding:16px 0;">這天還沒有交通資訊</div>';
       body += day.transport.map(function (tbl) {
         var rows = tbl.rows.map(function (row) {
           return '<div style="display:flex;flex-direction:column;gap:1px;background:#fff;border-radius:8px;padding:7px 9px;font-size:11px;">' +
@@ -714,6 +753,46 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
           '</div>' +
         '</div>';
     }
+    if (state.confirmDeleteDayId) {
+      var cd = dayById(state.confirmDeleteDayId);
+      out += '<div class="modal-mask" style="z-index:70;" data-day-del-cancel="1"></div>' +
+        '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
+          '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要刪除「' + esc(dayInfo(cd).label) + '」這一天嗎？' + (cd.custom ? '這天的行程、美食點、景點和準備清單都會一起刪除。' : '原本的行程內容會先收起來，之後可以在「＋」裡還原。') + '</div>' +
+          '<div style="display:flex;gap:8px;">' +
+            '<button data-day-del-cancel="1" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:13px;">取消</button>' +
+            '<button data-day-del-confirm="1" style="flex:1;padding:10px;border-radius:10px;border:none;background:#C0524B;color:#fff;font-weight:700;font-size:13px;">確定刪除</button>' +
+          '</div>' +
+        '</div>';
+    }
+    if (state.editDayOpen) {
+      var dayErr = state.editDayError
+        ? '<div style="background:#FBEAEA;color:#B84343;font-size:11px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.5;">' + esc(state.editDayError) + '</div>'
+        : '';
+      var removed = state.editDayId ? [] : removedBuiltinDays();
+      var restoreHtml = removed.length
+        ? '<div style="margin-top:6px;"><div style="font-size:10.5px;color:#9C8770;margin-bottom:4px;">或還原已刪除的天：</div><div style="display:flex;gap:5px;flex-wrap:wrap;">' +
+            removed.map(function (d) { return '<button data-restore-day="' + d.id + '" style="padding:4px 10px;border-radius:999px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-size:11px;font-weight:700;">' + esc(dayInfo(d).label) + '</button>'; }).join('') +
+          '</div></div>'
+        : '';
+      out += '<div class="modal-mask" style="z-index:70;" data-day-edit-cancel="1"></div>' +
+        '<div class="modal-box-top" id="addPlaceBox">' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">' + (state.editDayId ? '編輯日期與地點' : '新增一天') + '</div>' +
+          dayErr +
+          '<div style="display:flex;flex-direction:column;gap:5px;">' +
+            '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">日期</span>' +
+              '<input type="date" id="editDayDate" value="' + esc(state.dayForm.date) + '" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:14px;height:32px;background:#FFFFFF;color:#4A3626;"></div>' +
+            '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">地點</span>' +
+              '<input type="text" id="editDayPlace" value="' + esc(state.dayForm.place) + '" placeholder="例如：淺草・上野" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:12px;height:30px;background:#FFFFFF;color:#4A3626;"></div>' +
+            '<div style="font-size:10.5px;color:#9C8770;margin-top:2px;">分頁會顯示成「日期 地點」，並依日期先後排列</div>' +
+          '</div>' +
+          restoreHtml +
+          '<div style="display:flex;gap:6px;margin-top:8px;">' +
+            '<button data-day-edit-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
+            '<button data-day-edit-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">' + (state.editDayId ? '儲存' : '新增') + '</button>' +
+          '</div>' +
+          (state.editDayId && allDays().length > 1 ? '<button data-day-del="' + state.editDayId + '" style="display:block;margin:10px auto 0;border:none;background:transparent;color:#B84343;font-size:11px;font-weight:700;">刪除這一天</button>' : '') +
+        '</div>';
+    }
     if (state.confirmDeleteItemId) {
       var di = dayItems(dayById(state.activeDayId)).filter(function (e) { return e.itemId === state.confirmDeleteItemId; })[0];
       out += '<div class="modal-mask" style="z-index:70;" data-item-confirm-cancel="1"></div>' +
@@ -731,7 +810,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         : '';
       out += '<div class="modal-mask" style="z-index:70;" data-item-add-cancel="1"></div>' +
         '<div class="modal-box-top" id="addPlaceBox">' +
-          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">' + (state.editItemId ? '編輯行程' : '新增行程（' + esc(dayById(state.activeDayId).label) + '）') + '</div>' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">' + (state.editItemId ? '編輯行程' : '新增行程（' + esc(dayInfo(dayById(state.activeDayId)).label) + '）') + '</div>' +
           itemErr +
           '<div style="display:flex;flex-direction:column;gap:5px;">' +
             '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">時間</span>' +
@@ -967,6 +1046,37 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       addFoodSpot(state.addFoodItemId, label, fixed, desc);
     });
 
+    // day tabs: edit date + place, add a day, delete a day
+    var editDayBtn = document.getElementById('editDayBtn');
+    if (editDayBtn) editDayBtn.addEventListener('click', function () {
+      var inf = dayInfo(dayById(state.activeDayId));
+      state.dayForm = { date: inf.date, place: inf.place }; state.editDayError = ''; state.editDayId = state.activeDayId; state.editDayOpen = true; render();
+    });
+    var addDayBtn = document.getElementById('addDayBtn');
+    if (addDayBtn) addDayBtn.addEventListener('click', function () {
+      var last = allDays().map(function (d) { return dayInfo(d).date; }).sort().pop() || '2026-12-04';
+      var q = last.split('-'), nd = new Date(+q[0], +q[1] - 1, +q[2] + 1);
+      state.dayForm = { date: nd.getFullYear() + '-' + pad2(nd.getMonth() + 1) + '-' + pad2(nd.getDate()), place: '' };
+      state.editDayError = ''; state.editDayId = null; state.editDayOpen = true; render();
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-day-edit-cancel]'), function (el) { el.addEventListener('click', function () { state.editDayOpen = false; state.editDayError = ''; state.editDayId = null; render(); }); });
+    var dayEditEl = app.querySelector('[data-day-edit-confirm]');
+    if (dayEditEl) dayEditEl.addEventListener('click', function () {
+      var date = ((document.getElementById('editDayDate') || {}).value || '').trim();
+      var place = ((document.getElementById('editDayPlace') || {}).value || '').trim();
+      state.dayForm = { date: date, place: place };
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { state.editDayError = '請選擇日期'; render(); return; }
+      if (!place) { state.editDayError = '請輸入地點'; render(); return; }
+      if (state.editDayId) saveDayInfo(state.editDayId, date, place); else addDay(date, place);
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-restore-day]'), function (el) {
+      el.addEventListener('click', function () { restoreDay(el.getAttribute('data-restore-day')); });
+    });
+    var dayDelBtn = app.querySelector('[data-day-del]');
+    if (dayDelBtn) dayDelBtn.addEventListener('click', function () { state.confirmDeleteDayId = dayDelBtn.getAttribute('data-day-del'); state.editDayOpen = false; render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-day-del-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteDayId = null; render(); }); });
+    var dayDelOk = app.querySelector('[data-day-del-confirm]');
+    if (dayDelOk) dayDelOk.addEventListener('click', function () { var id = state.confirmDeleteDayId; state.confirmDeleteDayId = null; deleteDay(id); render(); });
     // schedule items added by the family
     var addItemBtn = document.getElementById('addItemBtn');
     if (addItemBtn) addItemBtn.addEventListener('click', function () { state.newItem = { time: '', name: '', desc: '' }; state.addItemError = ''; state.editItemId = null; state.addItemOpen = true; render(); });
@@ -1189,6 +1299,46 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         render();
       });
   }
+  function saveDayInfo(dayId, date, place) {
+    if (!db) { state.editDayError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    db.doc('scheduleItems/day_' + dayId).set({ date: date, place: place }, { merge: true })
+      .then(function () { state.editDayOpen = false; state.editDayError = ''; render(); })
+      .catch(function (err) {
+        noteDbError('saveDayInfo 失敗', err);
+        state.editDayError = '儲存失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function addDay(date, place) {
+    if (!db) { state.editDayError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    var id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    db.doc('scheduleItems/day_' + id).set({ date: date, place: place, custom: true })
+      .then(function () { state.activeDayId = id; state.editDayOpen = false; state.editDayError = ''; state.editDayId = null; render(); })
+      .catch(function (err) {
+        noteDbError('addDay 失敗', err);
+        state.editDayError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
+  }
+  function restoreDay(id) {
+    if (!db) { state.editDayError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    db.doc('scheduleItems/day_' + id).set({ deleted: false }, { merge: true })
+      .then(function () { state.activeDayId = id; state.editDayOpen = false; state.editDayId = null; render(); })
+      .catch(function (err) { noteDbError('restoreDay 失敗', err); });
+  }
+  // A built-in day is only hidden (so it can be restored); a day the family added is removed with everything saved under it.
+  function deleteDay(id) {
+    if (!db || !id || allDays().length <= 1) return;
+    var day = dayById(id);
+    if (!day.custom) { db.doc('scheduleItems/day_' + id).set({ deleted: true }, { merge: true }).catch(function (err) { noteDbError('deleteDay 失敗', err); }); return; }
+    var b = db.batch(), itemKeys = {};
+    b.delete(db.doc('scheduleItems/day_' + id));
+    state.scheduleItems.forEach(function (x) { if (x && x.dayId === id && String(x.id).indexOf('day_') !== 0) { itemKeys['x_' + x.id] = 1; b.delete(db.doc('scheduleItems/' + x.id)); } });
+    state.foodSpots.forEach(function (f) { if (f && itemKeys[f.itemId]) b.delete(db.doc('foodSpots/' + f.id)); });
+    state.places.forEach(function (pl) { if (pl && pl.dayId === id) b.delete(db.doc('places/' + pl.id)); });
+    state.checklist.forEach(function (c) { if (c && c.dayId === id && !isLocalId(c.id)) b.delete(db.doc('checklist/' + c.id)); });
+    b.commit().catch(function (err) { noteDbError('deleteDay 失敗', err); });
+  }
   function itemDbError(err, what) {
     noteDbError(what + ' 失敗', err);
     state.addItemError = '儲存失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
@@ -1258,7 +1408,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   function isLocalId(id) { return String(id).indexOf('local_') === 0; }
   function findChecklist(id) { return state.checklist.filter(function (c) { return c.id === id; })[0]; }
-  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc' || a.id === 'newItemTime' || a.id === 'newItemName' || a.id === 'newItemDesc')); }
+  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc' || a.id === 'editDayDate' || a.id === 'editDayPlace' || a.id === 'newItemTime' || a.id === 'newItemName' || a.id === 'newItemDesc')); }
   function persistChecklist(id, op, data) {
     if (!db || isLocalId(id)) return;
     var ref = db.doc('checklist/' + id);
