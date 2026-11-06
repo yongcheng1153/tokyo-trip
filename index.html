@@ -414,6 +414,16 @@
     var p = date.split('-');
     return { date: date, place: place, label: (+p[1]) + '/' + (+p[2]) + (place ? ' ' + place : '') };
   }
+  // The card title: the family's own text when set, otherwise the built-in title (added days: 'Day N．place')
+  function defaultDayTitle(id) {
+    var day = dayById(id);
+    return day.custom ? 'Day ' + (orderedDays().map(function (d) { return d.id; }).indexOf(day.id) + 1) + '．' + dayInfo(day).place : day.title;
+  }
+  function dayTitle(day) {
+    var o = dayOverride(day.id);
+    if (o && typeof o.title === 'string' && o.title.trim()) return o.title.trim();
+    return day.custom ? 'Day ' + (orderedDays().map(function (d) { return d.id; }).indexOf(day.id) + 1) + '．' + dayInfo(day).place : day.title;
+  }
   function orderedDays() {
     return allDays().map(function (d, i) { return { d: d, i: i, date: dayInfo(d).date }; })
       .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.i - b.i; })
@@ -428,6 +438,7 @@
   var state = {
     activeDayId: 'd1',
     drawerOpen: false,
+    exportSel: { sched: true, list: true }, exportMsg: '',
     quickModal: null,          // 'weather' | 'transport' | 'map' | 'checklist' | null
     dbReady: false,
     dbChecked: false,
@@ -514,7 +525,7 @@
         ? 'background:#8B5E34;color:#fff;box-shadow:0 3px 8px rgba(139,94,52,0.3);'
         : 'background:#fff;color:#8B5E34;border:1.5px solid #EADFCB;';
       var pillHtml = '<button class="pill" style="' + style + '" data-day="' + d.id + '">' + esc(dayInfo(d).label) + '</button>';
-      return !active ? pillHtml : '<div style="display:flex;gap:6px;flex-shrink:0;">' + pillHtml + '<button class="pill" id="editDayBtn" aria-label="編輯日期與地點" title="編輯日期與地點" style="background:#fff;border:1.5px solid #EADFCB;width:36px;padding:0;display:flex;align-items:center;justify-content:center;">' + ICO.pencil + '</button>' + '</div>';
+      return pillHtml;
     }).join('') +
       '<button class="pill" id="addDayBtn" aria-label="新增一天" title="新增一天" style="background:transparent;border:1.5px dashed #9C8770;width:36px;height:36px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9C8770" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
 
@@ -550,7 +561,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
             : '') +
           '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding-right:44px;">' + tabsHtml + '</div>' +
           '<div class="card">' +
-            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(day.custom ? 'Day ' + (orderedDays().map(function (d) { return d.id; }).indexOf(day.id) + 1) + '．' + dayInfo(day).place : day.title) + '</h3>' +
+            '<div class="card-head">' + ICO.pin.replace('16','18').replace('16','18') + '<h3>' + esc(dayTitle(day)) + '</h3>' +
+              '<button id="editDayBtn" aria-label="編輯這天的標題與日期" title="編輯這天的標題與日期" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.pencil + '</button>' +
               '<button class="close-x" id="addItemBtn" aria-label="新增行程" title="新增行程" style="margin-left:auto;width:30px;height:30px;">' + ICO.plus + '</button></div>' +
             '<div style="display:flex;flex-direction:column;">' + itemsHtml + '</div>' +
           '</div>' +
@@ -639,7 +651,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   function renderQuickModal(day) {
     if (!state.quickModal) return '';
-    var titleMap = { weather: '當天天氣重點', transport: '當天交通攻略', map: '當天景點地圖', checklist: '當天準備清單' };
+    var titleMap = { weather: '當天天氣重點', transport: '當天交通攻略', map: '當天景點地圖', checklist: '當天準備清單', export: '匯出行程與準備清單' };
     var body = '';
 
     if (state.quickModal === 'weather') {
@@ -694,6 +706,25 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       } else {
         body = '<div id="checklistList" style="display:flex;flex-direction:column;gap:9px;">' + items.map(checklistRowHtml).join('') + '</div>';
       }
+    }
+
+    if (state.quickModal === 'export') {
+      var chk = function (key, label, sub) {
+        var on = state.exportSel[key];
+        return '<button data-export-sel="' + key + '" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#FBF1E4;border:1.5px solid ' + (on ? '#B9713F' : '#EADFCB') + ';border-radius:12px;padding:11px 12px;">' +
+          '<span style="flex-shrink:0;width:20px;height:20px;border-radius:6px;border:1.5px solid #B9713F;background:' + (on ? '#B9713F' : '#fff') + ';display:flex;align-items:center;justify-content:center;">' + (on ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"/></svg>' : '') + '</span>' +
+          '<span><span style="display:block;font-size:13px;font-weight:700;color:#4A3626;">' + label + '</span><span style="display:block;font-size:10.5px;color:#9C8770;margin-top:1px;">' + sub + '</span></span></button>';
+      };
+      var none = !state.exportSel.sched && !state.exportSel.list;
+      var abtn = function (id, label) { return '<button id="' + id + '" ' + (none ? 'disabled' : '') + ' style="flex:1;padding:11px 6px;border-radius:10px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;' + (none ? 'opacity:.45;' : '') + '">' + label + '</button>'; };
+      body =
+        '<div style="font-size:11.5px;color:#9C8770;line-height:1.6;margin-bottom:10px;">全部天數一起匯出，不含天氣、交通、地圖與參考資料。</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">' +
+          chk('sched', '每日行程', '時間、地點、備註與美食連結') +
+          chk('list', '準備清單', '每天的準備項目，含已完成／未完成') +
+        '</div>' +
+        '<div style="display:flex;gap:8px;">' + abtn('exportCopyBtn', '複製文字') + abtn('exportTxtBtn', '下載文字檔') + abtn('exportPrintBtn', '列印／存成 PDF') + '</div>' +
+        (state.exportMsg ? '<div style="text-align:center;font-size:11.5px;color:#8B5E34;margin-top:10px;">' + esc(state.exportMsg) + '</div>' : '');
     }
 
     var addBtn = (state.quickModal === 'map' || state.quickModal === 'checklist')
@@ -783,7 +814,9 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
               '<input type="date" id="editDayDate" value="' + esc(state.dayForm.date) + '" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:14px;height:32px;background:#FFFFFF;color:#4A3626;"></div>' +
             '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">地點</span>' +
               '<input type="text" id="editDayPlace" value="' + esc(state.dayForm.place) + '" placeholder="例如：淺草・上野" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:12px;height:30px;background:#FFFFFF;color:#4A3626;"></div>' +
-            '<div style="font-size:10.5px;color:#9C8770;margin-top:2px;">分頁會顯示成「日期 地點」，並依日期先後排列</div>' +
+            (state.editDayId ? '<div style="display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;font-size:11px;font-weight:700;color:#8B5E34;width:34px;">標題</span>' +
+              '<input type="text" id="editDayTitle" value="' + esc(state.dayForm.title || '') + '" placeholder="卡片上方的標題" style="flex:1;min-width:0;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:12px;height:30px;background:#FFFFFF;color:#4A3626;"></div>' : '') +
+            '<div style="font-size:10.5px;color:#9C8770;margin-top:2px;">分頁顯示成「日期 地點」並依日期排列；標題是下方卡片的大標，清空會還原預設</div>' +
           '</div>' +
           restoreHtml +
           '<div style="display:flex;gap:6px;margin-top:8px;">' +
@@ -886,6 +919,94 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     return '<input type="text" id="' + key + '" value="' + esc(value) + '" placeholder="' + label + '" style="width:100%;border:1.5px solid #EADFCB;border-radius:8px;padding:0 9px;font-size:12px;height:30px;background:#FFFFFF;color:#4A3626;">';
   }
 
+  // ---------------------------------------------------------------------
+  // Export: schedule + checklist only (no weather / transport / map / reference links)
+  // ---------------------------------------------------------------------
+  var WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  function exportData() {
+    var out = [];
+    orderedDays().forEach(function (day) {
+      var info = dayInfo(day), p = info.date.split('-');
+      var wd = WEEK[new Date(+p[0], +p[1] - 1, +p[2]).getDay()];
+      var items = dayItems(day).map(function (e) {
+        var spots = state.foodSpots.filter(function (f) { return f && f.itemId === e.itemId && f.label; }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); })
+          .map(function (f) { return { label: f.label, url: /^https?:\/\//i.test(String(f.url || '')) ? f.url : '', desc: f.desc || '' }; });
+        return { time: e.it.time, name: e.it.name, desc: e.it.desc || '', spots: spots };
+      });
+      var list = state.checklist.filter(function (c) { return c && c.dayId === day.id && String(c.label || '').trim(); })
+        .sort(function (a, b) { return (a.order || 0) - (b.order || 0); }).map(function (c) { return { label: String(c.label).trim(), checked: !!c.checked }; });
+      out.push({ head: (+p[1]) + '/' + (+p[2]) + '（' + wd + '）' + dayTitle(day), items: items, list: list });
+    });
+    return out;
+  }
+  function buildExportText() {
+    var data = exportData(), L = [], sel = state.exportSel;
+    L.push('東京家族旅行  2026/12/4–12/10');
+    if (sel.sched) {
+      L.push('', '【每日行程】');
+      data.forEach(function (d) {
+        L.push('', '■ ' + d.head);
+        if (!d.items.length) L.push('  （尚無行程）');
+        d.items.forEach(function (it) {
+          L.push('  ' + it.time + '  ' + it.name);
+          if (it.desc) L.push('        ' + it.desc);
+          it.spots.forEach(function (s) { L.push('        ・' + s.label + (s.desc ? '（' + s.desc + '）' : '') + (s.url ? ' ' + s.url : '')); });
+        });
+      });
+    }
+    if (sel.list) {
+      L.push('', '【準備清單】');
+      data.forEach(function (d) {
+        L.push('', '■ ' + d.head);
+        if (!d.list.length) L.push('  （尚無項目）');
+        d.list.forEach(function (c) { L.push('  ' + (c.checked ? '☑ ' : '☐ ') + c.label); });
+      });
+    }
+    return L.join('\n') + '\n';
+  }
+  function exportHtml() {
+    var data = exportData(), sel = state.exportSel, h = '';
+    data.forEach(function (d) {
+      h += '<section><h2>' + esc(d.head) + '</h2>';
+      if (sel.sched) {
+        h += '<h3>行程</h3>' + (d.items.length ? '<table>' + d.items.map(function (it) {
+          return '<tr><td class="t">' + esc(it.time) + '</td><td><b>' + esc(it.name) + '</b>' + (it.desc ? '<div class="s">' + esc(it.desc) + '</div>' : '') +
+            it.spots.map(function (s) { return '<div class="s">・' + esc(s.label) + (s.desc ? '（' + esc(s.desc) + '）' : '') + '</div>'; }).join('') + '</td></tr>';
+        }).join('') + '</table>' : '<p class="s">尚無行程</p>');
+      }
+      if (sel.list) {
+        h += '<h3>準備清單</h3>' + (d.list.length ? '<ul>' + d.list.map(function (c) { return '<li>' + (c.checked ? '☑ ' : '☐ ') + esc(c.label) + '</li>'; }).join('') + '</ul>' : '<p class="s">尚無項目</p>');
+      }
+      h += '</section>';
+    });
+    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>東京家族旅行</title><style>' +
+      'body{font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:#222;margin:24px;font-size:13px;line-height:1.6}' +
+      'h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;border-bottom:2px solid #B9713F;padding-bottom:3px;margin:0 0 6px;color:#5A3A1E}h3{font-size:12px;color:#B9713F;margin:8px 0 3px}' +
+      'section{margin-top:16px;break-inside:avoid-page}table{border-collapse:collapse;width:100%}td{vertical-align:top;padding:2px 0}td.t{width:52px;color:#8B5E34;font-weight:700}' +
+      '.s{color:#666;font-size:12px}ul{list-style:none;padding:0;margin:0}li{padding:1px 0}</style></head><body><h1>東京家族旅行</h1><div class="s">2026/12/4–12/10</div>' + h + '</body></html>';
+  }
+  function copyText(text) {
+    function fallback() {
+      try { var ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;'; document.body.appendChild(ta); ta.select(); var ok = document.execCommand('copy'); document.body.removeChild(ta); return ok; } catch (e) { return false; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); });
+    return Promise.resolve(fallback());
+  }
+  function downloadText(text) {
+    try {
+      var url = URL.createObjectURL(new Blob(['\ufeff' + text], { type: 'text/plain;charset=utf-8' }));
+      var a = document.createElement('a'); a.href = url; a.download = '東京行程與準備清單.txt'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    } catch (e) { /* ignore */ }
+  }
+  function printExport() {
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(f);
+    var d = f.contentWindow.document; d.open(); d.write(exportHtml()); d.close();
+    setTimeout(function () { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { /* ignore */ } setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000); }, 300);
+  }
+
   function renderDrawer() {
     var bookingHtml = BOOKING_LINKS.map(function (bk) {
       return '<a href="' + bk.url + '" target="_blank" rel="noopener" class="booking-row">' +
@@ -934,6 +1055,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         '<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">' + ICO.ticket + '<span style="font-weight:700;font-size:12.5px;color:#5A3A1E;">一鍵訂票連結</span></div>' +
         bookingHtml + ownLinksHtml +
       '</div>' +
+      '<button id="openExportBtn" style="width:100%;margin-top:12px;padding:11px;border-radius:12px;border:1.5px solid #D9B58E;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">匯出行程與準備清單</button>' +
     '</div>';
   }
 
@@ -967,6 +1089,15 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       if (state.quickModal === 'checklist') { addChecklistItem(); }
     });
 
+    var openExp = document.getElementById('openExportBtn');
+    if (openExp) openExp.addEventListener('click', function () { state.drawerOpen = false; state.exportMsg = ''; state.quickModal = 'export'; render(); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-export-sel]'), function (el) {
+      el.addEventListener('click', function () { var k = el.getAttribute('data-export-sel'); state.exportSel[k] = !state.exportSel[k]; state.exportMsg = ''; render(); });
+    });
+    var exC = document.getElementById('exportCopyBtn'), exT = document.getElementById('exportTxtBtn'), exP = document.getElementById('exportPrintBtn');
+    if (exC) exC.addEventListener('click', function () { copyText(buildExportText()).then(function (ok) { state.exportMsg = ok ? '已複製，可以貼到備忘錄或訊息' : '複製失敗，請改用下載'; render(); }); });
+    if (exT) exT.addEventListener('click', function () { downloadText(buildExportText()); state.exportMsg = '已下載文字檔'; render(); });
+    if (exP) exP.addEventListener('click', function () { printExport(); });
     var handle = document.getElementById('drawerHandle');
     if (handle) handle.addEventListener('click', function () { state.drawerOpen = true; render(); });
     var drawerClose = document.getElementById('drawerCloseBtn');
@@ -1050,7 +1181,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var editDayBtn = document.getElementById('editDayBtn');
     if (editDayBtn) editDayBtn.addEventListener('click', function () {
       var inf = dayInfo(dayById(state.activeDayId));
-      state.dayForm = { date: inf.date, place: inf.place }; state.editDayError = ''; state.editDayId = state.activeDayId; state.editDayOpen = true; render();
+      state.dayForm = { date: inf.date, place: inf.place, title: dayTitle(dayById(state.activeDayId)) }; state.editDayError = ''; state.editDayId = state.activeDayId; state.editDayOpen = true; render();
     });
     var addDayBtn = document.getElementById('addDayBtn');
     if (addDayBtn) addDayBtn.addEventListener('click', function () {
@@ -1064,10 +1195,12 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     if (dayEditEl) dayEditEl.addEventListener('click', function () {
       var date = ((document.getElementById('editDayDate') || {}).value || '').trim();
       var place = ((document.getElementById('editDayPlace') || {}).value || '').trim();
-      state.dayForm = { date: date, place: place };
+      var titleEl = document.getElementById('editDayTitle');
+      var title = titleEl ? (titleEl.value || '').trim() : '';
+      state.dayForm = { date: date, place: place, title: title };
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { state.editDayError = '請選擇日期'; render(); return; }
       if (!place) { state.editDayError = '請輸入地點'; render(); return; }
-      if (state.editDayId) saveDayInfo(state.editDayId, date, place); else addDay(date, place);
+      if (state.editDayId) saveDayInfo(state.editDayId, date, place, title); else addDay(date, place);
     });
     Array.prototype.forEach.call(app.querySelectorAll('[data-restore-day]'), function (el) {
       el.addEventListener('click', function () { restoreDay(el.getAttribute('data-restore-day')); });
@@ -1299,9 +1432,9 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         render();
       });
   }
-  function saveDayInfo(dayId, date, place) {
+  function saveDayInfo(dayId, date, place, title) {
     if (!db) { state.editDayError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
-    db.doc('scheduleItems/day_' + dayId).set({ date: date, place: place }, { merge: true })
+    db.doc('scheduleItems/day_' + dayId).set({ date: date, place: place, title: (title && title !== defaultDayTitle(dayId)) ? title : '' }, { merge: true })
       .then(function () { state.editDayOpen = false; state.editDayError = ''; render(); })
       .catch(function (err) {
         noteDbError('saveDayInfo 失敗', err);
@@ -1408,7 +1541,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   function isLocalId(id) { return String(id).indexOf('local_') === 0; }
   function findChecklist(id) { return state.checklist.filter(function (c) { return c.id === id; })[0]; }
-  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc' || a.id === 'editDayDate' || a.id === 'editDayPlace' || a.id === 'newItemTime' || a.id === 'newItemName' || a.id === 'newItemDesc')); }
+  function isEditFocused() { var a = document.activeElement; return !!(a && (a.id === 'editChecklistInput' || a.id === 'newLinkLabel' || a.id === 'newLinkUrl' || a.id === 'newLinkDesc' || a.id === 'newFoodLabel' || a.id === 'newFoodUrl' || a.id === 'newFoodDesc' || a.id === 'editDayTitle' || a.id === 'editDayDate' || a.id === 'editDayPlace' || a.id === 'newItemTime' || a.id === 'newItemName' || a.id === 'newItemDesc')); }
   function persistChecklist(id, op, data) {
     if (!db || isLocalId(id)) return;
     var ref = db.doc('checklist/' + id);
