@@ -114,6 +114,38 @@
   table.bal td { text-align: right; padding: 8px 0; border-top: 1px solid var(--line); }
   .pos { color: var(--ok); font-weight: 700; } .neg { color: var(--danger); font-weight: 700; }
   .xfer { display: flex; justify-content: space-between; align-items: center; background: var(--soft); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+  .subseg { margin-bottom: 12px; } .subseg button { height: 38px; font-size: 13px; }
+  .srow { margin: 12px 0 0; } .srow .shd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; }
+  .srow .shd b { font-variant-numeric: tabular-nums; } .srow .pct { color: var(--muted); font-size: 12px; margin-left: 6px; font-weight: 600; }
+  .rank { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); } .rank:first-of-type { border-top: none; }
+  .rank .no { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(185,113,63,0.14); color: var(--dark); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .rank .no.top3 { background: var(--accent); color: #fff; } .rank .mid { flex: 1; min-width: 0; } .rank .mid .t { font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .amt { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pie { display: flex; align-items: center; gap: 12px; margin-top: 4px; } .pie svg { flex-shrink: 0; width: 138px; height: 138px; }
+  .pie .legend { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+  .pie .lg { display: flex; align-items: flex-start; gap: 7px; } .pie .lg i { flex-shrink: 0; width: 10px; height: 10px; border-radius: 3px; margin-top: 5px; }
+  .pie .lg .nm { font-size: 13px; font-weight: 700; line-height: 1.3; word-break: break-all; } .pie .lg .ds { font-size: 12px; color: var(--muted); line-height: 1.35; font-variant-numeric: tabular-nums; }
+  .scanimg { width: 100%; max-height: 180px; object-fit: contain; border-radius: 12px; background: #F3EBDD; }
+  .spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #EADFCB; border-top-color: var(--accent); animation: spin 0.9s linear infinite; margin: 10px auto; } @keyframes spin { to { transform: rotate(360deg); } }
+  .card label.f { display: block; margin: 12px 0 5px; font-size: 13px; color: var(--muted); font-weight: 700; } .card .seg + .hint, .card .check { margin-top: 8px; }
+  .hero { display: block; width: 100%; aspect-ratio: 2 / 1; object-fit: cover;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%);
+    -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent 0, #000 14%, #000 86%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%); mask-composite: intersect; }
+  .heroWrap { position: relative; margin-bottom: 10px; } .heroAct { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; }
+  .heroAct button { height: 30px; padding: 0 12px; border-radius: 999px; border: none; background: rgba(255,255,255,0.88); color: var(--dark); font-weight: 700; font-size: 12px; }
+  .heroEmpty { width: 100%; aspect-ratio: 2 / 1; border-radius: 18px; border: 1.5px dashed #D9B58E; background: rgba(255,255,255,0.5); color: var(--accent); font-weight: 700; font-size: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
+  .hc-top { display: grid; grid-template-columns: 1fr auto; align-items: start; }
+  .hc-a { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; padding-right: 14px; font-size: 14px; font-weight: 700; }
+  .hc-a span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .hc-a b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hc-b { border-left: 1px solid var(--line); padding-left: 14px; } .homecard .big { font-size: 22px; }
+  .homecard .pie { margin-top: 4px; }
+  .homecard .mine { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 700; } .homecard .mine span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .homecard .mine b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hrow { position: relative; border-radius: 10px; background: #F6EFE3; overflow: hidden; margin-top: 8px; }
+  .hrow i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(185,113,63,0.22); }
+  .hrow .in { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; font-size: 14px; }
+  .hrow .in b { font-variant-numeric: tabular-nums; white-space: nowrap; } .hrow .in span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cropbox { border-radius: 12px; overflow: hidden; background: #3b2f25; touch-action: none; } .cropbox canvas { display: block; width: 100%; height: auto; cursor: grab; }
+  .wip { text-align: center; padding: 44px 16px; } .wip .big { font-size: 22px; }
   .bar { height: 8px; background: #EEE7DC; border-radius: 999px; overflow: hidden; margin: 8px 0 4px; }
   .bar > i { display: block; height: 100%; background: var(--accent); }
   .bar.ok > i { background: var(--ok); }
@@ -129,7 +161,7 @@
   .tabs { position: absolute; left: 14px; right: 14px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; gap: 2px; padding: 5px; border-radius: 30px; background: rgba(255,255,255,0.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 8px 28px rgba(90,58,30,0.20), 0 1px 3px rgba(90,58,30,0.10); max-width: 440px; margin: 0 auto; }
   .tabs button { flex: 1; height: 46px; border: none; border-radius: 25px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 700; transition: background 0.2s ease, color 0.2s ease; }
   .tabs button.on { color: var(--dark); background: rgba(185,113,63,0.16); box-shadow: none; }
-  .fab { position: absolute; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 48px; padding: 0 20px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(139,94,52,0.35); }
+  .fab { position: absolute; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border: none; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; box-shadow: 0 6px 16px rgba(139,94,52,0.35); }
   .sheet { position: absolute; inset: 0; z-index: 100; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .sheet-top { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px; border-bottom: 1px solid var(--line); }
   .sheet-top b { font-size: 16px; color: #5A3A1E; }
@@ -166,8 +198,14 @@
   table.gloss tr:first-child td { border-top: none; }
   table.gloss td.jp { font-weight: 700; color: var(--dark); width: 38%; padding-right: 8px; }
   table.gloss .nw { white-space: nowrap; }
-  .fab2 { position: absolute; right: 14px; bottom: calc(84px + 48px + 10px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
+  #fab, #fabRate { width: 112px; padding: 0; text-align: center; }
+  .subfabs { position: absolute; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 61; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .subfabs button { height: 40px; width: 112px; padding: 0; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
+  .subfabs button.on { background: var(--dark); color: #fff; border-color: var(--dark); }
+  .fab2 { position: absolute; right: 14px; bottom: calc(84px + 40px + 5px + env(safe-area-inset-bottom, 0px)); z-index: 61; height: 40px; padding: 0 16px; border-radius: 999px; background: #fff; color: var(--dark); border: 1.5px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(139,94,52,0.22); }
   .tcard { background: #fff; border-radius: 16px; padding: 12px; margin-top: 12px; box-shadow: 0 2px 10px rgba(139,94,52,0.08); }
+  .payrow { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 4px 2px 8px; margin-top: 4px; }
+  .payrow .catbtn { flex: 0 0 62px; text-align: center; word-break: break-all; line-height: 1.25; }
   .catgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 4px; margin-top: 14px; }
   .catbtn { background: none; border: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--muted); }
   .catbtn .ic { width: 44px; height: 44px; border-radius: 50%; background: var(--soft); color: var(--dark); display: flex; align-items: center; justify-content: center; }
@@ -179,7 +217,6 @@
   .catacts:empty { display: none; }
   .catbtn.on { color: var(--dark); }
   .catbtn.on .ic { background: var(--dark); color: #fff; }
-  .fab3 { bottom: calc(84px + 48px + 10px + 40px + 10px + env(safe-area-inset-bottom, 0px)); }
   .fab3[disabled] { opacity: 0.6; }
   .acc-head { display: flex; align-items: center; gap: 8px; }
   .acc-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; text-align: left; background: none; border: none; padding: 11px 2px; color: var(--text); font-family: inherit; }
@@ -212,7 +249,7 @@
     </div>
   </div>
   <button id="fabRate" class="fab2 fab3">⟳ 更新匯率</button>
-  <button id="fabDay" class="fab2">＋ 新的一天</button>
+  <div id="subFabs" class="subfabs"></div>
   <button id="fab" class="fab">＋ 記一筆</button>
   <nav id="tabs" class="tabs"></nav>
   <div id="sheetLayer"></div>
@@ -1947,7 +1984,20 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   window.ExpenseCalc = { splitMinor: splitMinor, computeBalances: computeBalances, settlements: settlements, taxGroups: taxGroups, taxInfo: taxInfo, minorOf: minorOf };
 
   // ------------------------------------------------------------------ state
-  var state = { tab: 'list', members: [], expenses: [], days: [], rate: null, rates: [], cats: [], rateFetching: false, storageMessage: '', loading: true, sync: 'loading', localInfo: null };
+  var DEFAULT_PAYS = ['現金', '信用卡', '行動支付', '交通卡'];
+  function cleanPays(a) {
+    if (!Array.isArray(a)) return null;
+    var seen = {}, out = [];
+    a.forEach(function (x) { if (typeof x === 'string') { x = x.trim(); if (x && x.length <= 8 && !seen[x]) { seen[x] = 1; out.push(x); } } });
+    return out.length && out.length <= 12 ? out : null;
+  }
+  function cleanSettings(s) {
+    var o = {};
+    if (s && num(s.rate) && s.rate > 0) o.rate = s.rate;
+    var pm = s ? cleanPays(s.payMethods) : null; if (pm) o.payMethods = pm;
+    return o;
+  }
+  var state = { tab: 'home', reportSel: { all: true, mine: true, days: true }, subOpen: false, homePhoto: '', sub: 'detail', scan: { phase: 'idle', img: '', res: null, err: '' }, pays: DEFAULT_PAYS.slice(), members: [], expenses: [], days: [], rate: null, rates: [], cats: [], rateFetching: false, storageMessage: '', loading: true, sync: 'loading', localInfo: null };
   var renderPending = false;
   var formState = null, formId = null;
 
@@ -2025,7 +2075,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var taxFree = e.currency === 'JPY' && e.taxFree === true;
     return { id: e.id, date: e.date, title: str(e.title) ? e.title : cat, category: cat, currency: e.currency, amount: e.amount, rate: rate,
       payerId: e.payerId, participantIds: parts, taxFree: taxFree, store: taxFree && typeof e.store === 'string' ? e.store : '',
-      taxRate: Number(e.taxRate) === 8 ? 8 : 10, consumed: taxFree && e.consumed === true, createdAt: num(e.createdAt) ? e.createdAt : 0, note: typeof e.note === 'string' ? e.note : '' };
+      taxRate: Number(e.taxRate) === 8 ? 8 : 10, consumed: taxFree && e.consumed === true, createdAt: num(e.createdAt) ? e.createdAt : 0, note: typeof e.note === 'string' ? e.note : '', payMethod: typeof e.payMethod === 'string' ? e.payMethod : '' };
   }
   // A saved exchange-rate entry: 1 JPY = ? TWD, fetched (or typed) at a point in time, kept as history so a past
   // expense can be re-matched and new ones can pick which snapshot to use.
@@ -2040,8 +2090,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var members = [], expenses = [], skipped = 0;
     p.members.forEach(function (m, i) { var c = cleanMember(m, i); if (c) members.push(c); else skipped++; });
     p.expenses.forEach(function (e) { var c = cleanExpense(e); if (c) expenses.push(c); else skipped++; });
-    var settings = {};
-    if (p.settings && num(p.settings.rate) && p.settings.rate > 0) settings.rate = p.settings.rate;
+    var settings = cleanSettings(p.settings);
     // Days are the major items. Older data has none, so every date used by an expense becomes a day.
     var seen = {}, days = [];
     (Array.isArray(p.days) ? p.days : []).forEach(function (d) {
@@ -2075,7 +2124,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var data = { members: [], expenses: [], days: [], settings: {}, rates: [], cats: [] };
     var dayDocs = [], daysLoaded = false;  // dates that already have their own document
     var first = {}, meta = {}, askedDays = {};
-    var h = { onMembers: noop, onExpenses: noop, onDays: noop, onSettings: noop, onRates: noop, onCats: noop, onStatus: noop, onReady: noop };
+    var h = { onHome: noop, onMembers: noop, onExpenses: noop, onDays: noop, onSettings: noop, onRates: noop, onCats: noop, onStatus: noop, onReady: noop };
     function noop() {}
 
     function fail(what, err) { console.error(what, err); h.onStatus({ message: what + '：' + explainDbError(err) }); }
@@ -2143,6 +2192,10 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       }, function (err) { fail('讀取失敗', err); gotFirst(name); });
     }
     function attach() {
+      fs.doc('settings/home').onSnapshot(function (snap) {
+        var d = snap && snap.exists ? snap.data() : null;
+        h.onHome(d && typeof d.photo === 'string' && /^data:image\//.test(d.photo) && d.photo.length < 900000 ? d.photo : '');
+      }, function () { /* the photo is optional */ });
       listen('members', function (snap) {
         data.members = docsOf(snap).map(cleanMember).filter(Boolean).sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
         h.onMembers(cloneJson(data.members));
@@ -2160,7 +2213,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       fs.doc('settings/main').onSnapshot({ includeMetadataChanges: true }, function (snap) {
         meta.settings = { pending: !!(snap.metadata && snap.metadata.hasPendingWrites), cached: !!(snap.metadata && snap.metadata.fromCache) };
         var d = snap.exists ? snap.data() : null;
-        data.settings = d && num(d.rate) && d.rate > 0 ? { rate: d.rate } : {};
+        data.settings = cleanSettings(d);
         h.onSettings(cloneJson(data.settings)); gotFirst('settings'); syncState();
       }, function (err) { fail('讀取失敗', err); gotFirst('settings'); });
       listen('rates', function (snap) {
@@ -2236,6 +2289,15 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         data.expenses.forEach(function (e) { if (e.date === date) b.delete(ref('expenses/' + e.id)); });
         guard(b.commit(), '刪除日期失敗'); return { ok: true };
       },
+      // Saves the whole payment-method list; a rename (or delete, newName '') also updates the expenses that used it, in one batch
+      setPayMethods: function (list, oldName, newName) {
+        var b = newBatch();
+        b.set(ref('settings/main'), { payMethods: list }, { merge: true });
+        if (oldName) data.expenses.forEach(function (e) { if (e.payMethod === oldName) b.update(ref('expenses/' + e.id), { payMethod: newName || '' }); });
+        guard(b.commit(), '儲存付款方式失敗');
+      },
+      saveHomePhoto: function (dataUrl) { guard(ref('settings/home').set({ photo: dataUrl, updatedAt: Date.now() }), '儲存照片失敗'); },
+      clearHomePhoto: function () { guard(ref('settings/home').delete(), '移除照片失敗'); },
       saveSettings: function (patch) { guard(ref('settings/main').set(patch, { merge: true }), '儲存設定失敗'); },
       addRate: function (rate, source) {
         var id = newId('r_');
@@ -2283,7 +2345,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         data.members.forEach(function (m) { if (!keep['members/' + m.id]) ops.push(['delete', 'members/' + m.id]); });
         data.expenses.forEach(function (e) { if (!keep['expenses/' + e.id]) ops.push(['delete', 'expenses/' + e.id]); });
         dayDocs.forEach(function (x) { if (!keep['days/' + x]) ops.push(['delete', 'days/' + x]); });
-        if (d.settings.rate) sets.push(['set', 'settings/main', { rate: d.settings.rate }]); else ops.push(['delete', 'settings/main']);
+        if (Object.keys(d.settings).length) sets.push(['set', 'settings/main', cloneJson(d.settings)]); else ops.push(['delete', 'settings/main']);
         runOps(ops.concat(sets), '匯入失敗');
         return { ok: true, members: d.members.length, expenses: d.expenses.length, days: d.days.length, skipped: r.norm.skipped };
       },
@@ -2310,7 +2372,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
           v.participantIds = e.participantIds.map(function (p) { return idMap[p] || p; });
           ops.push(['set', 'expenses/' + e.id, v]);
         });
-        if (b.data.settings.rate && !data.settings.rate) ops.push(['set', 'settings/main', { rate: b.data.settings.rate }, true]);
+        if (b.data.settings.rate && !data.settings.rate) ops.push(['set', 'settings/main', { rate: b.data.settings.rate }, true]);   // (older this-phone data has no payment methods)
         var counts = { members: b.data.members.length, expenses: b.data.expenses.length, days: b.data.days.length };
         return runOps(ops, '上傳失敗').then(function (ok) {
           if (!ok) return null;
@@ -2340,7 +2402,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var main = e.currency === 'JPY' ? fmtYen(e.amount) : fmtTwd(e.amount);
     var sub = e.currency === 'JPY' ? '<div class="m">≈ ' + fmtTwd(expenseTwd(e)) + '</div>' : '';
     return '<button class="exp" data-edit="' + e.id + '"><div class="l"><div class="t">' + esc(e.title) + tags + '</div>' +
-      '<div class="m">' + esc(e.category) + ' · ' + esc(memberName(e.payerId)) + ' 付 · ' + who + '</div></div>' +
+      '<div class="m">' + esc(e.category) + ' · ' + esc(memberName(e.payerId)) + ' 付' + (e.payMethod ? '（' + esc(e.payMethod) + '）' : '') + ' · ' + who + '</div></div>' +
       (e.note ? '<div class="n">' + esc(e.note) + '</div>' : '') + '<div class="r"><div class="a">' + main + '</div>' + sub + '</div></button>';
   }
   // ---- accordion (how-to card and each day) ----
@@ -2377,10 +2439,10 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     return accHtml('howto', '<span class="acc-text"><span class="acc-title">怎麼用</span></span>', '',
       '<ol class="steps">' +
         '<li>先到「設定」新增旅伴；日圓匯率可按右下角「更新匯率」抓取，記帳時從清單挑。資料會同步，家人打開同一個網址就看到同一份</li>' +
-        '<li>按右下角「<b>＋ 新的一天</b>」新增旅行的日期，一天一天加。每一天是一個大項目，可以收合</li>' +
-        '<li>在某一天右邊按「＋」，或按右下角「＋ 記一筆」：填金額，選<b>誰付的</b>、<b>誰要分攤</b>。日期直接從已新增的天數裡選</li>' +
-        '<li>「結算」會算出每個人該收或該付多少，並列出怎麼轉帳最省事</li>' +
-        '<li>在免稅店買的東西，記帳時勾「在免稅店購買」並填店名。「退稅」分頁會幫你看有沒有達到 ¥5,000</li>' +
+        '<li>到「首頁」按右下角「<b>＋ 記一筆</b>」，日期預設就是今天，記下去那天就會自動出現在「紀錄」裡；要改日期，點進那筆帳目修改。每一天是一個大項目，可以收合</li>' +
+        '<li>在某一天右邊按「＋」，或按首頁右下角「＋ 記一筆」：填金額，選<b>誰付的</b>、<b>誰要分攤</b></li>' +
+        '<li>「紀錄」右下角可切換「明細／結算／退稅」：結算會算出每個人該收或該付多少，並列出怎麼轉帳最省事；「統計」看分類、付款方式與花費前十名</li>' +
+        '<li>在免稅店買的東西，記帳時勾「在免稅店購買」並填店名。「紀錄」裡的「退稅」會幫你看有沒有達到 ¥5,000</li>' +
         '<li>看不懂收據，或離境要辦退稅？點畫面<b>左側的小把手</b>，打開「對照表與退稅小抄」</li></ol>', 'card');
   }
   function dayCard(date, list) {
@@ -2393,9 +2455,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   function viewList() {
     if (!state.members.length) return howtoCard() + viewOnboarding();
     var exps = sortedExpenses();
-    var total = exps.reduce(function (sum, e) { return sum + expenseTwd(e); }, 0);
-    var html = howtoCard() + '<div class="card"><div class="muted">目前總花費（換算台幣）</div><div class="big">' + fmtTwd(total) + '</div><div class="muted">共 ' + state.days.length + ' 天、' + exps.length + ' 筆</div></div>';
-    if (!state.days.length) return html + '<div class="empty">還沒有任何一天。先按右下角「＋ 新的一天」，再開始記帳</div>';
+    var html = howtoCard();
+    if (!state.days.length) return html + '<div class="empty">還沒有任何帳目。到「首頁」按右下角「＋ 記一筆」開始記帳</div>';
     var byDate = {};
     exps.forEach(function (e) { (byDate[e.date] = byDate[e.date] || []).push(e); });
     state.days.slice().reverse().forEach(function (d) { html += dayCard(d, byDate[d] || []); });
@@ -2439,6 +2500,401 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     html += '<div class="card"><h3>看不懂收據，或要辦離境退稅？</h3><div class="muted">收據對照表、離境當天檢查清單、記帳時的重點，都收在左側的抽屜裡。</div><div style="margin-top:10px"><button class="btn small" data-open-drawer>打開對照表與退稅小抄</button></div></div>';
     return html;
   }
+  // ------------------------------------------------------------------ scan a receipt (Gemini through Firebase AI Logic: no API key in this page)
+  var AI_SDK = 'https://www.gstatic.com/firebasejs/12.19.0/';
+  // tried in this order; a model the project cannot use (not found / no access) falls through to the next one
+  var AI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite'];
+  var aiLoading = null;
+  function loadAI() {
+    if (window.__aiLoader) return window.__aiLoader();           // test hook
+    if (!aiLoading) {
+      aiLoading = Promise.all([import(AI_SDK + 'firebase-app.js'), import(AI_SDK + 'firebase-ai.js')]).then(function (m) {
+        var app; try { app = m[0].getApp('ai-scan'); } catch (e) { app = m[0].initializeApp(FIREBASE_CONFIG, 'ai-scan'); }
+        var ai = m[1].getAI(app, { backend: new m[1].GoogleAIBackend() });
+        return { getModel: function (name) { return m[1].getGenerativeModel(ai, { model: name, generationConfig: { responseMimeType: 'application/json', temperature: 0.1 } }); } };
+      });
+      aiLoading.catch(function () { aiLoading = null; });
+    }
+    return aiLoading;
+  }
+  function scanPrompt() {
+    var cats = CATEGORIES.map(function (c) { return c.label; }).concat(state.cats.map(function (c) { return c.name; })).join('、');
+    return '這是一張收據、發票或帳單的照片（多半是日文，在日本旅遊時拿到的）。請讀出內容，只輸出一個 JSON 物件，欄位如下：\n' +
+      '{"store": 店家名稱，翻成繁體中文（Bic Camera、無印良品 這類品牌用大家熟悉的寫法）, "storeOriginal": 店名原文, "amount": 實際付款的含稅總金額，純數字（お会計／合計／Total）, ' +
+      '"currency": 三位字母幣別，日本收據是 "JPY", "taxFree": 這是免稅（免税／Tax Free／消費税免除）購物的收據則為 true，否則 false, "date": 消費日期 YYYY-MM-DD，看不到就給空字串, ' +
+      '"category": 從這幾個挑最接近的一個：' + cats + ', "title": 用 2～8 個繁體中文字描述買了什麼，例如「拉麵」「藥妝用品」}\n' +
+      '看不清楚的欄位給 null，不要猜。amount 不要包含逗號或貨幣符號。';
+  }
+  // shrinks the photo (long side 1600px, JPEG) so the upload is small and quick
+  function fileToJpeg(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight)), w = Math.round(img.naturalWidth * s), hh = Math.round(img.naturalHeight * s);
+        var cv = document.createElement('canvas'); cv.width = w; cv.height = hh;
+        cv.getContext('2d').drawImage(img, 0, 0, w, hh);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bad-image')); };
+      img.src = url;
+    });
+  }
+  function parseScan(text) {
+    var t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    var o = JSON.parse(t);
+    if (Array.isArray(o)) o = o[0];
+    if (!o || typeof o !== 'object') throw new Error('bad-json');
+    var amt = typeof o.amount === 'number' ? o.amount : parseFloat(String(o.amount == null ? '' : o.amount).replace(/[^\d.]/g, ''));
+    var cur = String(o.currency || 'JPY').toUpperCase();
+    var cats = CATEGORIES.map(function (c) { return c.label; }).concat(state.cats.map(function (c) { return c.name; }));
+    return {
+      store: String(o.store || o.storeOriginal || '').trim(), original: String(o.storeOriginal || '').trim(),
+      amount: amt > 0 ? String(cur === 'TWD' ? Math.round(amt * 100) / 100 : Math.round(amt)) : '',
+      currency: cur === 'TWD' ? 'TWD' : 'JPY', otherCurrency: (cur !== 'JPY' && cur !== 'TWD') ? cur : '',
+      taxFree: o.taxFree === true, date: /^\d{4}-\d{2}-\d{2}$/.test(String(o.date || '')) ? o.date : '',
+      category: cats.indexOf(o.category) > -1 ? o.category : '', title: String(o.title || '').trim()
+    };
+  }
+  function runScan(dataUrl) {
+    var b64 = dataUrl.split(',')[1];
+    var part = { inlineData: { data: b64, mimeType: 'image/jpeg' } };
+    var order = AI_MODELS.slice(), saved = lsGet('expenses.aiModel');
+    if (saved && order.indexOf(saved) > 0) { order.splice(order.indexOf(saved), 1); order.unshift(saved); }
+    function withTimeout(p) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, 60000); })]); }
+    return loadAI().then(function (ai) {
+      var i = 0;
+      function next(lastErr) {
+        if (i >= order.length) throw lastErr;
+        var name = order[i++];
+        return withTimeout(Promise.resolve(ai.getModel(name).generateContent([scanPrompt(), part]))).then(function (r) {
+          lsSet('expenses.aiModel', name);
+          return parseScan(r.response.text());
+        }, function (err) {
+          var msg = String(err && (err.message || err.code) || err);
+          if (/not.?found|404|not supported|no longer|PERMISSION|not.?available|access/i.test(msg) && i < order.length) return next(err);
+          throw err;
+        });
+      }
+      return next(null);
+    });
+  }
+  function scanErrorDetail(err) {
+    var m = String(err && (err.message || err.code) || err), d = '';
+    try { if (err && err.customErrorData) { d = (err.customErrorData.status ? ' [' + err.customErrorData.status + ']' : '') + (err.customErrorData.errorDetails ? ' ' + JSON.stringify(err.customErrorData.errorDetails) : ''); } } catch (e) { /* ignore */ }
+    return (m + d).slice(0, 600);
+  }
+  function scanErrorText(err) {
+    var m = scanErrorDetail(err);
+    if (/timeout/.test(m)) return '等太久了，請確認網路後重試。';
+    if (/bad-image/.test(m)) return '這張圖片無法讀取，請換一張或重新拍照。';
+    if (/bad-json|JSON|Unexpected/.test(m) && !/Error fetching/.test(m)) return '沒有讀出清楚的內容，請拍得更清楚、讓整張收據入鏡再試一次。';
+    if (/has not been used|is disabled|SERVICE_DISABLED|not enabled/i.test(m)) return 'Firebase 的「AI Logic」還沒啟用：到 Firebase 主控台 → AI Services → AI Logic → Get started，選 Gemini Developer API，完成後等 1～2 分鐘再試。';
+    if (/API_KEY_INVALID|API key not valid|blocked|API_KEY_SERVICE_BLOCKED|referer|referrer/i.test(m)) return '這把 API 金鑰被限制住了：到 Google Cloud 主控台 → API 和服務 → 憑證，找到網頁用的金鑰，在「API 限制」加入「Firebase AI Logic API」（或暫時選「不限制金鑰」），並確認網站限制包含你放這個網頁的網址。';
+    if (/quota|429|RESOURCE/i.test(m)) return '今天的免費額度用完了，請稍後再試。';
+    if (/403|PERMISSION/i.test(m)) return '沒有權限呼叫辨識服務（403），請對照下方的詳細訊息設定。';
+    if (/Failed to fetch|Load failed|dynamically imported/i.test(m)) return '連不上辨識服務，請檢查網路後重試。';
+    return '辨識服務沒有成功回應，請對照下方的詳細訊息。';
+  }
+  function handleScanFile(file) {
+    if (!file) return;
+    state.scan = { phase: 'busy', img: '', res: null, err: '' }; renderView(true);
+    fileToJpeg(file).then(function (dataUrl) {
+      state.scan.img = dataUrl; renderView(true);
+      return runScan(dataUrl);
+    }).then(function (res) {
+      state.scan.phase = 'result'; state.scan.res = res; renderView(true);
+    }).catch(function (err) {
+      state.scan.phase = 'error'; state.scan.err = scanErrorText(err); state.scan.detail = scanErrorDetail(err); renderView(true);
+    });
+  }
+  function scanToForm() {
+    var s = state.scan.res; if (!s) return;
+    var amt = parseFloat(s.amount);
+    if (!(amt > 0)) { toast('請先填金額'); return; }
+    var jpy = s.currency === 'JPY';
+    var cat = s.category || (s.taxFree ? '購物' : '餐飲');
+    var taxFree = jpy && s.taxFree;
+    if (taxFree && !isGoods(cat)) cat = '購物';
+    var pre = { title: s.title || s.store, category: cat, currency: s.currency, amount: String(s.amount), taxFree: taxFree, store: taxFree ? s.store : '', note: taxFree ? '' : (s.title && s.store ? s.store : '') };
+    if (s.date && state.days.indexOf(s.date) > -1) pre.date = s.date;
+    state.scan = { phase: 'idle', img: '', res: null, err: '' };
+    renderView(true);
+    openForm(null, null, pre);
+  }
+  function viewScan() {
+    var sc = state.scan, inputs = '<input type="file" id="scanCam" accept="image/*" capture="environment" hidden><input type="file" id="scanPick" accept="image/*" hidden>';
+    var img = sc.img ? '<img class="scanimg" alt="收據照片" src="' + esc(sc.img) + '">' : '';
+    if (sc.phase === 'busy') return '<div class="card">' + img + '<div class="spin"></div><div class="muted" style="text-align:center">辨識中，約 5～15 秒…</div></div>';
+    if (sc.phase === 'result' && sc.res) {
+      var r = sc.res, jpy = r.currency === 'JPY';
+      var extra = [r.date ? '日期 ' + fmtDate(r.date) : '', r.category ? '分類 ' + r.category : '', r.title ? '品項 ' + r.title : ''].filter(Boolean).join('　');
+      return '<div class="card"><h3>辨識結果，請確認</h3>' + img +
+        '<label class="f" for="s_store">店家名稱（已翻成中文' + (r.original ? '；原文：' + esc(r.original) : '') + '）</label><input type="text" id="s_store" value="' + esc(r.store) + '">' +
+        '<label class="f">幣別</label><div class="seg"><button type="button" data-scan-cur="JPY" class="' + (jpy ? 'on' : '') + '">日圓 ¥</button><button type="button" data-scan-cur="TWD" class="' + (!jpy ? 'on' : '') + '">台幣 NT$</button></div>' +
+        (r.otherCurrency ? '<div class="hint">收據上的幣別看起來是 ' + esc(r.otherCurrency) + '，目前只支援日圓與台幣，請自行確認。</div>' : '') +
+        '<label class="f" for="s_amount">消費金額（含稅）</label><input type="number" id="s_amount" inputmode="decimal" min="0" step="any" value="' + esc(r.amount) + '">' +
+        (jpy ? '<label class="check"><input type="checkbox" id="s_tax"' + (r.taxFree ? ' checked' : '') + '><span>免稅（打算辦退稅）</span></label>' : '') +
+        (extra ? '<div class="muted" style="margin-top:10px">' + esc(extra) + '</div>' : '') +
+        '<div class="row" style="margin-top:14px"><button class="btn ghost" style="flex:1" data-scan-reset>重新掃描</button><button class="btn" style="flex:1" data-scan-go>帶入「記一筆」</button></div>' +
+        '<div class="muted" style="margin-top:10px">帶入後還要補：誰付的、誰分攤、付款方式等。</div></div>';
+    }
+    var err = sc.phase === 'error' ? '<div class="card"><div class="neg" style="font-weight:700">沒辦法讀出來</div><div class="muted" style="margin-top:6px">' + esc(sc.err) + '</div>' + (sc.detail ? '<div class="muted" style="margin-top:8px;font-size:11px;word-break:break-all;background:#F6EFE3;border-radius:8px;padding:8px">詳細訊息：' + esc(sc.detail) + '</div>' : '') + img + '</div>' : '';
+    return err + '<div class="card"><h3>掃描發票／收據</h3><div class="muted">拍下或選一張收據，自動讀出店名（翻成中文）、金額和是否免稅，你確認後直接帶入「記一筆」。</div>' +
+      '<div class="row" style="margin-top:12px"><button class="btn" style="flex:1" data-scan-cam>拍照</button><button class="btn ghost" style="flex:1" data-scan-pick>從相簿選</button></div>' +
+      '<div class="muted" style="margin-top:10px;font-size:12px">照片只會傳給 Google 的 Gemini 辨識，不會存起來。數字請務必核對再儲存。</div>' + inputs + '</div>';
+  }
+  // ------------------------------------------------------------------ home
+  function memberShare(e, id) {
+    var ids = (e.participantIds || []).filter(function (x) { return state.members.some(function (m) { return m.id === x; }); });
+    if (ids.indexOf(id) === -1) return 0;
+    return shareTwd(e, splitMinor(minorOf(e.amount, e.currency), ids)[id]);
+  }
+  function viewHome() {
+    var today = todayStr(), exps = state.expenses;
+    var todayList = exps.filter(function (e) { return e.date === today; });
+    var todayTotal = todayList.reduce(function (s, e) { return s + expenseTwd(e); }, 0);
+    var total = exps.reduce(function (s, e) { return s + expenseTwd(e); }, 0);
+    var hero = state.homePhoto
+      ? '<div class="heroWrap"><img class="hero" alt="封面照片" src="' + esc(state.homePhoto) + '"><div class="heroAct"><button data-home-photo-pick>更換</button><button data-home-photo-clear>移除</button></div></div>'
+      : '<button class="heroEmpty" data-home-photo-pick><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/></svg>上傳封面照片</button>';
+    var me = lsGet('expenses.me'), mem = state.members.filter(function (m) { return m.id === me; })[0];
+    // personal share (what this person owes on each bill) of a list of expenses, in total and by category
+    var mineOf = function (list) {
+      var cats = {}, v = 0;
+      if (mem) list.forEach(function (e) {
+        var s = memberShare(e, mem.id); if (!(s > 0)) return;
+        v += s; var c = cats[e.category] = cats[e.category] || { v: 0, n: 0 }; c.v += s; c.n++;
+      });
+      return { v: v, cats: cats };
+    };
+    // left: this person's share (name + amount, pie below); right, behind a thin line: everybody's total
+    var homeCard = function (label, totalTwd, sub, list, emptyText) {
+      var m = mineOf(list), top, below = '';
+      if (!mem) { top = '<span>我</span><b>未設定</b>'; below = '<div class="muted" style="margin-top:8px;font-size:12px">到設定選「我是誰」，這裡就會顯示你的消費圓餅圖。</div>'; }
+      else { top = '<span>' + esc(mem.name) + ' 的消費</span><b>' + fmtTwd(m.v) + '</b>'; below = m.v > 0 ? pieHtml(m.cats, m.v) : '<div class="muted" style="margin-top:8px;font-size:12px">' + emptyText + '</div>'; }
+      return '<div class="card homecard"><div class="hc-top"><div class="hc-a">' + top + '</div><div class="hc-b"><div class="muted">' + label + '</div><div class="big">' + fmtTwd(totalTwd) + '</div><div class="muted">' + sub + '</div></div></div>' + below + '</div>';
+    };
+    var duo = homeCard('本日消費', todayTotal, esc(fmtDate(today)) + ' · ' + todayList.length + ' 筆', todayList, '今天還沒有你分攤的花費') +
+      homeCard('累計消費', total, '共 ' + state.days.length + ' 天、' + exps.length + ' 筆', exps, '還沒有你分攤的花費');
+    // the itemised list is an accordion that starts folded (the first time only; after that it keeps whatever was chosen)
+    if (lsGet('expenses.homeMineInit') !== '1') { setAccClosed('home:mine', true); lsSet('expenses.homeMineInit', '1'); }
+    var mine = '';
+    if (!mem) {
+      mine = '<div class="card"><h3>我的今日花費</h3><div class="muted">還沒選「我是誰」。到設定選好之後，這裡會列出你今天的各項花費。</div><div style="margin-top:10px"><button class="btn ghost small" data-goto-settings>到設定選擇</button></div></div>';
+    } else {
+      var rows = todayList.map(function (e) { return { e: e, v: memberShare(e, mem.id) }; }).filter(function (r) { return r.v > 0; }).sort(function (a, b) { return b.v - a.v; });
+      var sum = rows.reduce(function (s, r) { return s + r.v; }, 0), max = rows.length ? rows[0].v : 1;
+      var head = '<span class="acc-text"><span class="acc-title">' + esc(mem.name) + ' 的今日花費</span><span class="acc-sub">' + rows.length + ' 筆 · ' + fmtTwd(sum) + '</span></span>';
+      var inner = (rows.length ? rows.map(function (r) { return '<div class="hrow"><i style="width:' + Math.max(4, Math.round(r.v / max * 100)) + '%"></i><div class="in"><span>' + esc(r.e.title) + '<span class="muted" style="margin-left:6px;font-size:12px">' + esc(r.e.category) + '</span></span><b>' + fmtTwd(r.v) + '</b></div></div>'; }).join('')
+        : '<div class="muted" style="margin-top:8px">今天還沒有你分攤的花費</div>') + '<div class="muted" style="margin-top:10px;font-size:12px">金額是你在每筆帳裡分攤到的部分。</div>';
+      mine = accHtml('home:mine', head, '', inner, 'card');
+    }
+    return hero + duo + mine + '<input type="file" id="homePhotoPick" accept="image/*" hidden>';
+  }
+  // crop the cover photo: drag to move, slider or two fingers to zoom, saved as a 2:1 JPEG
+  function openCropper(file) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onerror = function () { URL.revokeObjectURL(url); toast('這張圖片無法讀取'); };
+    img.onload = function () {
+      var W = 640, H = 320;
+      openDialog('<p>調整照片位置與大小</p><div class="cropbox"><canvas id="cropCv" width="' + W + '" height="' + H + '"></canvas></div>' +
+        '<div class="hint">拖曳移動，滑桿縮放（手機可雙指縮放）。外框就是首頁顯示的範圍。</div>' +
+        '<input type="range" id="cropZoom" min="100" max="300" value="100" style="width:100%;margin:10px 0 4px">' +
+        '<div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1" data-ok>使用這張</button></div>', function (w, close) {
+        var cv = w.querySelector('#cropCv'), ctx = cv.getContext('2d'), zoomEl = w.querySelector('#cropZoom');
+        var iw = img.naturalWidth, ih = img.naturalHeight, base = Math.max(W / iw, H / ih), z = 1, ox = (W - iw * base) / 2, oy = (H - ih * base) / 2;
+        function clamp() { var s = base * z; ox = Math.min(0, Math.max(W - iw * s, ox)); oy = Math.min(0, Math.max(H - ih * s, oy)); }
+        function draw() { clamp(); ctx.fillStyle = '#3b2f25'; ctx.fillRect(0, 0, W, H); var s = base * z; ctx.drawImage(img, ox, oy, iw * s, ih * s); }
+        function setZoom(nz) {
+          nz = Math.max(1, Math.min(3, nz));
+          var s0 = base * z, s1 = base * nz, cx = (W / 2 - ox) / s0, cy = (H / 2 - oy) / s0;   // keep the middle of the frame where it is
+          z = nz; ox = W / 2 - cx * s1; oy = H / 2 - cy * s1; zoomEl.value = String(Math.round(z * 100)); draw();
+        }
+        var ptrs = {}, lastDist = 0;
+        function pts() { return Object.keys(ptrs).map(function (k) { return ptrs[k]; }); }
+        cv.addEventListener('pointerdown', function (e) { try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; lastDist = 0; });
+        cv.addEventListener('pointermove', function (e) {
+          var p = ptrs[e.pointerId]; if (!p) return;
+          var k = W / cv.getBoundingClientRect().width, all = pts();
+          if (all.length >= 2) {
+            ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+            var a = pts(), d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+            if (lastDist) setZoom(z * d / lastDist); lastDist = d;
+          } else { ox += (e.clientX - p.x) * k; oy += (e.clientY - p.y) * k; ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; draw(); }
+        });
+        function up(e) { delete ptrs[e.pointerId]; lastDist = 0; }
+        cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+        zoomEl.addEventListener('input', function () { setZoom(parseInt(zoomEl.value, 10) / 100); });
+        draw();
+        w.querySelector('[data-no]').addEventListener('click', function () { URL.revokeObjectURL(url); close(); });
+        w.querySelector('[data-ok]').addEventListener('click', function () {
+          var out = document.createElement('canvas'); out.width = 1200; out.height = 600;
+          var k = 1200 / W, s = base * z, c2 = out.getContext('2d');
+          c2.fillStyle = '#3b2f25'; c2.fillRect(0, 0, 1200, 600); c2.drawImage(img, ox * k, oy * k, iw * s * k, ih * s * k);
+          var data = out.toDataURL('image/jpeg', 0.82);
+          URL.revokeObjectURL(url); close();
+          if (data.length > 850000) { toast('照片太大，請換一張或縮小範圍'); return; }
+          Store.saveHomePhoto(data);
+        });
+      });
+    };
+    img.src = url;
+  }
+  function viewStub(title, text) {
+    return '<div class="card wip"><div class="big">開發中</div><div class="muted" style="margin-top:8px">' + esc(title) + (text ? '：' + esc(text) : '') + '</div></div>';
+  }
+  function viewRecords() {
+    return state.sub === 'settle' ? viewSettle() : state.sub === 'tax' ? viewTax() : viewList();
+  }
+  var PIE_COLORS = ['#B9713F', '#6E8B74', '#D9A441', '#7A6A9C', '#C0524B', '#4F7CAC', '#8B5E34', '#9AA66B', '#C98FA3', '#7FB5B0', '#A7A29A', '#E0875A', '#5F6F8F', '#B8A06A'];
+  // A pie with the percentage on each slice, and the numbers for every item on its right
+  function pieParts(map, total) {
+    var arr = Object.keys(map).map(function (k) { return { name: k, v: map[k].v, n: map[k].n }; }).sort(function (a, b) { return b.v - a.v; });
+    var cx = 70, cy = 70, r = 66, ang = -Math.PI / 2, paths = '', labels = '';
+    arr.forEach(function (it, i) {
+      var frac = total > 0 ? it.v / total : 0, col = PIE_COLORS[i % PIE_COLORS.length];
+      if (frac >= 0.9999) paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + col + '"/>';
+      else if (frac > 0) {
+        var a2 = ang + frac * 2 * Math.PI, large = frac > 0.5 ? 1 : 0;
+        paths += '<path d="M' + cx + ' ' + cy + ' L' + (cx + r * Math.cos(ang)).toFixed(2) + ' ' + (cy + r * Math.sin(ang)).toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + large + ' 1 ' + (cx + r * Math.cos(a2)).toFixed(2) + ' ' + (cy + r * Math.sin(a2)).toFixed(2) + ' Z" fill="' + col + '" stroke="#fff" stroke-width="1.5"/>';
+      }
+      if (frac >= 0.1) {
+        var mid = ang + frac * Math.PI, lr = frac >= 0.9999 ? 0 : r * 0.62;
+        labels += '<text x="' + (cx + lr * Math.cos(mid)).toFixed(1) + '" y="' + (cy + lr * Math.sin(mid) + 4).toFixed(1) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="#fff">' + (frac * 100).toFixed(frac >= 0.995 ? 0 : 1).replace(/\.0$/, '') + '%</text>';
+      }
+      ang += frac * 2 * Math.PI;
+    });
+    var legend = arr.map(function (it, i) {
+      var pct = total > 0 ? it.v / total * 100 : 0;
+      return '<div class="lg"><i style="background:' + PIE_COLORS[i % PIE_COLORS.length] + '"></i><div><div class="nm">' + esc(it.name) + '</div><div class="ds">' + fmtTwd(it.v) + '　' + it.n + ' 筆　' + pct.toFixed(1) + '%</div></div></div>';
+    }).join('');
+    return { svg: '<svg viewBox="0 0 140 140" role="img" aria-label="圓餅圖">' + paths + labels + '</svg>', legend: legend };
+  }
+  function pieHtml(map, total) { var p = pieParts(map, total); return '<div class="pie">' + p.svg + '<div class="legend">' + p.legend + '</div></div>'; }
+  function viewStats() {
+    var exps = state.expenses;
+    if (!exps.length) return '<div class="card"><h3>統計</h3><div class="empty" style="padding:14px 0 4px">還沒有任何帳目，記幾筆之後這裡就會出現統計。</div></div>';
+    var total = 0, byCat = {}, byPay = {};
+    exps.forEach(function (e) {
+      var v = expenseTwd(e); total += v;
+      var c = byCat[e.category] = byCat[e.category] || { v: 0, n: 0 }; c.v += v; c.n++;
+      var k = e.payMethod || '未指定', q = byPay[k] = byPay[k] || { v: 0, n: 0 }; q.v += v; q.n++;
+    });
+    var top = exps.slice().sort(function (a, b) { return expenseTwd(b) - expenseTwd(a); }).slice(0, 10).map(function (e, i) {
+      var amt = e.currency === 'JPY' ? fmtYen(e.amount) + '<div class="muted" style="font-size:12px;font-weight:400">≈ ' + fmtTwd(expenseTwd(e)) + '</div>' : fmtTwd(e.amount);
+      return '<div class="rank"><span class="no' + (i < 3 ? ' top3' : '') + '">' + (i + 1) + '</span><div class="mid"><div class="t">' + esc(e.title) + '</div><div class="muted" style="font-size:12px">' +
+        esc(fmtDate(e.date)) + ' · ' + esc(e.category) + (e.payMethod ? ' · ' + esc(e.payMethod) : '') + '</div></div><div class="amt">' + amt + '</div></div>';
+    }).join('');
+    return '<div class="card"><div class="muted">總花費（換算台幣）</div><div class="big">' + fmtTwd(total) + '</div><div class="muted">共 ' + exps.length + ' 筆，依記帳當下的匯率換算</div></div>' +
+      accHtml('stat:cat', '<span class="acc-text"><span class="acc-title">分類支出</span></span>', '', pieHtml(byCat, total), 'card') +
+      accHtml('stat:pay', '<span class="acc-text"><span class="acc-title">支付方式</span></span>', '', pieHtml(byPay, total) + '<div class="muted" style="margin-top:12px">付款方式可在「設定」調整；沒選的帳目歸在「未指定」。</div>', 'card') +
+      accHtml('stat:top', '<span class="acc-text"><span class="acc-title">花費金額前十名</span></span>', '', top, 'card');
+  }
+  // ------------------------------------------------------------------ report (PDF through the print dialog)
+  function reportCard() {
+    var s = state.reportSel;
+    var chk = function (k, label, sub) {
+      return '<label class="check"><input type="checkbox" data-report-sel="' + k + '"' + (s[k] ? ' checked' : '') + '><span><b>' + label + '</b><span class="muted" style="display:block;font-size:12px">' + sub + '</span></span></label>';
+    };
+    return setAcc('report', '匯出報告（PDF）', '<div class="muted">把帳目整理成一份報告。按「匯出 PDF」後會開啟列印畫面，目的地選「另存為 PDF」就會得到檔案。</div>' +
+      chk('all', '整體統計', '分類支出、支付方式的圓餅圖') +
+      chk('mine', '個人統計', '每位旅伴的分類圓餅圖，以及已付、應分攤、結果') +
+      chk('days', '消費明細', '依天分類，每天列出所有帳目與小計') +
+      '<div class="row" style="margin-top:12px"><button class="btn small" data-report-pdf' + (s.all || s.mine || s.days ? '' : ' disabled') + '>匯出 PDF</button></div>');
+  }
+  function reportHtml() {
+    var sel = state.reportSel, exps = state.expenses, mem = state.members;
+    var total = exps.reduce(function (s, e) { return s + expenseTwd(e); }, 0);
+    var days = state.days.slice().sort(), range = days.length ? fmtDate(days[0]) + ' – ' + fmtDate(days[days.length - 1]) : '';
+    var stamp = todayStr().replace(/-/g, '/');
+    var pie = function (map, tot) { var q = pieParts(map, tot); return '<div class="pie">' + q.svg + '<div class="legend">' + q.legend + '</div></div>'; };
+    var group = function (keyOf, valOf, list) {
+      var m = {}; list.forEach(function (e) { var v = valOf(e); if (!(v > 0)) return; var k = keyOf(e), c = m[k] = m[k] || { v: 0, n: 0 }; c.v += v; c.n++; }); return m;
+    };
+    var body = '';
+    if (sel.all) {
+      body += '<section><h2>整體統計</h2><div class="sub">全部旅伴合計，共 ' + exps.length + ' 筆，' + fmtTwd(total) + '</div>' +
+        '<h3>分類支出</h3>' + pie(group(function (e) { return e.category; }, expenseTwd, exps), total) +
+        '<h3>支付方式</h3>' + pie(group(function (e) { return e.payMethod || '未指定'; }, expenseTwd, exps), total) + '</section>';
+    }
+    if (sel.mine) {
+      var bal = computeBalances(exps, mem);
+      body += '<section><h2>個人統計</h2><div class="sub">以每筆帳裡各人分攤到的金額計算</div>' + mem.map(function (m) {
+        var map = group(function (e) { return e.category; }, function (e) { return memberShare(e, m.id); }, exps), tot = 0;
+        Object.keys(map).forEach(function (k) { tot += map[k].v; });
+        var b = bal[m.id] || { paid: 0, owed: 0, net: 0 }, net = Math.round(b.net);
+        return '<div class="person"><h3>' + esc(m.name) + '　<span class="amt">' + fmtTwd(tot) + '</span></h3>' +
+          '<div class="sub">已付 ' + fmtTwd(b.paid) + '　應分攤 ' + fmtTwd(b.owed) + '　' + (net > 0 ? '應收 ' + fmtTwd(net) : net < 0 ? '應付 ' + fmtTwd(-net) : '打平') + '</div>' +
+          (tot > 0 ? pie(map, tot) : '<div class="sub">沒有分攤到的花費</div>') + '</div>';
+      }).join('') + '</section>';
+    }
+    if (sel.days) {
+      var byDate = {}; exps.forEach(function (e) { (byDate[e.date] = byDate[e.date] || []).push(e); });
+      var ds = Object.keys(byDate).sort();
+      body += '<section><h2>消費明細</h2>' + (ds.length ? ds.map(function (d) {
+        var list = byDate[d].slice().sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+        var sum = list.reduce(function (s, e) { return s + expenseTwd(e); }, 0);
+        return '<div class="day"><div class="dh"><b>' + esc(fmtDate(d)) + '</b><span>' + list.length + ' 筆　' + fmtTwd(sum) + '</span></div><table>' + list.map(function (e) {
+          var n = (e.participantIds || []).length, who = n === mem.length ? '全員分攤' : (e.participantIds || []).map(memberName).join('、') + ' 分攤';
+          var amt = e.currency === 'JPY' ? fmtYen(e.amount) + '<div class="s">≈ ' + fmtTwd(expenseTwd(e)) + '</div>' : fmtTwd(e.amount);
+          return '<tr><td class="t">' + esc(e.title) + (e.taxFree ? ' <span class="tag">免稅' + (e.store ? '・' + esc(e.store) : '') + '</span>' : '') +
+            '<div class="s">' + esc(e.category) + ' · ' + esc(memberName(e.payerId)) + ' 付' + (e.payMethod ? '（' + esc(e.payMethod) + '）' : '') + ' · ' + esc(who) + (e.note ? ' · ' + esc(e.note) : '') + '</div></td><td class="a">' + amt + '</td></tr>';
+        }).join('') + '</table></div>';
+      }).join('') : '<div class="sub">還沒有帳目</div>') + '</section>';
+    }
+    var colors = PIE_COLORS;
+    var css = '@page{size:A4;margin:14mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'body{font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:#222;font-size:12.5px;line-height:1.55;margin:0}' +
+      'h1{font-size:22px;margin:0}h2{font-size:16px;margin:22px 0 4px;padding-bottom:4px;border-bottom:2px solid #B9713F;color:#5A3A1E;break-after:avoid}h3{font-size:13.5px;margin:12px 0 4px;color:#5A3A1E;break-after:avoid}' +
+      '.sub{color:#777;font-size:12px}.amt{color:#8B5E34;font-weight:700}.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid #ddd;padding-bottom:8px}' +
+      '.pie{display:flex;align-items:center;gap:18px;break-inside:avoid;margin:4px 0 8px}.pie svg{width:150px;height:150px;flex-shrink:0}.legend{display:flex;flex-direction:column;gap:7px}' +
+      '.lg{display:flex;gap:7px;align-items:flex-start}.lg i{width:10px;height:10px;border-radius:3px;margin-top:5px;flex-shrink:0}.nm{font-weight:700}.ds{color:#777;font-size:12px}' +
+      '.person{break-inside:avoid;margin-top:6px}.day{break-inside:avoid;margin-top:10px}.dh{display:flex;justify-content:space-between;background:#F6EFE3;padding:5px 9px;border-radius:6px;font-size:13px}' +
+      'table{width:100%;border-collapse:collapse}td{padding:5px 4px;border-bottom:1px solid #eee;vertical-align:top}td.a{text-align:right;white-space:nowrap;font-weight:700;width:1%}.s{color:#777;font-size:11.5px;font-weight:400}.tag{background:#FBEADA;color:#A65C1E;border-radius:4px;padding:0 5px;font-size:11px}';
+    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>旅行記帳報告</title><style>' + css + '</style></head><body>' +
+      '<div class="head"><div><h1>旅行記帳報告</h1><div class="sub">' + esc(range) + '　共 ' + days.length + ' 天、' + exps.length + ' 筆</div></div><div style="text-align:right"><div class="amt" style="font-size:18px">' + fmtTwd(total) + '</div><div class="sub">匯出於 ' + stamp + '</div></div></div>' + body + '</body></html>';
+  }
+  function exportReportPdf() {
+    if (!state.expenses.length) { toast('還沒有帳目可以匯出'); return; }
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(f);
+    var d = f.contentWindow.document; d.open(); d.write(reportHtml()); d.close();
+    setTimeout(function () { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('無法開啟列印畫面'); } setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000); }, 400);
+  }
+  function payCard() {
+    var rows = state.pays.map(function (n, i) {
+      return '<div class="mrow"><span><b>' + esc(n) + '</b></span><span class="row"><button class="btn ghost small" data-pay-rename="' + i + '">改名</button><button class="btn danger small" data-pay-del="' + i + '">刪除</button></span></div>';
+    }).join('');
+    return setAcc('pays', '付款方式', '<div class="muted">記一筆時，幣別下方可以選付款方式；統計頁會依這些種類加總。</div>' +
+      '<div style="margin-top:10px">' + rows + '</div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn ghost small" data-pay-add>＋ 新增付款方式</button>' + (state.pays.join('|') === DEFAULT_PAYS.join('|') ? '' : '<button class="btn ghost small" data-pay-reset>還原預設</button>') + '</div>');
+  }
+  function payNameOk(v, except) {
+    if (v.length > 8) { toast('名稱最多 8 個字'); return false; }
+    if (state.pays.some(function (n, i) { return n === v && i !== except; })) { toast('已經有「' + v + '」了'); return false; }
+    return true;
+  }
+  function addPay() {
+    if (state.pays.length >= 12) { toast('付款方式最多 12 種'); return; }
+    askText('新的付款方式（最多 8 字）', '', function (v) { if (payNameOk(v, -1)) Store.setPayMethods(state.pays.concat([v])); });
+  }
+  function renamePay(i) {
+    var old = state.pays[i]; if (old === undefined) return;
+    askText('改名「' + old + '」', old, function (v) {
+      if (v === old || !payNameOk(v, i)) return;
+      var list = state.pays.slice(); list[i] = v; Store.setPayMethods(list, old, v);
+    });
+  }
+  function deletePay(i) {
+    var old = state.pays[i]; if (old === undefined) return;
+    if (state.pays.length <= 1) { toast('至少要保留一種付款方式'); return; }
+    var n = state.expenses.filter(function (e) { return e.payMethod === old; }).length;
+    confirmBox('確定要刪除「' + old + '」嗎？' + (n ? '有 ' + n + ' 筆帳目用到，刪除後這些帳目會變成「未指定」。' : ''), '刪除', function () {
+      Store.setPayMethods(state.pays.filter(function (x, j) { return j !== i; }), old, '');
+    });
+  }
   function viewSettings() {
     var meOpts = '<option value="">（不指定）</option>' + state.members.map(function (m) {
       return '<option value="' + m.id + '"' + (lsGet('expenses.me') === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>';
@@ -2448,7 +2904,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       setAcc('data', '資料儲存（Firebase 同步）', '<div class="muted">資料存在你的Firebase，拿到這個網址的家人打開都會看到同一份，不用註冊或登入。斷線時會先存在手機，連上網路後自動補上傳。匯出備份可以另外留一份在自己手上。</div>' +
       '<div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn ghost small" data-export>匯出備份</button><button class="btn ghost small" data-import>匯入備份</button><button class="btn danger small" data-clear>清除全部資料</button></div>' +
       (state.localInfo ? '<div class="muted" style="margin-top:12px">這支手機還有以前只存在手機的資料（' + state.localInfo.members + ' 位旅伴、' + state.localInfo.expenses + ' 筆帳目）。</div><div style="margin-top:8px"><button class="btn small" data-mig-upload>上傳到Firebase</button></div>' : '')) +
-      rateCard();
+      reportCard() + payCard() + rateCard();
   }
   function rateCard() {
     var rows = sortedRates().map(function (r) {
@@ -2456,7 +2912,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         '<span class="row"><button class="btn danger small" data-del-rate="' + r.id + '">刪除</button></span></div>';
     }).join('');
     return setAcc('rates', '匯率紀錄', '<div class="muted">按右下角的「更新匯率」才會抓現在的匯率，不會自動更新。每次抓到的匯率會存成一筆紀錄，記帳時可以挑要用哪一筆。</div>' +
-      '<div class="row" style="margin-top:10px"><button class="btn ghost small" data-add-rate-manual>手動輸入</button></div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn ghost small" data-add-rate-manual>手動輸入</button><button class="btn ghost small" data-fetch-rate' + (state.rateFetching ? ' disabled' : '') + '>' + (state.rateFetching ? '更新中…' : '⟳ 更新匯率') + '</button></div>' +
       (rows ? '<div style="margin-top:12px">' + rows + '</div>' : '<div class="muted" style="margin-top:12px">還沒有任何匯率紀錄。</div>'));
   }
 
@@ -2489,16 +2945,27 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     });
   }
   function renderTabs() {
-    var T = [['list', '明細'], ['settle', '結算'], ['tax', '退稅'], ['settings', '設定']];
+    var T = [['home', '首頁'], ['list', '紀錄'], ['scan', '掃描'], ['stats', '統計'], ['settings', '設定']];
     $('tabs').innerHTML = T.map(function (t) {
       return '<button data-tab="' + t[0] + '" class="' + (state.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>';
     }).join('');
+    // home: 記一筆 + 更新匯率; records: the 明細／結算／退稅 switch; nothing elsewhere
+    ['fab', 'fabRate'].forEach(function (id) { var b = $(id); if (b) b.style.display = state.tab === 'home' ? '' : 'none'; });
+    var sf = $('subFabs');
+    if (state.tab !== 'list') state.subOpen = false;
+    if (sf) {
+      var NM = { detail: '明細', settle: '結算', tax: '退稅' };
+      sf.innerHTML = state.tab !== 'list' ? '' :
+        (state.subOpen ? ['tax', 'settle', 'detail'].filter(function (k) { return k !== state.sub; }).map(function (k) { return '<button data-sub="' + k + '">' + NM[k] + '</button>'; }).join('') : '') +
+        '<button class="on" data-sub-toggle aria-expanded="' + (state.subOpen ? 'true' : 'false') + '">' + NM[state.sub] + (state.subOpen ? '　▾' : '　▴') + '</button>';
+    }
   }
+
   function renderView(force) {
     if (!force && viewHasFocusedInput()) { renderPending = true; return; }
     renderPending = false;
     var html = state.loading ? '<div class="card"><div class="muted">正在讀取資料…</div></div>'
-      : state.tab === 'settle' ? viewSettle() : state.tab === 'tax' ? viewTax() : state.tab === 'settings' ? viewSettings() : viewList();
+      : state.tab === 'home' ? viewHome() : state.tab === 'scan' ? viewScan() : state.tab === 'stats' ? viewStats() : state.tab === 'settings' ? viewSettings() : viewRecords();
     $('view').innerHTML = html;
   }
   function renderAll() { renderBanner(); renderModeTag(); renderTabs(); renderView(); }
@@ -2525,6 +2992,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var b = $('fabRate'); if (!b) return;
     b.disabled = !!fetching;
     b.textContent = fetching ? '更新中…' : '⟳ 更新匯率';
+    Array.prototype.forEach.call(root.querySelectorAll('[data-fetch-rate]'), function (x) { x.disabled = !!fetching; x.textContent = fetching ? '更新中…' : '⟳ 更新匯率'; });
   }
   function fetchRateNow() {
     if (state.rateFetching) return;
@@ -2614,21 +3082,6 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   // ------------------------------------------------------------------ days (the major items)
   function dayCount(date) { return state.expenses.filter(function (e) { return e.date === date; }).length; }
-  function nextDayDefault() { return state.days.length ? addDays(state.days[state.days.length - 1], 1) : todayStr(); }
-  function openNewDay() {
-    openDialog('<p><b>新的一天</b></p><label class="dl" for="dayDate">日期</label><input type="date" id="dayDate" value="' + esc(nextDayDefault()) + '">' +
-      '<div class="hint">按「新增」後，這一天就會出現在明細裡，記帳時直接從這些天選。</div><div class="derr" id="dayErr"></div>' +
-      '<div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" data-no>取消</button><button class="btn" style="flex:1" data-ok>新增</button></div>',
-      function (w, close) {
-        w.querySelector('[data-no]').addEventListener('click', close);
-        w.querySelector('[data-ok]').addEventListener('click', function () {
-          var v = w.querySelector('#dayDate').value, err = w.querySelector('#dayErr');
-          var r = Store.addDay(v);
-          if (!r.ok) { err.textContent = r.error; return; }
-          setAccClosed('day:' + v, false); close(); toast('已新增 ' + fmtDate(v));
-        });
-      });
-  }
   function openChangeDay(date) {
     var n = dayCount(date);
     openDialog('<p><b>改日期</b></p><label class="dl" for="dayDate2">' + esc(fmtDate(date)) + ' 改成</label><input type="date" id="dayDate2" value="' + esc(date) + '">' +
@@ -2661,23 +3114,22 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   // ------------------------------------------------------------------ expense form
   function defaultDay(preset) {
-    if (preset && state.days.indexOf(preset) > -1) return preset;
-    var t = todayStr();
-    return state.days.indexOf(t) > -1 ? t : state.days[state.days.length - 1];
+    return preset || todayStr();                 // today by default; change it by opening the expense later (the day is created automatically)
   }
   function newFormState(presetDate) {
     var me = lsGet('expenses.me');
     var payer = state.members.some(function (m) { return m.id === me; }) ? me : state.members[0].id;
     var r0 = latestRate();
     return { date: defaultDay(presetDate), title: '', category: '餐飲', currency: 'JPY', amount: '', rate: r0 ? String(r0) : '',
-      payerId: payer, participantIds: state.members.map(function (m) { return m.id; }), taxFree: false, store: '', taxRate: 10, consumed: false, note: '' };
+      payerId: payer, participantIds: state.members.map(function (m) { return m.id; }), taxFree: false, store: '', taxRate: 10, consumed: false, note: '',
+      payMethod: state.pays.indexOf(lsGet('expenses.pay')) > -1 ? lsGet('expenses.pay') : '' };
   }
   function formFromExpense(e) {
     var r0 = latestRate();
     return { date: e.date, title: e.title, category: e.category, currency: e.currency, amount: String(e.amount),
       rate: e.currency === 'JPY' ? String(e.rate) : (r0 ? String(r0) : ''),
       payerId: e.payerId, participantIds: (e.participantIds || []).slice(), taxFree: !!e.taxFree, store: e.store || '',
-      taxRate: Number(e.taxRate) || 10, consumed: !!e.consumed, note: e.note || '' };
+      taxRate: Number(e.taxRate) || 10, consumed: !!e.consumed, note: e.note || '', payMethod: e.payMethod || '' };
   }
   // The <option> for the rate-select whose value is closest to the form's current rate (so re-opening a saved
   // expense still shows something sensible); '' (manual) when nothing saved matches closely enough.
@@ -2752,18 +3204,41 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     }).join('');
     return '<select id="f_rateSelect">' + opts + '</select>';
   }
+  // payment methods: round line icons in one scrolling row; the ones the family adds all get the "$ in a circle" icon
+  var PAY_ICONS = {
+    '現金': '<rect x="3" y="6.5" width="18" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 12h.01M17.5 12h.01"/>',
+    '信用卡': '<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18M7 15h4"/>',
+    '行動支付': '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M10.5 18h3"/>',
+    '交通卡': '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 11a5 5 0 0 1 7 0M10.4 13.4a2.3 2.3 0 0 1 3.2 0"/><circle cx="12" cy="16" r=".6" fill="currentColor"/>'
+  };
+  var PAY_DOLLAR = '<circle cx="12" cy="12" r="8.6"/><text x="12" y="16.3" text-anchor="middle" style="font-size:12.5px;font-weight:700">$</text>';
+  function payRowHtml(sel) {
+    var list = state.pays.slice();
+    if (sel && list.indexOf(sel) === -1) list.push(sel);
+    return list.map(function (n) { return catBtn(n, n === sel, PAY_ICONS[n] || PAY_DOLLAR, '', 'data-pay="' + esc(n) + '"'); }).join('') +
+      catBtn('新增', false, '<path d="M12 6v12M6 12h12"/>', ' add', 'data-pay-add="1"');
+  }
+  function renderPayField() { var el = $('f_pays'); if (el && formState) el.innerHTML = payRowHtml(formState.payMethod); }
+  function addPayFromForm() {
+    if (state.pays.length >= 12) { toast('付款方式最多 12 種'); return; }
+    askText('新的付款方式（最多 8 字）', '', function (v) {
+      if (!payNameOk(v, -1)) return;
+      if (formState) { formState.payMethod = v; lsSet('expenses.pay', v); }
+      Store.setPayMethods(state.pays.concat([v]));
+      renderPayField();
+    });
+  }
   function formHtml(f, isEdit) {
     var chips = state.members.map(function (m) {
       return '<button type="button" class="chip' + (f.participantIds.indexOf(m.id) > -1 ? ' on' : '') + '" data-part="' + m.id + '">' + esc(m.name) + '</button>';
     }).join('');
     var payer = state.members.map(function (m) { return '<option value="' + m.id + '"' + (m.id === f.payerId ? ' selected' : '') + '>' + esc(m.name) + '</option>'; }).join('');
-    var dayOpts = state.days.slice().reverse().map(function (d) { return '<option value="' + d + '"' + (d === f.date ? ' selected' : '') + '>' + esc(fmtDate(d)) + '</option>'; }).join('');
-    if (f.date && state.days.indexOf(f.date) === -1) dayOpts = '<option value="' + esc(f.date) + '" selected>' + esc(fmtDate(f.date)) + '</option>' + dayOpts;
     var cats = catGridHtml(f.category);
     return '<div class="sheet"><div class="sheet-top"><button class="btn ghost small" data-f="cancel">取消</button><b>' + (isEdit ? '編輯帳目' : '記一筆') + '</b><button class="btn small" data-f="save">儲存</button></div><div class="sheet-body">' +
-      '<label class="f" for="f_date">日期（從已新增的天數選）</label><select id="f_date">' + dayOpts + '</select><div class="hint tight">沒有想要的日期？先取消，按右下角「＋ 新的一天」新增。</div>' +
+      '<label class="f" for="f_date">日期（預設今天，可直接改）</label><input type="date" id="f_date" value="' + esc(f.date) + '">' +
       '<div class="tcard"><input type="text" id="f_title" aria-label="品項" placeholder="品項，例如：拉麵、Suica儲值" value="' + esc(f.title) + '"><div class="catgrid" id="f_cats">' + cats + '</div><div class="catacts" id="f_catActs"></div></div>' +
       '<label class="f">幣別</label><div class="seg"><button type="button" data-cur="JPY" class="' + (f.currency === 'JPY' ? 'on' : '') + '">日圓 ¥</button><button type="button" data-cur="TWD" class="' + (f.currency === 'TWD' ? 'on' : '') + '">台幣 NT$</button></div>' +
+      '<label class="f">付款方式</label><div class="payrow" id="f_pays">' + payRowHtml(f.payMethod) + '</div>' +
       '<label class="f" for="f_amount">金額（含稅、實際付的）</label><input type="number" id="f_amount" inputmode="decimal" min="0" step="any" placeholder="0" value="' + esc(f.amount) + '">' +
       '<div id="f_rateWrap"><label class="f" for="f_rate">匯率：1 日圓 = ? 台幣</label>' + rateSelectHtml(f) +
       '<input type="number" id="f_rate" inputmode="decimal" min="0" step="any" placeholder="例如 0.2" value="' + esc(f.rate) + '"><div class="hint" id="f_twdPreview"></div></div>' +
@@ -2835,11 +3310,11 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     } else { tp.textContent = ''; }
     renderStoreHistory();
   }
-  function openForm(exp, presetDate) {
+  function openForm(exp, presetDate, prefill) {
     if (state.loading) { toast('資料還在讀取中，請稍候'); return; }
     if (!state.members.length) { state.tab = 'settings'; renderAll(); toast('請先新增旅伴'); return; }
-    if (!state.days.length) { toast('先新增一天，才能記帳'); openNewDay(); return; }
     formState = exp ? formFromExpense(exp) : newFormState(presetDate);
+    if (!exp && prefill) Object.keys(prefill).forEach(function (k) { formState[k] = prefill[k]; });
     formId = exp ? exp.id : null;
     var layer = $('sheetLayer');
     layer.innerHTML = formHtml(formState, !!exp);
@@ -2875,7 +3350,9 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     sheet.addEventListener('click', function (e) {
       var t = e.target.closest ? e.target.closest('button') : null; if (!t) return;
       var f = formState;
-      if (t.hasAttribute('data-cat-add')) addCategory();
+      if (t.hasAttribute('data-pay-add')) addPayFromForm();
+      else if (t.hasAttribute('data-pay')) { var pn = t.getAttribute('data-pay'); f.payMethod = f.payMethod === pn ? '' : pn; if (f.payMethod) lsSet('expenses.pay', f.payMethod); renderPayField(); }
+      else if (t.hasAttribute('data-cat-add')) addCategory();
       else if (t.hasAttribute('data-cat-rename')) renameCategory(t.getAttribute('data-cat-rename'));
       else if (t.hasAttribute('data-cat-del')) deleteCategory(t.getAttribute('data-cat-del'));
       else if (t.hasAttribute('data-cat')) { f.category = t.getAttribute('data-cat'); applyFormVisibility(); }
@@ -2914,7 +3391,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var f = formState; if (!f) return;
     var amount = parseFloat(f.amount), rate = parseFloat(f.rate);
     if (!(amount > 0)) { setFormError('請輸入金額'); return; }
-    if (!f.date) { setFormError('請選日期'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date || '')) { setFormError('請選日期'); return; }
     var jpy = f.currency === 'JPY';
     if (jpy) { amount = Math.round(amount); if (!(rate > 0)) { setFormError('請輸入匯率（1 日圓 = ? 台幣）'); return; } }
     else { amount = Math.round(amount * 100) / 100; rate = 1; }
@@ -2931,7 +3408,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       amount: amount, rate: rate, payerId: f.payerId, participantIds: ordered,
       taxFree: !!taxFree, store: taxFree ? String(f.store).trim() : '', taxRate: Number(f.taxRate) || 10, consumed: !!(taxFree && f.consumed),
       createdAt: existing && existing.createdAt ? existing.createdAt : Date.now(),
-      note: String(f.note || '').trim()
+      note: String(f.note || '').trim(), payMethod: f.payMethod || ''
     };
     setAccClosed('day:' + data.date, false);
     if (formId) Store.setExpense(formId, data); else Store.addExpense(data);
@@ -3012,7 +3489,12 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   // ------------------------------------------------------------------ events
   function bindStatic() {
     $('fab').addEventListener('click', function () { openForm(null); });
-    $('fabDay').addEventListener('click', openNewDay);
+    $('subFabs').addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('[data-sub-toggle]') : null;
+      if (t) { state.subOpen = !state.subOpen; renderTabs(); return; }
+      var b = e.target.closest ? e.target.closest('[data-sub]') : null; if (!b) return;
+      state.sub = b.getAttribute('data-sub'); state.subOpen = false; renderTabs(); renderView(true); $('scroll').scrollTop = 0;
+    });
     $('fabRate').addEventListener('click', fetchRateNow);
     $('banner').addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
@@ -3025,6 +3507,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     });
     var view = $('view');
     view.addEventListener('click', function (e) {
+      if (state.subOpen) { state.subOpen = false; renderTabs(); }         // tapping elsewhere folds the menu
       var t = e.target.closest ? e.target.closest('button') : null; if (!t) return;
       if (t.hasAttribute('data-acc-toggle')) toggleAcc(t.closest('.acc'));
       else if (t.hasAttribute('data-day-add')) openForm(null, t.getAttribute('data-day-add'));
@@ -3049,7 +3532,34 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       else if (t.hasAttribute('data-del-member')) deleteMember(t.getAttribute('data-del-member'));
       else if (t.hasAttribute('data-rename')) renameMember(t.getAttribute('data-rename'));
       else if (t.hasAttribute('data-add-rate-manual')) addRateManual();
+      else if (t.hasAttribute('data-fetch-rate')) fetchRateNow();
+      else if (t.hasAttribute('data-report-pdf')) exportReportPdf();
       else if (t.hasAttribute('data-del-rate')) deleteRate(t.getAttribute('data-del-rate'));
+      else if (t.hasAttribute('data-sub')) { state.sub = t.getAttribute('data-sub'); renderTabs(); renderView(true); }
+      else if (t.hasAttribute('data-home-photo-pick')) { var hp = $('homePhotoPick'); if (hp) hp.click(); }
+      else if (t.hasAttribute('data-home-photo-clear')) confirmBox('確定要移除封面照片嗎？', '移除', function () { Store.clearHomePhoto(); });
+      else if (t.hasAttribute('data-goto-settings')) { state.tab = 'settings'; renderTabs(); renderView(true); $('scroll').scrollTop = 0; }
+      else if (t.hasAttribute('data-scan-cam')) { var c1 = $('scanCam'); if (c1) c1.click(); }
+      else if (t.hasAttribute('data-scan-pick')) { var c2 = $('scanPick'); if (c2) c2.click(); }
+      else if (t.hasAttribute('data-scan-reset')) { state.scan = { phase: 'idle', img: '', res: null, err: '' }; renderView(true); }
+      else if (t.hasAttribute('data-scan-go')) scanToForm();
+      else if (t.hasAttribute('data-scan-cur')) { if (state.scan.res) { state.scan.res.currency = t.getAttribute('data-scan-cur'); state.scan.res.otherCurrency = ''; renderView(true); } }
+      else if (t.hasAttribute('data-pay-add')) addPay();
+      else if (t.hasAttribute('data-pay-rename')) renamePay(+t.getAttribute('data-pay-rename'));
+      else if (t.hasAttribute('data-pay-del')) deletePay(+t.getAttribute('data-pay-del'));
+      else if (t.hasAttribute('data-pay-reset')) Store.setPayMethods(DEFAULT_PAYS.slice());
+    });
+    view.addEventListener('input', function (e) {
+      var r = state.scan && state.scan.res; if (!r) return;
+      if (e.target.id === 's_store') r.store = e.target.value;
+      else if (e.target.id === 's_amount') r.amount = e.target.value;
+    });
+    view.addEventListener('change', function (e) {
+      var id = e.target.id;
+      if (id === 'homePhotoPick' && e.target.files && e.target.files[0]) { var hf = e.target.files[0]; e.target.value = ''; openCropper(hf); return; }
+      if ((id === 'scanCam' || id === 'scanPick') && e.target.files && e.target.files[0]) { var f = e.target.files[0]; e.target.value = ''; handleScanFile(f); }
+      else if (id === 's_tax' && state.scan.res) state.scan.res.taxFree = e.target.checked;
+      else if (e.target.hasAttribute && e.target.hasAttribute('data-report-sel')) { state.reportSel[e.target.getAttribute('data-report-sel')] = e.target.checked; renderView(true); }
     });
     view.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && e.target.id === 'newMember') {
@@ -3074,10 +3584,11 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     bindStatic();
     bindDrawer();
     Store.start({
+      onHome: function (p) { state.homePhoto = p || ''; renderView(); },
       onMembers: function (list) { state.members = list.sort(function (a, b) { return (a.order || 0) - (b.order || 0); }); renderAll(); },
       onExpenses: function (list) { state.expenses = list; renderView(); },
       onDays: function (list) { state.days = list.map(function (d) { return d.date; }).sort(); renderView(); },
-      onSettings: function (st) { state.rate = st && st.rate > 0 ? Number(st.rate) : null; renderView(); },
+      onSettings: function (st) { state.rate = st && st.rate > 0 ? Number(st.rate) : null; state.pays = (st && st.payMethods && st.payMethods.length) ? st.payMethods.slice() : DEFAULT_PAYS.slice(); if (formState) renderPayField(); renderView(); },
       onRates: function (list) { state.rates = list; renderView(); },
       onCats: function (list) { state.cats = list; if (formState) renderCatGrid(); },
       onStatus: function (st) {
