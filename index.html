@@ -74,6 +74,9 @@
   .cd b { display: block; font-size: 19px; line-height: 1.15; color: #5A3A1E; font-variant-numeric: tabular-nums; }
   .cd span { font-size: 10px; color: #6B4425; }
   .cd-done > div { font-size: 13px; font-weight: 700; color: #5A3A1E; padding: 9px 0; }
+  .wx-row { display: flex; gap: 6px; }
+  .wx-card { flex: 1; min-width: 0; text-align: center; background: #FBF1E4; border-radius: 12px; padding: 8px 2px 8px; }
+  .wx-card.on { background: #FBEADA; }
   #expHost { position: fixed; inset: 0; z-index: 90; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, visibility 0s linear 0.18s; }
   #expHost.open { visibility: visible; opacity: 1; pointer-events: auto; transition: opacity 0.18s ease; }
 </style>
@@ -194,9 +197,11 @@
     '.place-row,.booking-row{background:' + PAPER + ';border:2.5px solid ' + INK + ';border-radius:16px}',
     '.food-row{background:' + PAPER + ';border:2.5px solid ' + INK + ';border-radius:14px}',
     '.chk-badge{border:2px solid ' + INK + ' !important}',
-    '@keyframes trainGo{from{left:-180px}to{left:100%}}',
-    '[style*="linear-gradient(135deg,#E8B98C"]::after{content:"";position:absolute;bottom:4px;left:-180px;width:166px;height:40px;background:' + TRAIN_CAR + ' center / contain no-repeat;animation:trainGo 11s linear infinite;pointer-events:none}',
-    '@media (prefers-reduced-motion:reduce){[style*="linear-gradient(135deg,#E8B98C"]::after{animation:none;left:38%}}',
+    '@keyframes trainGo{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 180px))}}',
+    '[style*="linear-gradient(135deg,#E8B98C"]::after{content:"";position:absolute;bottom:4px;left:-180px;width:166px;height:40px;background:' + TRAIN_CAR + ' center / contain no-repeat;animation:trainGo 11s linear infinite;will-change:transform;pointer-events:none}',
+    '.wx-card{background:' + PAPER + ';border:2.5px solid ' + INK + ';border-radius:16px}',
+    '.wx-card.on{background:' + YEL + '}',
+    'svg[stroke="#4A3626"]{stroke:' + INK + '}',
     '.cd{max-width:290px}',
     '.cd > div{background:' + PAPER + ';border:2.5px solid ' + INK + ';border-radius:14px;box-shadow:2px 3px 0 ' + INK + '}',
     '.cd > div:first-child{background:' + COR + '}',
@@ -215,10 +220,9 @@
     'input,select{background:' + PAPER + '}',
     'input[type=text],input[type=number],input[type=date],select,.dlg textarea{border:2.5px solid ' + INK + ';border-radius:14px}',
     '.top{background:' + SCENE + ' no-repeat right 12px bottom 0 / auto 76px, ' + TORII + ' no-repeat left 16px bottom 0 / auto 58px, ' + RAIL + ' repeat-x left bottom 3px / 24px 4px, ' + YEL + ' !important;border-bottom:3px solid ' + INK + ';border-radius:0 0 30px 30px;padding-bottom:86px}',
-    '@keyframes trainGo{from{left:-180px}to{left:100%}}',
-    '.top::after{content:"";position:absolute;bottom:4px;left:-180px;width:166px;height:40px;background:' + TRAIN_CAR + ' center / contain no-repeat;animation:trainGo 11s linear infinite;pointer-events:none}',
+    '@keyframes trainGo{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 180px))}}',
+    '.top::after{content:"";position:absolute;bottom:4px;left:-180px;width:166px;height:40px;background:' + TRAIN_CAR + ' center / contain no-repeat;animation:trainGo 11s linear infinite;will-change:transform;pointer-events:none}',
     '.top{position:relative;overflow:hidden}',
-    '@media (prefers-reduced-motion:reduce){.top::after{animation:none;left:38%}}',
     '.top h1{color:' + INK + ';font-size:24px}',
     '.top p,.top .back,.top .mode{color:' + INK + '}',
     '.top p{max-width:100%}',
@@ -970,13 +974,100 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     '</div>';
   }
 
+  // ---- 天氣預報（Open-Meteo，免金鑰；每個地點各抓今天＋未來2天，3小時內用手機裡的快取）
+  var WX_LOC = {
+    d1: { k: 'ikebukuro', n: '池袋', lat: 35.7295, lon: 139.7109 },
+    d2: { k: 'asakusa', n: '淺草・上野', lat: 35.7148, lon: 139.7967 },
+    d3: { k: 'kawagoe', n: '川越', lat: 35.9251, lon: 139.4856 },
+    d4: { k: 'kawaguchiko', n: '河口湖（富士山）', lat: 35.5008, lon: 138.7681 },
+    d5: { k: 'enoshima', n: '江之島・鐮倉', lat: 35.2995, lon: 139.4807 },
+    d6: { k: 'shibuya', n: '澀谷・新宿', lat: 35.6580, lon: 139.7016 },
+    d7: { k: 'shibamata', n: '柴又', lat: 35.7870, lon: 139.8770 }
+  };
+  var WX_DEFAULT = { k: 'tokyo', n: '東京', lat: 35.6812, lon: 139.7671 };
+  function wxLoc(day) { return WX_LOC[day.id] || WX_DEFAULT; }
+  function wxKind(c) {
+    if (c === 0) return { t: '晴', ic: 'sun' };
+    if (c === 1 || c === 2) return { t: '晴時多雲', ic: 'partly' };
+    if (c === 3) return { t: '陰', ic: 'cloud' };
+    if (c === 45 || c === 48) return { t: '霧', ic: 'fog' };
+    if (c >= 51 && c <= 57) return { t: '毛毛雨', ic: 'rain' };
+    if ((c >= 61 && c <= 67) || (c >= 80 && c <= 82)) return { t: c >= 80 ? '陣雨' : '雨', ic: 'rain' };
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return { t: '雪', ic: 'snow' };
+    if (c >= 95) return { t: '雷雨', ic: 'thunder' };
+    return { t: '多雲', ic: 'cloud' };
+  }
+  function wxIcon(ic) {
+    var cloud = '<path d="M14 30 Q8 30 8 24 Q8 18 15 18 Q17 10 26 10 Q35 10 36 18 Q42 18 42 24 Q42 30 36 30 Z" fill="#fff"/>';
+    var g = {
+      sun: '<circle cx="24" cy="20" r="8" fill="#F6D27A"/><path d="M24 4v4M24 32v4M8 20h4M36 20h4M12.7 8.7l2.8 2.8M32.5 28.5l2.8 2.8M12.7 31.3l2.8-2.8M32.5 11.5l2.8-2.8"/>',
+      partly: '<circle cx="16" cy="14" r="6.5" fill="#F6D27A"/><path d="M16 3v2.5M5 14h2.5M7.5 5.5l1.8 1.8M24.5 5.5l-1.8 1.8"/><path d="M16 33 Q10 33 10 27.5 Q10 22 16.5 22 Q18.5 15 27 15 Q35 15 36 22 Q42 22 42 27.5 Q42 33 36 33 Z" fill="#fff"/>',
+      cloud: cloud,
+      fog: cloud + '<path d="M12 34h24M16 38h16"/>',
+      rain: cloud + '<path d="M17 33l-2 5M25 33l-2 5M33 33l-2 5" stroke="#6FA8C8"/>',
+      snow: cloud + '<circle cx="16" cy="36" r="1.6" fill="#A8D3E6"/><circle cx="25" cy="37" r="1.6" fill="#A8D3E6"/><circle cx="34" cy="36" r="1.6" fill="#A8D3E6"/>',
+      thunder: cloud + '<path d="M26 28l-5 7h4l-2 5 7-8h-4z" fill="#F6D27A"/>'
+    };
+    return '<svg width="40" height="34" viewBox="0 0 48 42" fill="none" stroke="#4A3626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + (g[ic] || cloud) + '</svg>';
+  }
+  function wxLoad(loc) {
+    state.wx = state.wx || {};
+    var st = state.wx[loc.k];
+    if (st && st.status === 'loading') return;
+    if (st && st.days && Date.now() - st.t < 3 * 3600e3 && st.status === 'ok') return;
+    if (st && st.status === 'error' && Date.now() - st.t < 30e3) return;
+    var cached = null;
+    try { cached = JSON.parse(window.localStorage.getItem('wx.v1.' + loc.k) || 'null'); } catch (e) { cached = null; }
+    if (cached && cached.days && Date.now() - cached.t < 3 * 3600e3) { state.wx[loc.k] = { status: 'ok', t: cached.t, days: cached.days }; return; }
+    state.wx[loc.k] = { status: 'loading', t: Date.now(), days: cached && cached.days, stamp: cached && cached.t };
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + loc.lat + '&longitude=' + loc.lon +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Asia%2FTokyo&forecast_days=3';
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+    fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); }).then(function (j) {
+      clearTimeout(timer);
+      var d = j.daily, days = [];
+      for (var i = 0; i < d.time.length && i < 3; i++) days.push({ date: d.time[i], code: d.weather_code[i], hi: d.temperature_2m_max[i], lo: d.temperature_2m_min[i], pop: d.precipitation_probability_max[i], wind: d.wind_speed_10m_max[i] });
+      var rec = { t: Date.now(), days: days };
+      try { window.localStorage.setItem('wx.v1.' + loc.k, JSON.stringify(rec)); } catch (e) { /* storage may be blocked */ }
+      state.wx[loc.k] = { status: 'ok', t: rec.t, days: days };
+      if (state.quickModal === 'weather') render();
+    }).catch(function (e) {
+      clearTimeout(timer);
+      var old = state.wx[loc.k] || {}, m = String(e && e.message || '');
+      var why = (e && e.name === 'AbortError') ? '等了 9 秒都沒有回應（逾時）' : /^http /.test(m) ? '氣象伺服器回傳錯誤（' + m.slice(5) + '）' : '這個瀏覽器連不上 api.open-meteo.com（網路中斷、被擋，或在預覽模式下被限制外部連線）';
+      state.wx[loc.k] = { status: 'error', t: Date.now(), days: old.days, stamp: old.stamp, why: why };
+      if (state.quickModal === 'weather') render();
+    });
+  }
+  function wxBlock(loc) {
+    var st = (state.wx && state.wx[loc.k]) || {};
+    var head = '<div style="font-size:12.5px;font-weight:700;color:#4A3626;margin-bottom:8px;">' + esc(loc.n) + '　今天＋未來2天</div>';
+    if (!st.days) return head + '<div style="font-size:12px;color:#9C8770;margin-bottom:12px;line-height:1.6;">' + (st.status === 'error' ? '暫時抓不到天氣預報。<br>原因：' + esc(st.why || '未知') + '<br><button data-wx-retry style="margin-top:8px;padding:6px 14px;border-radius:999px;border:1.5px solid #EADFCB;background:#fff;color:#4A3626;font-weight:700;font-size:12px;">重新取得</button>' : '天氣讀取中…') + '</div>';
+    var names = ['今天', '明天', '後天'], wk = ['日', '一', '二', '三', '四', '五', '六'];
+    var cards = st.days.map(function (d, i) {
+      var k = wxKind(d.code), dt = new Date(d.date + 'T00:00:00');
+      var md = (dt.getMonth() + 1) + '/' + dt.getDate() + '（' + wk[dt.getDay()] + '）';
+      return '<div class="wx-card' + (i === 0 ? ' on' : '') + '">' +
+        '<div style="font-size:11.5px;font-weight:700;color:#4A3626;">' + names[i] + '</div><div style="font-size:9.5px;color:#9C8770;">' + md + '</div>' +
+        '<div style="margin:3px 0 1px;">' + wxIcon(k.ic) + '</div><div style="font-size:11px;font-weight:700;color:#4A3626;">' + k.t + '</div>' +
+        '<div style="font-size:12px;color:#4A3626;margin-top:2px;"><b>' + Math.round(d.hi) + '°</b> / ' + Math.round(d.lo) + '°</div>' +
+        '<div style="font-size:10px;color:#9C8770;margin-top:2px;">降雨 ' + (d.pop == null ? '–' : Math.round(d.pop) + '%') + '</div>' +
+        '<div style="font-size:10px;color:#9C8770;">風 ' + Math.round(d.wind) + ' km/h</div></div>';
+    }).join('');
+    var ts = new Date(st.status === 'error' ? (st.stamp || st.t) : st.t), hh = ts.getHours(), mm = ts.getMinutes();
+    var note = '資料：Open-Meteo　更新於 ' + (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm + (st.status === 'error' ? '（目前連不上網路，顯示上次的資料）' : '');
+    return head + '<div class="wx-row">' + cards + '</div><div style="font-size:9.5px;color:#B49A7F;margin:2px 0 12px;">' + note + '</div>';
+  }
+
   function renderQuickModal(day) {
     if (!state.quickModal) return '';
     var titleMap = { weather: '當天天氣重點', transport: '當天交通攻略', map: '當天景點地圖', checklist: '當天準備清單', export: '匯出行程與準備清單' };
     var body = '';
 
     if (state.quickModal === 'weather') {
-      body =
+      wxLoad(wxLoc(day));
+      body = wxBlock(wxLoc(day)) +
         '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
           statBox('平均高溫', '11.9度') + statBox('平均氣溫', '7.6度') + statBox('平均低溫', '3.5度') +
         '</div>' +
@@ -985,7 +1076,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
           '<div><div style="font-size:12px;font-weight:700;color:#4A3626;">查看即時天氣預報</div><div style="font-size:10px;color:#9C8770;margin-top:1px;">日本氣象廳官方 東京都預報</div></div>' +
           '<div style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
         '</a>' +
-        '<div style="font-size:9.5px;color:#B49A7F;margin-top:6px;line-height:1.5;">以上溫度為歷年12月平均值，非即時預報；建議出發前幾天點上方連結查詢當週實際天氣</div>';
+        '<div style="font-size:9.5px;color:#B49A7F;margin-top:6px;line-height:1.5;">上方三格是這個地點的預報；下面的平均氣溫是歷年12月平均值，不是預報</div>';
     }
 
     if (state.quickModal === 'transport') {
@@ -1397,6 +1488,9 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     });
     Array.prototype.forEach.call(app.querySelectorAll('[data-toggle-theme]'), function (el) {
       el.addEventListener('click', function () { if (window.Theme) window.Theme.toggle(); });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-wx-retry]'), function (el) {
+      el.addEventListener('click', function () { state.wx = {}; render(); });
     });
     Array.prototype.forEach.call(app.querySelectorAll('[data-open-modal]'), function (el) {
       el.addEventListener('click', function () { state.quickModal = el.getAttribute('data-open-modal'); render(); });
