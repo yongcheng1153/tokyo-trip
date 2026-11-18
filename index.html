@@ -1023,7 +1023,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + loc.lat + '&longitude=' + loc.lon +
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=Asia%2FTokyo&forecast_days=3';
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+    var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 15000);
     fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); }).then(function (j) {
       clearTimeout(timer);
       var d = j.daily, days = [];
@@ -1035,7 +1035,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     }).catch(function (e) {
       clearTimeout(timer);
       var old = state.wx[loc.k] || {}, m = String(e && e.message || '');
-      var why = (e && e.name === 'AbortError') ? '等了 9 秒都沒有回應（逾時）' : /^http /.test(m) ? '氣象伺服器回傳錯誤（' + m.slice(5) + '）' : '這個瀏覽器連不上 api.open-meteo.com（網路中斷、被擋，或在預覽模式下被限制外部連線）';
+      var why = (e && e.name === 'AbortError') ? '等了 15 秒都沒有回應（逾時）' : /^http /.test(m) ? '氣象伺服器回傳錯誤（' + m.slice(5) + '）' : '這個瀏覽器連不上 api.open-meteo.com（網路中斷、被擋，或在預覽模式下被限制外部連線）';
       state.wx[loc.k] = { status: 'error', t: Date.now(), days: old.days, stamp: old.stamp, why: why };
       if (state.quickModal === 'weather') render();
     });
@@ -1043,7 +1043,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   function wxBlock(loc) {
     var st = (state.wx && state.wx[loc.k]) || {};
     var head = '<div style="font-size:12.5px;font-weight:700;color:#4A3626;margin-bottom:8px;">' + esc(loc.n) + '　今天＋未來2天</div>';
-    if (!st.days) return head + '<div style="font-size:12px;color:#9C8770;margin-bottom:12px;line-height:1.6;">' + (st.status === 'error' ? '暫時抓不到天氣預報。<br>原因：' + esc(st.why || '未知') + '<br><button data-wx-retry style="margin-top:8px;padding:6px 14px;border-radius:999px;border:1.5px solid #EADFCB;background:#fff;color:#4A3626;font-weight:700;font-size:12px;">重新取得</button>' : '天氣讀取中…') + '</div>';
+    if (!st.days) return head + '<div style="font-size:12px;color:#9C8770;margin-bottom:12px;line-height:1.6;">' + (st.status === 'error' ? '暫時抓不到天氣預報。<br>原因：' + esc(st.why || '未知') + '<br><span style="font-size:10px;color:#B49A7F;">頁面版本 wx-15s</span><br><button data-wx-retry style="margin-top:8px;padding:6px 14px;border-radius:999px;border:1.5px solid #EADFCB;background:#fff;color:#4A3626;font-weight:700;font-size:12px;">重新取得</button>' : '天氣讀取中…') + '</div>';
     var names = ['今天', '明天', '後天'], wk = ['日', '一', '二', '三', '四', '五', '六'];
     var cards = st.days.map(function (d, i) {
       var k = wxKind(d.code), dt = new Date(d.date + 'T00:00:00');
