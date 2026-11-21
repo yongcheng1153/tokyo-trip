@@ -66,6 +66,8 @@
   @keyframes tbIn { from { opacity: 0; transform: translateY(-8px) scale(0.85); } to { opacity: 1; transform: none; } }
   .toolbar { position: fixed; top: 14px; right: 12px; z-index: 46; display: flex; flex-direction: column; gap: 8px; }
   .place-row, .booking-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #FBF1E4; border-radius: 11px; padding: 10px; }
+  .food-row { position: relative; }
+  .food-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .drag-handle { flex-shrink: 0; padding: 12px 8px; margin: -8px -4px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
   .place-row { position: relative; }
@@ -333,9 +335,42 @@
     if (shadowStyle) shadowStyle.textContent = on ? EXP_CSS : '';
     try { document.dispatchEvent(new Event('themechange')); } catch (e) { /* old browser */ }
   }
+  // ---------------------------------------------------------------- 匯出（PDF／列印）共用的繪本風樣式
+  var PRINT_HEAD = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&display=swap">';
+  var PRINT_CSS = [
+    '@page{size:A4;margin:12mm}',
+    '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+    'html,body{background:' + PAPER + '}',
+    'body{font-family:"Huninn","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:' + INK + ';margin:0;font-size:12.5px;line-height:1.6}',
+    '.hero{position:relative;min-height:100px;padding:16px 200px 22px 22px;background:' + SCENE + ' no-repeat right 14px bottom 0 / auto 80px,' + RAIL + ' repeat-x left bottom 3px / 24px 4px,' + YEL + ';border:3px solid ' + INK + ';border-radius:28px;margin:0 0 16px;display:flex;flex-direction:column;justify-content:center;gap:3px;break-inside:avoid}',
+    '.hero h1{margin:0;font-size:25px;line-height:1.3}',
+    '.hero .sub{color:' + INK + ';font-size:12.5px}',
+    '.hero .big{font-size:16px;font-weight:700;margin-top:2px}',
+    'section{border:2.5px solid ' + INK + ';border-radius:20px;padding:12px 16px;margin:0 0 12px;background:' + PAPER + '}',
+    'h2{display:inline-block;margin:0 0 8px;padding:1px 16px;border:2.5px solid ' + INK + ';border-radius:999px;font-size:14.5px;line-height:1.5;background:' + COR + ';break-after:avoid}',
+    'section:nth-of-type(4n+2) h2{background:' + YEL + '}section:nth-of-type(4n+3) h2{background:' + AQU + '}section:nth-of-type(4n) h2{background:' + GRN + '}',
+    'h3{font-size:13px;margin:10px 0 4px;break-after:avoid}',
+    'h3::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:' + AQU + ';border:2px solid ' + INK + ';margin-right:6px;vertical-align:-1px}',
+    '.sub{color:' + MUT + ';font-size:12px}.s{color:' + MUT + ';font-size:11.5px;font-weight:400}',
+    'table{width:100%;border-collapse:collapse}td{vertical-align:top;padding:4px 0}',
+    '.chip{display:inline-block;min-width:50px;text-align:center;background:' + AQU + ';border:2px solid ' + INK + ';border-radius:9px;padding:0 6px;font-weight:700;font-size:11.5px;line-height:1.55}',
+    'td.t{width:64px;white-space:nowrap}ul{list-style:none;padding:0;margin:0}li{padding:2px 0}',
+    '.foot{height:80px;margin-top:16px;background:' + TRAIN_CAR + ' no-repeat center bottom / auto 62px,' + RAIL + ' repeat-x left bottom 2px / 24px 4px;break-inside:avoid}',
+    // 記帳報告專用
+    '.amt{font-weight:700}.person{border:2px dashed ' + INK + ';border-radius:14px;padding:6px 12px 8px;margin-top:8px;break-inside:avoid}.person h3{margin-top:4px}',
+    '.pie{display:flex;align-items:center;gap:18px;break-inside:avoid;margin:4px 0 8px}.pie svg{width:150px;height:150px;flex-shrink:0}.legend{display:flex;flex-direction:column;gap:7px}',
+    '.pie svg path,.pie svg circle{stroke:' + INK + ';stroke-width:3;stroke-linejoin:round}.pie svg text{fill:' + INK + '}',
+    '.lg{display:flex;gap:7px;align-items:flex-start}.lg i{width:14px;height:14px;border-radius:5px;margin-top:3px;flex-shrink:0;border:2.5px solid ' + INK + '}.nm{font-weight:700}.ds{color:' + MUT + ';font-size:12px}',
+    '.day{break-inside:avoid;margin-top:10px}.dh{display:flex;justify-content:space-between;background:' + YEL + ';border:2.5px solid ' + INK + ';border-radius:12px;padding:3px 11px;font-size:13px}',
+    '.day td{border-bottom:1.5px dashed #CFC8C0}.day tr:last-child td{border-bottom:none}td.a{text-align:right;white-space:nowrap;font-weight:700;width:1%}',
+    '.tag{background:' + AQU + ';color:' + INK + ';border:1.5px solid ' + INK + ';border-radius:6px;padding:0 5px;font-size:11px}'
+  ].join('\n');
+
   window.Theme = {
     get: get,
     pie: function () { return get() === 'sb' ? PIE_SB : null; },
+    printHead: PRINT_HEAD,
+    printCss: PRINT_CSS,
     attach: function (host, shadow) {
       hostEl = host;
       shadowStyle = document.createElement('style'); shadowStyle.id = 'themeCssExp';
@@ -780,6 +815,7 @@
     links: [],
     foodSpots: [],             // from db: {id, itemId, label, url, desc, order}  (food spots noted under a schedule item)
     expandedItems: {},         // itemId -> true, which schedule items are expanded
+    editFoodId: null,          // when set, the food dialog edits this spot instead of adding
     addFoodItemId: null,       // itemId the "add food" dialog is open for, or null
     newFood: { label: '', url: '', desc: '' },
     addFoodError: '',
@@ -956,11 +992,13 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
   function foodRowHtml(f) {
     return '<div class="food-row" data-food-id="' + f.id + '">' +
+      '<div class="drag-handle" data-food-drag="' + f.id + '" title="按住拖曳調整順序" style="padding:8px 6px;margin:-4px -2px -4px -4px;">' + ICO.drag.replace('width="18" height="18"', 'width="15" height="15"') + '</div>' +
       '<a href="' + esc(f.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
         '<div style="min-width:0;"><div style="font-size:11.5px;font-weight:700;color:#4A3626;word-break:break-all;">' + esc(f.label) + '</div>' +
         (f.desc ? '<div style="font-size:9.5px;color:#9C8770;margin-top:1px;word-break:break-all;">' + esc(f.desc) + '</div>' : '') + '</div>' +
         ICO.pinSmall +
       '</a>' +
+      '<button data-edit-food="' + f.id + '" aria-label="編輯這個美食點" title="編輯" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#FBEADA;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.pencil.replace('width="18" height="18"', 'width="12" height="12"') + '</button>' +
       '<button data-del-food="' + f.id + '" aria-label="移除這個美食點" style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.xSmall + '</button>' +
     '</div>';
   }
@@ -976,8 +1014,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       : '';
     var bodyHtml = '';
     if (expanded) {
-      var body = spots.map(foodRowHtml).join('<div style="height:6px;"></div>') +
-        (spots.length ? '<div style="height:6px;"></div>' : '') +
+      var body = '<div class="food-list" data-food-list="' + itemId + '" style="display:flex;flex-direction:column;gap:6px;">' + spots.map(foodRowHtml).join('') + '</div>' +
         '<button data-add-food-btn="' + itemId + '" style="width:100%;padding:7px;border-radius:9px;border:1.5px dashed #D9B58E;background:transparent;color:#8B5E34;font-weight:700;font-size:10.5px;">＋ 新增美食</button>';
       bodyHtml = '<div class="item-acc-body"><div style="padding:9px 0 2px 55px;display:flex;flex-direction:column;gap:6px;">' + body + '</div></div>';
     }
@@ -1365,7 +1402,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         : '';
       out += '<div class="modal-mask" style="z-index:70;" data-food-add-cancel="1"></div>' +
         '<div class="modal-box-top" id="addPlaceBox">' +
-          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">新增美食</div>' +
+          '<div style="font-weight:700;font-size:12.5px;color:#5A3A1E;margin-bottom:6px;">' + (state.editFoodId ? '編輯美食' : '新增美食') + '</div>' +
           foodErr +
           '<div style="display:flex;flex-direction:column;gap:5px;">' +
             labeledInput('店名', 'newFoodLabel', state.newFood.label) +
@@ -1374,7 +1411,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
           '</div>' +
           '<div style="display:flex;gap:6px;margin-top:8px;">' +
             '<button data-food-add-cancel="1" style="flex:1;padding:6px;border-radius:8px;border:1.5px solid #EADFCB;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">取消</button>' +
-            '<button data-food-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">新增</button>' +
+            '<button data-food-add-confirm="1" style="flex:1;padding:6px;border-radius:8px;border:none;background:#8B5E34;color:#fff;font-weight:700;font-size:12px;">' + (state.editFoodId ? '儲存' : '新增') + '</button>' +
           '</div>' +
         '</div>';
     }
@@ -1461,7 +1498,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       h += '<section><h2>' + esc(d.head) + '</h2>';
       if (sel.sched) {
         h += '<h3>行程</h3>' + (d.items.length ? '<table>' + d.items.map(function (it) {
-          return '<tr><td class="t">' + esc(it.time) + '</td><td><b>' + esc(it.name) + '</b>' + (it.desc ? '<div class="s">' + esc(it.desc) + '</div>' : '') +
+          return '<tr><td class="t"><span class="chip">' + esc(it.time) + '</span></td><td><b>' + esc(it.name) + '</b>' + (it.desc ? '<div class="s">' + esc(it.desc) + '</div>' : '') +
             it.spots.map(function (s) { return '<div class="s">・' + esc(s.label) + (s.desc ? '（' + esc(s.desc) + '）' : '') + '</div>'; }).join('') + '</td></tr>';
         }).join('') + '</table>' : '<p class="s">尚無行程</p>');
       }
@@ -1470,11 +1507,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       }
       h += '</section>';
     });
-    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>東京家族旅行</title><style>' +
-      'body{font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:#222;margin:24px;font-size:13px;line-height:1.6}' +
-      'h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;border-bottom:2px solid #B9713F;padding-bottom:3px;margin:0 0 6px;color:#5A3A1E}h3{font-size:12px;color:#B9713F;margin:8px 0 3px}' +
-      'section{margin-top:16px;break-inside:avoid-page}table{border-collapse:collapse;width:100%}td{vertical-align:top;padding:2px 0}td.t{width:52px;color:#8B5E34;font-weight:700}' +
-      '.s{color:#666;font-size:12px}ul{list-style:none;padding:0;margin:0}li{padding:1px 0}</style></head><body><h1>東京家族旅行</h1><div class="s">2026/12/4–12/10</div>' + h + '</body></html>';
+    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>東京家族旅行</title>' + (window.Theme ? window.Theme.printHead : '') + '<style>' + (window.Theme ? window.Theme.printCss : '') +
+      'section{break-inside:avoid}</style></head><body><div class="hero"><h1>東京家族旅行</h1><div class="sub">2026/12/4–12/10　行程與準備清單</div></div>' + h + '<div class="foot"></div></body></html>';
   }
   function copyText(text) {
     function fallback() {
@@ -1495,7 +1529,13 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
     document.body.appendChild(f);
     var d = f.contentWindow.document; d.open(); d.write(exportHtml()); d.close();
-    setTimeout(function () { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { /* ignore */ } setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000); }, 300);
+    var fired = false, go = function () {
+      if (fired) return; fired = true;
+      try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { /* ignore */ }
+      setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000);
+    };
+    try { d.fonts.ready.then(function () { setTimeout(go, 200); }); } catch (e) { /* no font API */ }
+    setTimeout(go, 3000);
   }
 
   function renderDrawer() {
@@ -1652,9 +1692,18 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     Array.prototype.forEach.call(app.querySelectorAll('[data-add-food-btn]'), function (el) {
       el.addEventListener('click', function (e) {
         e.stopPropagation();
-        state.addFoodItemId = el.getAttribute('data-add-food-btn');
+        state.addFoodItemId = el.getAttribute('data-add-food-btn'); state.editFoodId = null;
         state.newFood = { label: '', url: '', desc: '' };
         state.addFoodError = '';
+        render();
+      });
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-edit-food]'), function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault(); e.stopPropagation();
+        var id = el.getAttribute('data-edit-food'), sp = state.foodSpots.filter(function (f) { return f.id === id; })[0];
+        if (!sp) return;
+        state.editFoodId = id; state.addFoodItemId = sp.itemId; state.newFood = { label: sp.label || '', url: sp.url || '', desc: sp.desc || '' }; state.addFoodError = '';
         render();
       });
     });
@@ -1664,7 +1713,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     Array.prototype.forEach.call(app.querySelectorAll('[data-food-confirm-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteFoodId = null; render(); }); });
     var foodDelEl = app.querySelector('[data-food-confirm-del]');
     if (foodDelEl) foodDelEl.addEventListener('click', function () { var id = state.confirmDeleteFoodId; state.confirmDeleteFoodId = null; deleteFoodSpot(id); render(); });
-    Array.prototype.forEach.call(app.querySelectorAll('[data-food-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addFoodItemId = null; state.addFoodError = ''; render(); }); });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-food-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addFoodItemId = null; state.editFoodId = null; state.addFoodError = ''; render(); }); });
     var foodAddEl = app.querySelector('[data-food-add-confirm]');
     if (foodAddEl) foodAddEl.addEventListener('click', function () {
       var label = ((document.getElementById('newFoodLabel') || {}).value || '').trim();
@@ -1674,7 +1723,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       var fixed = normalizeUrl(url);
       if (!label) { state.addFoodError = '請輸入店名'; render(); return; }
       if (!fixed) { state.addFoodError = '網址看起來不對，請貼上完整網址（例如 https://…）'; render(); return; }
-      addFoodSpot(state.addFoodItemId, label, fixed, desc);
+      if (state.editFoodId) updateFoodSpot(state.editFoodId, label, fixed, desc);
+      else addFoodSpot(state.addFoodItemId, label, fixed, desc);
     });
 
     // day tabs: edit date + place, add a day, delete a day
@@ -1766,7 +1816,10 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
 
     // map: drag reorder
     Array.prototype.forEach.call(app.querySelectorAll('[data-drag-handle]'), function (el) {
-      bindDragHandle(el);
+      bindDragHandle(el, DRAG_PLACES);
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-food-drag]'), function (el) {
+      bindDragHandle(el, DRAG_FOOD);
     });
 
     // checklist rows (toggle / tap to edit / edit box)
@@ -1803,22 +1856,25 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   var dragActive = false;      // while true, render() is deferred so the dragged row is never destroyed
   var renderPending = false;
 
-  function bindDragHandle(handleEl) {
-    var placeId = handleEl.getAttribute('data-drag-handle');
+  var DRAG_PLACES = { idAttr: 'data-drag-handle', rowSel: '.place-row', rowId: 'data-place-id', gap: 7, list: function () { return document.getElementById('placesList'); }, commit: function (ids) { commitPlacesOrder(ids); } };
+  var DRAG_FOOD = { idAttr: 'data-food-drag', rowSel: '.food-row', rowId: 'data-food-id', gap: 6, list: function (h) { return h.closest('.food-list'); }, commit: function (ids) { commitFoodOrder(ids); } };
+  function bindDragHandle(handleEl, cfg) {
+    cfg = cfg || DRAG_PLACES;
+    var placeId = handleEl.getAttribute(cfg.idAttr);
     handleEl.addEventListener('pointerdown', function (e) {
       if (e.button != null && e.button !== 0 && e.pointerType === 'mouse') return;
-      var list = document.getElementById('placesList');
+      var list = cfg.list(handleEl);
       if (!list) return;
-      e.preventDefault();
+      e.preventDefault(); e.stopPropagation();
 
-      var rows = Array.prototype.slice.call(list.querySelectorAll('.place-row'));
+      var rows = Array.prototype.slice.call(list.querySelectorAll(cfg.rowSel));
       var startIdx = -1;
-      rows.forEach(function (r, i) { if (r.getAttribute('data-place-id') === placeId) startIdx = i; });
+      rows.forEach(function (r, i) { if (r.getAttribute(cfg.rowId) === placeId) startIdx = i; });
       if (startIdx < 0) return;
 
       // Measure everything once, before anything moves
       var rects = rows.map(function (r) { var b = r.getBoundingClientRect(); return { top: b.top, height: b.height }; });
-      var gap = 7;
+      var gap = cfg.gap;
       var startY = e.clientY;
       var dragRow = rows[startIdx];
       var dragH = rects[startIdx].height + gap;
@@ -1862,10 +1918,10 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         try { if (handleEl.releasePointerCapture && e.pointerId != null) handleEl.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
         dragActive = false;
         if (commit && targetIdx !== startIdx) {
-          var ids = rows.map(function (r) { return r.getAttribute('data-place-id'); });
+          var ids = rows.map(function (r) { return r.getAttribute(cfg.rowId); });
           var moved = ids.splice(startIdx, 1)[0];
           ids.splice(targetIdx, 0, moved);
-          commitPlacesOrder(ids);   // re-renders
+          cfg.commit(ids);   // re-renders
         } else {
           renderPending = false;
           render();
@@ -2017,6 +2073,25 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   function deletePlace(id) {
     if (!db || !id) return;
     db.doc('places/' + id).delete().catch(function (err) { noteDbError('deletePlace 失敗', err); });
+  }
+  function commitFoodOrder(orderedIds) {
+    var changed = [];
+    orderedIds.forEach(function (id, idx) {
+      state.foodSpots.forEach(function (f) { if (f.id === id && f.order !== idx) { f.order = idx; changed.push({ id: id, order: idx }); } });
+    });
+    if (db) changed.forEach(function (c) { db.doc('foodSpots/' + c.id).update({ order: c.order }).catch(function (err) { noteDbError('美食排序失敗', err); }); });
+    render();
+  }
+  function updateFoodSpot(id, label, url, desc) {
+    state.foodSpots.forEach(function (f) { if (f.id === id) { f.label = label; f.url = url; f.desc = desc || ''; } });
+    if (!db) { state.addFoodError = '目前連不上資料庫，請檢查網路連線'; render(); return; }
+    db.doc('foodSpots/' + id).update({ label: label, url: url, desc: desc || '' })
+      .then(function () { state.addFoodItemId = null; state.editFoodId = null; state.addFoodError = ''; render(); })
+      .catch(function (err) {
+        noteDbError('updateFoodSpot 失敗', err);
+        state.addFoodError = '儲存失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
+        render();
+      });
   }
   function commitPlacesOrder(orderedIds) {
     // Update the screen right away, then save the new order
@@ -3307,17 +3382,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         }).join('') + '</table></div>';
       }).join('') : '<div class="sub">還沒有帳目</div>') + '</section>';
     }
-    var colors = PIE_COLORS;   // the printed report keeps the plain palette
-    var css = '@page{size:A4;margin:14mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
-      'body{font-family:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;color:#222;font-size:12.5px;line-height:1.55;margin:0}' +
-      'h1{font-size:22px;margin:0}h2{font-size:16px;margin:22px 0 4px;padding-bottom:4px;border-bottom:2px solid #B9713F;color:#5A3A1E;break-after:avoid}h3{font-size:13.5px;margin:12px 0 4px;color:#5A3A1E;break-after:avoid}' +
-      '.sub{color:#777;font-size:12px}.amt{color:#8B5E34;font-weight:700}.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid #ddd;padding-bottom:8px}' +
-      '.pie{display:flex;align-items:center;gap:18px;break-inside:avoid;margin:4px 0 8px}.pie svg{width:150px;height:150px;flex-shrink:0}.legend{display:flex;flex-direction:column;gap:7px}' +
-      '.lg{display:flex;gap:7px;align-items:flex-start}.lg i{width:10px;height:10px;border-radius:3px;margin-top:5px;flex-shrink:0}.nm{font-weight:700}.ds{color:#777;font-size:12px}' +
-      '.person{break-inside:avoid;margin-top:6px}.day{break-inside:avoid;margin-top:10px}.dh{display:flex;justify-content:space-between;background:#F6EFE3;padding:5px 9px;border-radius:6px;font-size:13px}' +
-      'table{width:100%;border-collapse:collapse}td{padding:5px 4px;border-bottom:1px solid #eee;vertical-align:top}td.a{text-align:right;white-space:nowrap;font-weight:700;width:1%}.s{color:#777;font-size:11.5px;font-weight:400}.tag{background:#FBEADA;color:#A65C1E;border-radius:4px;padding:0 5px;font-size:11px}';
-    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>旅行記帳報告</title><style>' + css + '</style></head><body>' +
-      '<div class="head"><div><h1>旅行記帳報告</h1><div class="sub">' + esc(range) + '　共 ' + days.length + ' 天、' + exps.length + ' 筆</div></div><div style="text-align:right"><div class="amt" style="font-size:18px">' + fmtTwd(total) + '</div><div class="sub">匯出於 ' + stamp + '</div></div></div>' + body + '</body></html>';
+    return '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><title>旅行記帳報告</title>' + (window.Theme ? window.Theme.printHead : '') + '<style>' + (window.Theme ? window.Theme.printCss : '') + '</style></head><body>' +
+      '<div class="hero"><h1>旅行記帳報告</h1><div class="sub">' + esc(range) + '　共 ' + days.length + ' 天、' + exps.length + ' 筆　匯出於 ' + stamp + '</div><div class="big">總花費 ' + fmtTwd(total) + '</div></div>' + body + '<div class="foot"></div></body></html>';
   }
   function exportReportPdf() {
     if (!state.expenses.length) { toast('還沒有帳目可以匯出'); return; }
@@ -3325,7 +3391,13 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
     document.body.appendChild(f);
     var d = f.contentWindow.document; d.open(); d.write(reportHtml()); d.close();
-    setTimeout(function () { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('無法開啟列印畫面'); } setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000); }, 400);
+    var fired = false, go = function () {
+      if (fired) return; fired = true;
+      try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('無法開啟列印畫面'); }
+      setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 60000);
+    };
+    try { d.fonts.ready.then(function () { setTimeout(go, 200); }); } catch (e) { /* no font API */ }
+    setTimeout(go, 3000);
   }
   function payCard() {
     var rows = state.pays.map(function (n, i) {
