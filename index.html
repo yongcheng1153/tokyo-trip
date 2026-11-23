@@ -66,6 +66,8 @@
   @keyframes tbIn { from { opacity: 0; transform: translateY(-8px) scale(0.85); } to { opacity: 1; transform: none; } }
   .toolbar { position: fixed; top: 14px; right: 12px; z-index: 46; display: flex; flex-direction: column; gap: 8px; }
   .place-row, .booking-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: #FBF1E4; border-radius: 11px; padding: 10px; }
+  .check-row { position: relative; }
+  .check-row.dragging { background: #FFFFFF; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .food-row { position: relative; }
   .food-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
   .place-row.dragging { opacity: 0.6; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
@@ -987,6 +989,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     return '<div class="check-row" data-check-row="' + it.id + '" style="display:flex;align-items:center;gap:9px;">' +
       '<input type="checkbox" data-toggle-check="' + it.id + '" ' + (it.checked ? 'checked' : '') + '>' +
       '<label data-edit-check="' + it.id + '" style="' + labelStyle + 'font-size:12.5px;cursor:pointer;flex-grow:1;">' + esc(it.label || '（點擊輸入內容）') + '</label>' +
+      '<div class="drag-handle" data-check-drag="' + it.id + '" title="按住拖曳調整順序" style="padding:8px 6px;margin:-8px -4px -8px 0;">' + ICO.drag.replace('width="18" height="18"', 'width="15" height="15"') + '</div>' +
     '</div>';
   }
 
@@ -1857,6 +1860,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   var renderPending = false;
 
   var DRAG_PLACES = { idAttr: 'data-drag-handle', rowSel: '.place-row', rowId: 'data-place-id', gap: 7, list: function () { return document.getElementById('placesList'); }, commit: function (ids) { commitPlacesOrder(ids); } };
+  var DRAG_CHECK = { idAttr: 'data-check-drag', rowSel: '.check-row', rowId: 'data-check-row', gap: 9, list: function () { return document.getElementById('checklistList'); }, commit: function (ids) { commitChecklistOrder(ids); } };
   var DRAG_FOOD = { idAttr: 'data-food-drag', rowSel: '.food-row', rowId: 'data-food-id', gap: 6, list: function (h) { return h.closest('.food-list'); }, commit: function (ids) { commitFoodOrder(ids); } };
   function bindDragHandle(handleEl, cfg) {
     cfg = cfg || DRAG_PLACES;
@@ -2074,6 +2078,13 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     if (!db || !id) return;
     db.doc('places/' + id).delete().catch(function (err) { noteDbError('deletePlace 失敗', err); });
   }
+  function commitChecklistOrder(orderedIds) {
+    orderedIds.forEach(function (id, idx) {
+      var it = findChecklist(id);
+      if (it && it.order !== idx) { it.order = idx; persistChecklist(id, 'update', { order: idx }); }
+    });
+    render();
+  }
   function commitFoodOrder(orderedIds) {
     var changed = [];
     orderedIds.forEach(function (id, idx) {
@@ -2164,6 +2175,8 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     if (cb) cb.addEventListener('change', function () { toggleChecklist(id); });
     var lab = row.querySelector('[data-edit-check]');
     if (lab) lab.addEventListener('click', function () { enterChecklistEdit(id); });
+    var dh = row.querySelector('[data-check-drag]');
+    if (dh) bindDragHandle(dh, DRAG_CHECK);
     var inp = row.querySelector('#editChecklistInput');
     if (inp) {
       inp.addEventListener('input', function () { state.editingChecklistText = inp.value; });
