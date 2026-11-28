@@ -815,6 +815,7 @@
     addPlaceError: '',
     confirmDeletePlaceId: null,
     links: [],
+    hiddenBk: {},              // built-in booking links the user removed (also saved as links/hide_<key>)
     foodSpots: [],             // from db: {id, itemId, label, url, desc, order}  (food spots noted under a schedule item)
     expandedItems: {},         // itemId -> true, which schedule items are expanded
     editFoodId: null,          // when set, the food dialog edits this spot instead of adding
@@ -1287,6 +1288,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     }
     if (state.confirmDeleteLinkId) {
       var lk = state.links.filter(function (l) { return l.id === state.confirmDeleteLinkId; })[0];
+      if (String(state.confirmDeleteLinkId).indexOf('bk:') === 0) lk = BOOKING_LINKS.filter(function (b) { return bkKey(b) === state.confirmDeleteLinkId.slice(3); })[0];
       out += '<div class="modal-mask" style="z-index:70;" data-link-confirm-cancel="1"></div>' +
         '<div class="modal-box" style="z-index:71;max-width:300px;padding:18px;">' +
           '<div style="font-size:13.5px;color:#4A3626;margin-bottom:14px;line-height:1.6;">確定要移除連結「' + esc(lk ? lk.label : '') + '」嗎？</div>' +
@@ -1542,12 +1544,18 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
   }
 
   function renderDrawer() {
-    var bookingHtml = BOOKING_LINKS.map(function (bk) {
-      return '<a href="' + bk.url + '" target="_blank" rel="noopener" class="booking-row">' +
-        '<div><div style="font-size:10.5px;font-weight:700;color:#4A3626;">' + esc(bk.label) + '</div><div style="font-size:9px;color:#9C8770;margin-top:1px;">' + esc(bk.desc) + '</div></div>' +
-        '<div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#FBEADA;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
-      '</a>';
+    var visibleBk = BOOKING_LINKS.filter(function (bk) { return !bkHidden(bk); });
+    var bookingHtml = visibleBk.map(function (bk) {
+      return '<div class="booking-row" data-bk-key="' + bkKey(bk) + '">' +
+        '<a href="' + esc(bk.url) + '" target="_blank" rel="noopener" style="flex-grow:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:6px;">' +
+          '<div style="min-width:0;"><div style="font-size:10.5px;font-weight:700;color:#4A3626;">' + esc(bk.label) + '</div><div style="font-size:9px;color:#9C8770;margin-top:1px;">' + esc(bk.desc) + '</div></div>' +
+          '<div style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#FBEADA;display:flex;align-items:center;justify-content:center;">' + ICO.arrow + '</div>' +
+        '</a>' +
+        '<button data-del-bk="' + bkKey(bk) + '" aria-label="移除這個連結" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#F6E2DC;border:none;display:flex;align-items:center;justify-content:center;">' + ICO.x + '</button>' +
+      '</div>';
     }).join('<div style="height:6px;"></div>');
+    var restoreHtml = visibleBk.length < BOOKING_LINKS.length
+      ? '<button id="restoreBkBtn" style="width:100%;margin-top:8px;padding:6px;border:none;background:transparent;color:#9C8770;font-size:10px;text-decoration:underline;">還原已移除的預設連結</button>' : '';
 
     var ownLinks = state.links.filter(function (l) { return l.label && /^https?:\/\//i.test(String(l.url || '')); }).sort(function (a, b) { return (a.order || 0) - (b.order || 0); }).map(function (l) {
       return '<div class="booking-row" data-link-id="' + l.id + '">' +
@@ -1587,7 +1595,7 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
       '</div>' +
       '<div style="background:#FBF1E4;border-radius:13px;padding:12px;">' +
         '<div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">' + ICO.ticket + '<span style="font-weight:700;font-size:12.5px;color:#5A3A1E;">一鍵訂票連結</span></div>' +
-        bookingHtml + ownLinksHtml +
+        bookingHtml + ownLinksHtml + restoreHtml +
       '</div>' +
       '<button id="openExportBtn" style="width:100%;margin-top:12px;padding:11px;border-radius:12px;border:1.5px solid #D9B58E;background:#fff;color:#8B5E34;font-weight:700;font-size:12px;">匯出行程與準備清單</button>' +
     '</div>';
@@ -1803,7 +1811,16 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
     });
     Array.prototype.forEach.call(app.querySelectorAll('[data-link-confirm-cancel]'), function (el) { el.addEventListener('click', function () { state.confirmDeleteLinkId = null; render(); }); });
     var linkDelEl = app.querySelector('[data-link-confirm-del]');
-    if (linkDelEl) linkDelEl.addEventListener('click', function () { var id = state.confirmDeleteLinkId; state.confirmDeleteLinkId = null; deleteLink(id); render(); });
+    if (linkDelEl) linkDelEl.addEventListener('click', function () {
+      var id = state.confirmDeleteLinkId; state.confirmDeleteLinkId = null;
+      if (String(id).indexOf('bk:') === 0) hideBuiltinLink(id.slice(3)); else deleteLink(id);
+      render();
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('[data-del-bk]'), function (el) {
+      el.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); state.confirmDeleteLinkId = 'bk:' + el.getAttribute('data-del-bk'); render(); });
+    });
+    var restoreBk = document.getElementById('restoreBkBtn');
+    if (restoreBk) restoreBk.addEventListener('click', function () { restoreBuiltinLinks(); render(); });
     Array.prototype.forEach.call(app.querySelectorAll('[data-link-add-cancel]'), function (el) { el.addEventListener('click', function () { state.addLinkOpen = false; state.addLinkError = ''; render(); }); });
     var linkAddEl = app.querySelector('[data-link-add-confirm]');
     if (linkAddEl) linkAddEl.addEventListener('click', function () {
@@ -1977,6 +1994,22 @@ var itemsHtml = dayItems(day).map(itemRowHtml).join('<div style="height:10px;"><
         state.addLinkError = '新增失敗（' + (err && err.code ? err.code : '未知錯誤') + '），請確認Firestore規則允許寫入';
         render();
       });
+  }
+  // built-in booking links can be removed too: a small "hide_<key>" marker doc in the links collection records it for everyone
+  function bkKey(bk) { var h = 5381, u = String(bk.url); for (var i = 0; i < u.length; i++) h = ((h * 33) ^ u.charCodeAt(i)) >>> 0; return h.toString(36); }
+  function bkHidden(bk) {
+    var k = bkKey(bk);
+    return !!(state.hiddenBk && state.hiddenBk[k]) || state.links.some(function (l) { return l.id === 'hide_' + k; });
+  }
+  function hideBuiltinLink(key) {
+    state.hiddenBk = state.hiddenBk || {}; state.hiddenBk[key] = true;
+    if (db) db.doc('links/hide_' + key).set({ hidden: true, createdAt: Date.now() }).catch(function (err) { noteDbError('移除預設連結失敗', err); });
+  }
+  function restoreBuiltinLinks() {
+    state.hiddenBk = {};
+    var gone = state.links.filter(function (l) { return String(l.id).indexOf('hide_') === 0; });
+    state.links = state.links.filter(function (l) { return String(l.id).indexOf('hide_') !== 0; });
+    if (db) gone.forEach(function (l) { db.doc('links/' + l.id).delete().catch(function (err) { noteDbError('還原預設連結失敗', err); }); });
   }
   function deleteLink(id) {
     if (!db || !id) return;
